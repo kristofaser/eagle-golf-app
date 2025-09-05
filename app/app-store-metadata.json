@@ -1,0 +1,22 @@
+{
+  "name": "Eagle",
+  "subtitle": "Votre parcours de golf pro",
+  "description": "Eagle est l'application qui révolutionne l'apprentissage du golf. Réservez facilement des leçons avec des professionnels certifiés, suivez vos progrès et améliorez votre jeu.\n\nFonctionnalités principales :\n• Trouvez et réservez des cours avec des pros certifiés\n• Consultez les disponibilités en temps réel\n• Suivez votre progression\n• Gérez votre profil et vos réservations\n• Découvrez de nouveaux parcours\n\nQue vous soyez débutant ou joueur confirmé, Eagle vous accompagne dans votre progression.",
+  "keywords": [
+    "golf",
+    "cours de golf",
+    "leçons",
+    "sport",
+    "coaching",
+    "parcours",
+    "réservation",
+    "professeur",
+    "entrainement",
+    "progression"
+  ],
+  "primaryCategory": "Sports",
+  "secondaryCategory": "Health & Fitness",
+  "supportUrl": "https://eagle-app.com/support",
+  "privacyPolicyUrl": "https://eagle-app.com/privacy",
+  "marketingUrl": "https://eagle-app.com"
+}

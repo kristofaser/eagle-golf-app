@@ -1,0 +1,38 @@
+# .easignore - Files to exclude from EAS builds and updates
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.development
+
+# Documentation
+docs/
+*.md
+
+# Scripts
+scripts/
+
+# Tests
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Development files
+.vscode/
+.idea/
+*.log
+
+# Git
+.git/
+.gitignore
+
+# Node modules (already handled by EAS)
+node_modules/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store

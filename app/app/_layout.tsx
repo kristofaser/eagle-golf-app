@@ -1,0 +1,126 @@
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
+import 'react-native-reanimated';
+import React from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { OverlayProvider } from '@/contexts/OverlayContext';
+import { AppProviders } from '@/contexts/AppProviders';
+import { queryClient } from '@/services/query/queryClient';
+import { ProProfileProvider } from '@/contexts/ProProfileContext';
+import { StripeProviderWrapper } from '@/contexts/StripeContext';
+import '@/utils/polyfills';
+
+export {
+  // Catch any errors thrown by the Layout component.
+  ErrorBoundary,
+} from 'expo-router';
+
+export const unstable_settings = {
+  // Ensure that reloading on `/modal` keeps a back button present.
+  initialRouteName: 'index',
+};
+
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync();
+
+function RootLayoutContent() {
+  return (
+    <StripeProviderWrapper>
+      <AppProviders>
+        <ProProfileProvider>
+          <BottomSheetModalProvider>
+            <OverlayProvider>
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                }}
+              >
+                <Stack.Screen name="index" options={{ headerShown: false }} />
+                <Stack.Screen name="splash" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="profile/pricing"
+                  options={{
+                    headerShown: false,
+                    presentation: 'modal',
+                    animation: 'slide_from_bottom',
+                  }}
+                />
+                <Stack.Screen
+                  name="profile/availability"
+                  options={{
+                    headerShown: false,
+                    presentation: 'modal',
+                    animation: 'slide_from_bottom',
+                  }}
+                />
+                <Stack.Screen
+                  name="search"
+                  options={{
+                    headerShown: false,
+                    presentation: 'modal',
+                    animation: 'slide_from_bottom',
+                  }}
+                />
+                <Stack.Screen
+                  name="profile/[id]"
+                  options={{
+                    headerShown: false,
+                    presentation: 'card',
+                    animation: 'fade',
+                  }}
+                />
+                <Stack.Screen
+                  name="parcours/[id]"
+                  options={{
+                    headerShown: false,
+                    presentation: 'card',
+                    animation: 'fade_from_bottom',
+                  }}
+                />
+              </Stack>
+              <StatusBar style="auto" />
+            </OverlayProvider>
+          </BottomSheetModalProvider>
+        </ProProfileProvider>
+      </AppProviders>
+    </StripeProviderWrapper>
+  );
+}
+
+export default function RootLayout() {
+  const [loaded, error] = useFonts({
+    ...FontAwesome.font,
+  });
+
+  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
+  useEffect(() => {
+    if (error) throw error;
+  }, [error]);
+
+  // Cacher le splash screen dès que les fonts sont chargées
+  useEffect(() => {
+    if (loaded) {
+      console.log('Fonts loaded, hiding native splash immediately');
+      SplashScreen.hideAsync();
+    }
+  }, [loaded]);
+
+  if (!loaded) {
+    return null;
+  }
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <QueryClientProvider client={queryClient}>
+        <RootLayoutContent />
+      </QueryClientProvider>
+    </GestureHandlerRootView>
+  );
+}
