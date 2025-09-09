@@ -1,68 +1,150 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Text } from '@/components/atoms';
+import { Stack, useRouter } from 'expo-router';
+import { Text, LoadingScreen, ErrorScreen } from '@/components/atoms';
 import { Colors, Spacing, Typography, BorderRadius, Elevation } from '@/constants/theme';
-import { ProRequestStatus, formatRequestDate, getDaysSinceRequest, getEstimatedDelay } from '@/services/pro-request-status.service';
+import { useAuth } from '@/hooks/useAuth';
+import { profileService } from '@/services/profile.service';
 
-interface ProRequestPendingScreenProps {
-  request: ProRequestStatus;
-  onContactSupport: () => void;
-  onBackToProfile: () => void;
-}
+export default function ProRequestPendingScreen() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [requestData, setRequestData] = useState<{
+    status: 'none' | 'pending' | 'approved' | 'rejected';
+    request_id?: string;
+    admin_notes?: string;
+    created_at?: string;
+    validated_at?: string;
+  } | null>(null);
 
-export default function ProRequestPendingScreen({ 
-  request, 
-  onContactSupport, 
-  onBackToProfile 
-}: ProRequestPendingScreenProps) {
-  const daysSinceRequest = getDaysSinceRequest(request.created_at);
-  const estimatedDelay = getEstimatedDelay(daysSinceRequest);
+  useEffect(() => {
+    loadRequestStatus();
+  }, []);
+
+  const loadRequestStatus = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setLoading(true);
+      const result = await profileService.getProRequestStatus(user.id);
+      
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+
+      if (result.data.status === 'none') {
+        // Pas de demande, rediriger vers become-pro
+        router.replace('/become-pro');
+        return;
+      }
+
+      setRequestData(result.data);
+    } catch (err) {
+      console.error('Erreur chargement statut demande:', err);
+      setError('Erreur lors du chargement');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleContactSupport = () => {
     Alert.alert(
       "Contacter le support",
-      "Voulez-vous contacter notre équipe support concernant votre demande ?",
-      [
-        { text: "Annuler", style: "cancel" },
-        { text: "Oui", onPress: onContactSupport }
-      ]
+      "Fonctionnalité à venir. En attendant, vous pouvez nous contacter par email.",
+      [{ text: "OK", style: "default" }]
     );
   };
 
+  const handleBackToProfile = () => {
+    router.push('/(tabs)/profile');
+  };
+
+  if (loading) {
+    return <LoadingScreen message="Chargement du statut..." />;
+  }
+
+  if (error) {
+    return (
+      <ErrorScreen 
+        error={error}
+        onRetry={loadRequestStatus}
+      />
+    );
+  }
+
+  if (!requestData || requestData.status === 'none') {
+    return (
+      <ErrorScreen 
+        error="Aucune demande trouvée"
+        message="Vous pouvez créer une nouvelle demande pour devenir professionnel."
+        onRetry={() => router.replace('/become-pro')}
+      />
+    );
+  }
+
+  // Calculer les jours depuis la demande
+  const daysSinceRequest = requestData.created_at 
+    ? Math.floor((Date.now() - new Date(requestData.created_at).getTime()) / (1000 * 60 * 60 * 24))
+    : 0;
+    
+  const estimatedDelay = daysSinceRequest < 2 
+    ? "Nous examinons généralement les demandes sous 24-48h. Votre dossier est en cours de traitement."
+    : "Votre demande prend un peu plus de temps que prévu. Notre équipe examine minutieusement votre dossier.";
+
+  const formatRequestDate = (dateString?: string) => {
+    if (!dateString) return 'Date inconnue';
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  };
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header avec gradient */}
-      <LinearGradient
-        colors={[Colors.primary.electric, Colors.primary.navy]}
-        style={styles.header}
-      >
-        <View style={styles.headerContent}>
-          <TouchableOpacity 
-            onPress={onBackToProfile}
-            style={styles.backButton}
-          >
-            <Ionicons name="arrow-back" size={24} color={Colors.neutral.white} />
-          </TouchableOpacity>
-          <Text variant="h3" color="white" weight="semiBold">
-            Demande en cours
-          </Text>
-        </View>
-        
-        <View style={styles.statusCard}>
-          <View style={styles.statusHeader}>
-            <Ionicons name="time-outline" size={24} color={Colors.neutral.white} />
-            <Text variant="h4" color="white" weight="medium" style={styles.statusTitle}>
-              En cours d'examen
+    <>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Demande en Cours',
+          headerStyle: {
+            backgroundColor: Colors.primary.electric,
+          },
+          headerTitleStyle: {
+            color: Colors.neutral.white,
+            fontWeight: '600',
+          },
+          headerLeft: () => (
+            <TouchableOpacity onPress={handleBackToProfile} style={styles.headerButton}>
+              <Ionicons name="arrow-back" size={24} color={Colors.neutral.white} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        {/* Header avec gradient */}
+        <LinearGradient
+          colors={[Colors.primary.electric, Colors.primary.navy]}
+          style={styles.header}
+        >
+          <View style={styles.statusCard}>
+            <View style={styles.statusHeader}>
+              <Ionicons name="time-outline" size={24} color={Colors.neutral.white} />
+              <Text variant="h4" color="white" weight="medium" style={styles.statusTitle}>
+                En cours d'examen
+              </Text>
+            </View>
+            <Text variant="body" color="white" style={styles.statusDescription}>
+              Votre demande pour devenir professionnel est en cours d'examen par nos équipes.
             </Text>
           </View>
-          <Text variant="body" color="white" style={styles.statusDescription}>
-            Votre demande pour devenir professionnel est en cours d'examen par nos équipes.
-          </Text>
-        </View>
-      </LinearGradient>
+        </LinearGradient>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Statut de la demande */}
@@ -77,7 +159,7 @@ export default function ProRequestPendingScreen({
           <View style={styles.infoRow}>
             <Text variant="body" color="iron">Date de soumission :</Text>
             <Text variant="body" color="charcoal" weight="medium">
-              {formatRequestDate(request.created_at)}
+              {formatRequestDate(requestData.created_at)}
             </Text>
           </View>
           
@@ -119,7 +201,7 @@ export default function ProRequestPendingScreen({
           </Text>
         </TouchableOpacity>
         
-        <TouchableOpacity onPress={onBackToProfile} style={styles.secondaryButton}>
+        <TouchableOpacity onPress={handleBackToProfile} style={styles.secondaryButton}>
           <Ionicons name="person-outline" size={20} color={Colors.neutral.charcoal} />
           <Text variant="body" color="charcoal" weight="semiBold" style={styles.buttonText}>
             Retour au profil
@@ -127,6 +209,7 @@ export default function ProRequestPendingScreen({
         </TouchableOpacity>
       </View>
     </SafeAreaView>
+    </>
   );
 }
 
@@ -241,5 +324,9 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     marginLeft: Spacing.xs,
+  },
+  headerButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
 });

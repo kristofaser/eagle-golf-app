@@ -268,7 +268,7 @@ class ProfileService extends BaseService {
   }
 
   /**
-   * Convertir un amateur en pro
+   * Créer une demande de validation pour devenir professionnel
    */
   async convertToPro(
     userId: string,
@@ -280,22 +280,91 @@ class ProfileService extends BaseService {
       id_card_front_url?: string;
       id_card_back_url?: string;
     }
-  ): Promise<ServiceResponse<boolean>> {
+  ): Promise<ServiceResponse<{ request_id: string }>> {
     try {
-      const { data, error } = await this.supabase.rpc('convert_amateur_to_pro', {
-        p_user_id: userId,
-        p_date_of_birth: proData.date_of_birth,
-        p_siret: proData.siret,
-        p_company_status: proData.company_status,
-        p_phone_number: proData.phone_number,
-        p_id_card_front_url: proData.id_card_front_url || null,
-        p_id_card_back_url: proData.id_card_back_url || null,
-      });
+      // Vérifier qu'aucune demande en cours n'existe déjà
+      const { data: existingRequest } = await this.supabase
+        .from('pro_validation_requests')
+        .select('id, status')
+        .eq('user_id', userId)
+        .in('status', ['pending', 'approved'])
+        .maybeSingle();
+
+      if (existingRequest) {
+        if (existingRequest.status === 'pending') {
+          throw new Error('Une demande de validation est déjà en cours de traitement.');
+        } else if (existingRequest.status === 'approved') {
+          throw new Error('Vous êtes déjà professionnel ou votre demande a été approuvée.');
+        }
+      }
+
+      // Créer la demande de validation dans pro_validation_requests
+      const { data: request, error } = await this.supabase
+        .from('pro_validation_requests')
+        .insert({
+          user_id: userId,
+          date_of_birth: proData.date_of_birth,
+          siret: proData.siret,
+          company_status: proData.company_status,
+          phone_number: proData.phone_number,
+          id_card_front_url: proData.id_card_front_url || null,
+          id_card_back_url: proData.id_card_back_url || null,
+          status: 'pending',
+          created_at: new Date().toISOString()
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
 
       return {
-        data: data as boolean,
+        data: { request_id: request.id },
+        error: null,
+      };
+    } catch (error: any) {
+      return {
+        data: null,
+        error: this.handleError(error),
+      };
+    }
+  }
+
+  /**
+   * Vérifier le statut de la demande de validation pro
+   */
+  async getProRequestStatus(userId: string): Promise<ServiceResponse<{
+    status: 'none' | 'pending' | 'approved' | 'rejected';
+    request_id?: string;
+    admin_notes?: string;
+    created_at?: string;
+    validated_at?: string;
+  }>> {
+    try {
+      const { data: request, error } = await this.supabase
+        .from('pro_validation_requests')
+        .select('id, status, admin_notes, created_at, validated_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!request) {
+        return {
+          data: { status: 'none' },
+          error: null,
+        };
+      }
+
+      return {
+        data: {
+          status: request.status as 'pending' | 'approved' | 'rejected',
+          request_id: request.id,
+          admin_notes: request.admin_notes,
+          created_at: request.created_at,
+          validated_at: request.validated_at,
+        },
         error: null,
       };
     } catch (error: any) {

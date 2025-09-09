@@ -433,12 +433,12 @@ export default function BecomeProScreen() {
       }
 
       Alert.alert(
-        'Demande envoyée !',
-        'Votre demande de conversion en professionnel a été envoyée. Vous recevrez une notification une fois votre demande validée.',
+        'Demande Soumise avec Succès !',
+        'Votre demande pour devenir professionnel a été envoyée à notre équipe de validation.\n\n⏱️ Délai de traitement : 24-48h\n📧 Vous recevrez une notification une fois validée.',
         [
           {
-            text: 'OK',
-            onPress: () => router.back(),
+            text: 'Compris',
+            onPress: () => router.push('/profile/pro-status'),
           },
         ]
       );

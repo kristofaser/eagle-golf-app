@@ -83,7 +83,17 @@ serve(async (req) => {
         console.error('Error deleting availabilities:', availabilitiesError);
       }
 
-      // 4. Delete amateur profile if exists
+      // 4. Delete pro validation requests if exists
+      const { error: proRequestsError } = await supabaseAdmin
+        .from('pro_validation_requests')
+        .delete()
+        .eq('user_id', userId);
+
+      if (proRequestsError) {
+        console.error('Error deleting pro validation requests:', proRequestsError);
+      }
+
+      // 5. Delete amateur profile if exists
       const { error: amateurError } = await supabaseAdmin
         .from('amateur_profiles')
         .delete()
@@ -93,7 +103,7 @@ serve(async (req) => {
         console.error('Error deleting amateur profile:', amateurError);
       }
 
-      // 5. Delete pro profile if exists
+      // 6. Delete pro profile if exists
       const { error: proError } = await supabaseAdmin
         .from('pro_profiles')
         .delete()
@@ -103,7 +113,7 @@ serve(async (req) => {
         console.error('Error deleting pro profile:', proError);
       }
 
-      // 6. Delete main profile
+      // 7. Delete main profile
       const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .delete()
@@ -113,7 +123,7 @@ serve(async (req) => {
         console.error('Error deleting profile:', profileError);
       }
 
-      // 7. Delete user from storage (profile pictures, etc.)
+      // 8. Delete user from storage (profile pictures, etc.)
       // List all files in user's folder
       const { data: files, error: listError } = await supabaseAdmin.storage
         .from('avatars')
@@ -131,7 +141,7 @@ serve(async (req) => {
         }
       }
 
-      // 8. Finally, delete the user from auth.users using admin API
+      // 9. Finally, delete the user from auth.users using admin API
       const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
       if (deleteError) {
