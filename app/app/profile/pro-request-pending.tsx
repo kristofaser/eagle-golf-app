@@ -62,7 +62,7 @@ export default function ProRequestPendingScreen() {
   };
 
   const handleBackToProfile = () => {
-    router.push('/(tabs)/profile');
+    router.push('/profile');
   };
 
   if (loading) {
