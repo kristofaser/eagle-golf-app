@@ -119,6 +119,9 @@ export default function ProRequestValidationView({
 }: ProRequestValidationViewProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState<'approve' | 'reject' | null>(null);
+  const [adminNotes, setAdminNotes] = useState('');
+  const [notesError, setNotesError] = useState('');
+  const [validationError, setValidationError] = useState('');
   const [refreshedUrls, setRefreshedUrls] = useState<{
     frontUrl: string | null;
     backUrl: string | null;
@@ -159,23 +162,56 @@ export default function ProRequestValidationView({
   }, [request]);
 
 
+  // Gérer l'approbation/rejet
   const handleSubmitValidation = async (action: 'approve' | 'reject') => {
     if (!request) return;
 
+    // Validation des notes (obligatoires)
+    if (!adminNotes.trim()) {
+      setNotesError(action === 'approve' ? 'Les notes d\'approbation sont obligatoires' : 'Le motif du rejet est obligatoire');
+      return;
+    }
+
     setIsSubmitting(true);
+    setValidationError('');
+    
     try {
       const result = action === 'approve' 
-        ? await onApprove(request.id, '')
-        : await onReject(request.id, '');
+        ? await onApprove(request.id, adminNotes.trim())
+        : await onReject(request.id, adminNotes.trim());
 
       if (result.success) {
+        // Réinitialiser les états
         setShowConfirmModal(null);
+        setAdminNotes('');
+        setNotesError('');
+        setValidationError('');
         onClose();
+      } else {
+        // Afficher l'erreur sans fermer la modal
+        setValidationError(result.message || 'Erreur lors de la validation');
       }
     } catch (error) {
       console.error('Erreur validation:', error);
+      setValidationError(error instanceof Error ? error.message : 'Erreur lors de la validation');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Réinitialiser les erreurs quand on change d'action
+  const handleOpenModal = (action: 'approve' | 'reject') => {
+    setShowConfirmModal(action);
+    setAdminNotes('');
+    setNotesError('');
+    setValidationError('');
+  };
+
+  // Gérer le changement de notes
+  const handleNotesChange = (value: string) => {
+    setAdminNotes(value);
+    if (value.trim() && notesError) {
+      setNotesError('');
     }
   };
 
@@ -392,7 +428,7 @@ export default function ProRequestValidationView({
                   <div className="max-w-2xl mx-auto">
                     <div className="flex gap-4">
                       <button
-                        onClick={() => setShowConfirmModal('approve')}
+                        onClick={() => handleOpenModal('approve')}
                         disabled={isSubmitting}
                         className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors duration-200"
                       >
@@ -401,7 +437,7 @@ export default function ProRequestValidationView({
                       </button>
                       
                       <button
-                        onClick={() => setShowConfirmModal('reject')}
+                        onClick={() => handleOpenModal('reject')}
                         disabled={isSubmitting}
                         className="flex-1 flex items-center justify-center gap-2 px-6 py-4 bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors duration-200"
                       >
@@ -423,19 +459,62 @@ export default function ProRequestValidationView({
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                {showConfirmModal === 'approve' ? 'Confirmer l\'approbation' : 'Confirmer le rejet'}
+                {showConfirmModal === 'approve' ? 'Approuver la demande' : 'Rejeter la demande'}
               </h3>
               
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 mb-4">
                 {showConfirmModal === 'approve'
-                  ? `Êtes-vous sûr de vouloir approuver la demande de ${userName} ? L'utilisateur deviendra professionnel et pourra créer des disponibilités.`
-                  : `Êtes-vous sûr de vouloir rejeter la demande de ${userName} ? L'utilisateur restera amateur et devra refaire une demande.`
+                  ? `Approuver la demande de ${userName} ? L'utilisateur deviendra professionnel et pourra créer des disponibilités.`
+                  : `Rejeter la demande de ${userName} ? L'utilisateur restera amateur et devra refaire une demande.`
                 }
               </p>
+
+              {/* Champ de notes obligatoire */}
+              <div className="mb-4">
+                <label htmlFor="admin-notes" className="block text-sm font-medium text-gray-700 mb-2">
+                  {showConfirmModal === 'approve' ? 'Notes d\'approbation' : 'Motif du rejet'} *
+                </label>
+                <textarea
+                  id="admin-notes"
+                  value={adminNotes}
+                  onChange={(e) => handleNotesChange(e.target.value)}
+                  placeholder={showConfirmModal === 'approve' 
+                    ? 'Précisez les vérifications effectuées (SIRET, pièces d\'identité, etc.)...' 
+                    : 'Expliquez pourquoi la demande est rejetée (documents manquants, informations incorrectes, etc.)...'
+                  }
+                  rows={4}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
+                    notesError ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
+                  disabled={isSubmitting}
+                  required
+                />
+                {notesError && (
+                  <p className="mt-1 text-sm text-red-600">{notesError}</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  {showConfirmModal === 'approve' 
+                    ? 'Ces notes seront conservées dans l\'historique de validation.'
+                    : 'Ces informations pourront aider l\'utilisateur à corriger sa demande.'
+                  }
+                </p>
+              </div>
+
+              {/* Affichage des erreurs de validation */}
+              {validationError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                  <p className="text-sm text-red-600">{validationError}</p>
+                </div>
+              )}
               
               <div className="flex gap-3">
                 <button
-                  onClick={() => setShowConfirmModal(null)}
+                  onClick={() => {
+                    setShowConfirmModal(null);
+                    setAdminNotes('');
+                    setNotesError('');
+                    setValidationError('');
+                  }}
                   disabled={isSubmitting}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
                 >
@@ -444,14 +523,21 @@ export default function ProRequestValidationView({
                 
                 <button
                   onClick={() => handleSubmitValidation(showConfirmModal)}
-                  disabled={isSubmitting}
-                  className={`flex-1 px-4 py-2 text-white rounded-lg font-medium transition-colors disabled:opacity-50 ${
+                  disabled={isSubmitting || !adminNotes.trim()}
+                  className={`flex-1 px-4 py-2 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                     showConfirmModal === 'approve'
-                      ? 'bg-green-600 hover:bg-green-700'
-                      : 'bg-red-600 hover:bg-red-700'
+                      ? 'bg-green-600 hover:bg-green-700 disabled:bg-gray-400'
+                      : 'bg-red-600 hover:bg-red-700 disabled:bg-gray-400'
                   }`}
                 >
-                  {isSubmitting ? 'Traitement...' : showConfirmModal === 'approve' ? 'Approuver' : 'Rejeter'}
+                  {isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Traitement...
+                    </div>
+                  ) : (
+                    showConfirmModal === 'approve' ? 'Approuver' : 'Rejeter'
+                  )}
                 </button>
               </div>
             </div>
