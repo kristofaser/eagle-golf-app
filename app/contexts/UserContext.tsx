@@ -45,32 +45,51 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         if (error) throw error;
 
         if (!profile) {
-          // 🚨 VALIDATION CONTINUE : Si profil n'existe pas, peut être supprimé par admin
+          // 🚨 DIAGNOSTIC : Profil manquant - Identifier la cause réelle
           const {
             data: { user },
           } = await supabase.auth.getUser();
           
           if (user && user.id === userId) {
-            // JWT encore valide mais pas de profil → Possiblement supprimé par admin
-            console.warn('🚨 UserContext: Profil manquant détecté, vérification suppression admin');
+            console.warn('🚨 UserContext: Profil manquant détecté pour utilisateur authentifié:', userId);
             
-            // Déclencher la déconnexion via SessionContext parent
-            try {
-              await supabase.auth.signOut();
-              console.log('✅ UserContext: Déconnexion déclenchée pour profil manquant');
+            // Vérifier si c'est un problème de création incomplète
+            const { data: authUser } = await supabase.auth.getUser();
+            const isRecentlyCreated = authUser?.user && 
+              new Date(authUser.user.created_at).getTime() > Date.now() - 10 * 60 * 1000; // 10 min
+            
+            if (isRecentlyCreated) {
+              // 🚨 NOUVEAUX COMPTES : Ne pas déconnecter immédiatement
+              // Laisser le temps à la création différée de profil amateur
+              console.warn('⏳ UserContext: Profil manquant pour nouveau compte, attente création différée...');
               
-              // Afficher message utilisateur
-              Alert.alert(
-                'Compte supprimé',
-                'Votre compte a été supprimé par un administrateur. Vous avez été déconnecté.',
-                [{ text: 'OK', style: 'default' }]
-              );
+              // Attendre un peu avant de déclencher l'erreur
+              setTimeout(() => {
+                console.warn('🔄 UserContext: Tentative de rechargement après délai création');
+                // Recharger le profil après délai
+                loadUserProfile(userId);
+              }, 2000);
               
-            } catch (error) {
-              console.error('❌ UserContext: Erreur lors de signOut:', error);
+              // Ne pas déconnecter pour l'instant, laisser la chance à la création différée
+              return null;
+            } else {
+              // Comptes anciens : comportement normal (vraie suppression admin)
+              try {
+                await supabase.auth.signOut();
+                console.log('✅ UserContext: Déconnexion déclenchée pour profil manquant (compte ancien)');
+                
+                Alert.alert(
+                  'Compte supprimé',
+                  'Votre compte a été supprimé par un administrateur. Vous avez été déconnecté.',
+                  [{ text: 'OK', style: 'default' }]
+                );
+                
+              } catch (error) {
+                console.error('❌ UserContext: Erreur lors de signOut:', error);
+              }
+              
+              return null;
             }
-            
-            return null;
           }
           
           return null;
@@ -96,7 +115,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             .from('amateur_profiles')
             .select('*')
             .eq('user_id', userId)
-            .single();
+            .maybeSingle();
 
           if (amateurProfile) {
             authUser.amateurProfile = amateurProfile;
@@ -106,7 +125,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             .from('pro_profiles')
             .select('*')
             .eq('user_id', userId)
-            .single();
+            .maybeSingle();
 
           if (proProfile) {
             authUser.proProfile = proProfile;
@@ -167,7 +186,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           })
           .eq('id', user.id)
           .select()
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
 

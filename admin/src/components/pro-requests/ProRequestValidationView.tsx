@@ -315,6 +315,74 @@ export default function ProRequestValidationView({
                       </div>
                     </div>
                   </div>
+
+                  {/* Tarifs professionnels */}
+                  {(request.price_9_holes_1_player || request.price_18_holes_1_player) && (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <h3 className="text-lg font-semibold text-gray-900">Tarifs proposés</h3>
+                      </div>
+                      
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {/* Tarifs 9 trous */}
+                          {(request.price_9_holes_1_player || request.price_9_holes_2_players || request.price_9_holes_3_players) && (
+                            <div>
+                              <h4 className="font-medium text-gray-900 mb-3">9 trous</h4>
+                              <div className="space-y-2 text-sm">
+                                {request.price_9_holes_1_player && (
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">1 joueur:</span>
+                                    <span className="font-medium text-gray-900">{(request.price_9_holes_1_player / 100).toFixed(2)} €</span>
+                                  </div>
+                                )}
+                                {request.price_9_holes_2_players && (
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">2 joueurs:</span>
+                                    <span className="font-medium text-gray-900">{(request.price_9_holes_2_players / 100).toFixed(2)} € / pers</span>
+                                  </div>
+                                )}
+                                {request.price_9_holes_3_players && (
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">3 joueurs:</span>
+                                    <span className="font-medium text-gray-900">{(request.price_9_holes_3_players / 100).toFixed(2)} € / pers</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Tarifs 18 trous */}
+                          {(request.price_18_holes_1_player || request.price_18_holes_2_players || request.price_18_holes_3_players) && (
+                            <div>
+                              <h4 className="font-medium text-gray-900 mb-3">18 trous</h4>
+                              <div className="space-y-2 text-sm">
+                                {request.price_18_holes_1_player && (
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">1 joueur:</span>
+                                    <span className="font-medium text-gray-900">{(request.price_18_holes_1_player / 100).toFixed(2)} €</span>
+                                  </div>
+                                )}
+                                {request.price_18_holes_2_players && (
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">2 joueurs:</span>
+                                    <span className="font-medium text-gray-900">{(request.price_18_holes_2_players / 100).toFixed(2)} € / pers</span>
+                                  </div>
+                                )}
+                                {request.price_18_holes_3_players && (
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">3 joueurs:</span>
+                                    <span className="font-medium text-gray-900">{(request.price_18_holes_3_players / 100).toFixed(2)} € / pers</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               

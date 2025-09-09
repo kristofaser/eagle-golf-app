@@ -422,6 +422,13 @@ export default function BecomeProScreen() {
         phone_number: formData.phoneNumber.replace(/\s/g, ''), // Enlever les espaces pour la DB
         id_card_front_url: formData.idCardFrontUrl,
         id_card_back_url: formData.idCardBackUrl,
+        // Tarifs en centimes pour la base de données
+        price_9_holes_1_player: formData.price9Holes1Player ? parseFloat(formData.price9Holes1Player) * 100 : undefined,
+        price_9_holes_2_players: formData.price9Holes2Players ? parseFloat(formData.price9Holes2Players) * 100 : undefined,
+        price_9_holes_3_players: formData.price9Holes3Players ? parseFloat(formData.price9Holes3Players) * 100 : undefined,
+        price_18_holes_1_player: formData.price18Holes1Player ? parseFloat(formData.price18Holes1Player) * 100 : undefined,
+        price_18_holes_2_players: formData.price18Holes2Players ? parseFloat(formData.price18Holes2Players) * 100 : undefined,
+        price_18_holes_3_players: formData.price18Holes3Players ? parseFloat(formData.price18Holes3Players) * 100 : undefined,
       };
 
       // Appel au service

@@ -79,6 +79,13 @@ export interface ProValidationRequestWithDetails extends ProValidationRequest {
     last_name: string;
     email: string;
   };
+  // Tarifs optionnels en centimes
+  price_9_holes_1_player?: number | null;
+  price_9_holes_2_players?: number | null;
+  price_9_holes_3_players?: number | null;
+  price_18_holes_1_player?: number | null;
+  price_18_holes_2_players?: number | null;
+  price_18_holes_3_players?: number | null;
 }
 
 export interface ProRequestFilters {

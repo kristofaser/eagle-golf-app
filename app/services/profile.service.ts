@@ -279,6 +279,12 @@ class ProfileService extends BaseService {
       phone_number: string;
       id_card_front_url?: string;
       id_card_back_url?: string;
+      price_9_holes_1_player?: number;
+      price_9_holes_2_players?: number;
+      price_9_holes_3_players?: number;
+      price_18_holes_1_player?: number;
+      price_18_holes_2_players?: number;
+      price_18_holes_3_players?: number;
     }
   ): Promise<ServiceResponse<{ request_id: string }>> {
     try {
@@ -309,6 +315,12 @@ class ProfileService extends BaseService {
           phone_number: proData.phone_number,
           id_card_front_url: proData.id_card_front_url || null,
           id_card_back_url: proData.id_card_back_url || null,
+          price_9_holes_1_player: proData.price_9_holes_1_player || null,
+          price_9_holes_2_players: proData.price_9_holes_2_players || null,
+          price_9_holes_3_players: proData.price_9_holes_3_players || null,
+          price_18_holes_1_player: proData.price_18_holes_1_player || null,
+          price_18_holes_2_players: proData.price_18_holes_2_players || null,
+          price_18_holes_3_players: proData.price_18_holes_3_players || null,
           status: 'pending',
           created_at: new Date().toISOString()
         })

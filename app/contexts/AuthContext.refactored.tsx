@@ -42,34 +42,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = useCallback(async (email: string) => {
     try {
       const result = await authOperation.execute(async () => {
-        // 🚨 VALIDATION PRÉ-OTP : Vérifier si le profil utilisateur existe
-        console.log('🔍 AuthContext: Vérification existence profil pour:', email);
-        
-        try {
-          const { data: existingProfile, error: profileError } = await supabase
-            .from('profiles')
-            .select('email, id')
-            .eq('email', email.toLowerCase())
-            .maybeSingle();
-
-          if (profileError) {
-            console.error('❌ AuthContext: Erreur lors de la vérification profil:', profileError);
-            // En cas d'erreur réseau, continuer avec la procédure normale
-          } else if (!existingProfile) {
-            // Pas de profil trouvé → Compte inexistant ou supprimé
-            console.warn('🚨 AuthContext: Aucun profil trouvé pour:', email);
-            throw new Error('Aucun compte trouvé avec cette adresse email. Vérifiez votre email ou créez un nouveau compte.');
-          } else {
-            console.log('✅ AuthContext: Profil trouvé pour:', email, 'ID:', existingProfile.id);
-          }
-        } catch (profileValidationError) {
-          // Si c'est notre erreur personnalisée, la re-lancer
-          if (profileValidationError.message.includes('Aucun compte trouvé')) {
-            throw profileValidationError;
-          }
-          // Sinon, logger et continuer (problème réseau)
-          console.warn('⚠️ AuthContext: Impossible de valider le profil, continuant:', profileValidationError);
-        }
+        // 🚨 VALIDATION PAR OTP SUFFISANTE
+        // L'OTP valide déjà que l'email existe et est contrôlé par l'utilisateur
+        console.log('🔍 AuthContext: Procédure OTP pour:', email);
 
         // Procédure OTP normale si profil existe ou en cas d'erreur réseau
         const { error } = await supabase.auth.signInWithOtp({
@@ -239,6 +214,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               first_name: userData.first_name || '',
               last_name: userData.last_name || '',
               user_type: userData.user_type || 'amateur',
+              email: email, // Ajouter l'email pour éviter les valeurs null
             };
 
             const { error: profileError } = await supabase.from('profiles').insert(profileData);
@@ -250,30 +226,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 throw profileError;
               }
             } else {
-              // Créer le profil amateur par défaut seulement si le profil principal a été créé
-              if (userData.user_type === 'amateur' || !userData.user_type) {
+              console.log('✅ Profil principal créé, profil amateur sera créé en différé après établissement JWT');
+            }
+          }
+
+          // D'abord définir la session pour établir le contexte JWT
+          setSession(data.session);
+
+          // Attendre que la session soit établie avant de créer le profil amateur
+          if (userData.user_type === 'amateur' || !userData.user_type) {
+            // Petit délai pour s'assurer que le JWT context est établi
+            setTimeout(async () => {
+              try {
+                console.log('🔄 Création différée du profil amateur avec contexte JWT établi');
                 const { error: amateurError } = await supabase.from('amateur_profiles').insert({
                   user_id: data.user.id,
                 });
 
                 if (amateurError && amateurError.code !== '23505') {
-                  console.error('Erreur création profil amateur:', amateurError);
+                  console.error('❌ Erreur création profil amateur différée:', amateurError);
+                  // Ne pas throw ici car on est dans un setTimeout
+                  Alert.alert(
+                    'Erreur de profil', 
+                    'Votre profil principal a été créé mais le profil amateur a échoué. Contactez le support.'
+                  );
+                } else {
+                  console.log('✅ Profil amateur créé avec succès en mode différé');
                 }
+              } catch (error) {
+                console.error('❌ Erreur lors de la création différée:', error);
               }
-            }
+            }, 1000);
           }
 
-          // D'abord définir la session
-          setSession(data.session);
-
-          // Ensuite charger le profil avec un délai pour s'assurer que la création est terminée
+          // Charger le profil avec un délai pour s'assurer que la création est terminée
           setTimeout(async () => {
             try {
               await loadUserProfile(data.user.id);
             } catch (error) {
               console.error('Erreur chargement profil après OTP:', error);
             }
-          }, 500);
+          }, 1500); // Délai plus long pour attendre la création amateur
         }
 
         return { user: data.user, session: data.session };
