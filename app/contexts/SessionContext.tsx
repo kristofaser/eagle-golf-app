@@ -36,9 +36,11 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   // Flag de sécurité pour désactiver en cas de problème
   const ENABLE_REALTIME_DELETION = !process.env.JEST_WORKER_ID && process.env.NODE_ENV !== 'test';
   
-  if (ENABLE_REALTIME_DELETION) {
-    useUserDeletionRealtime(state.session?.user?.id, {
-      debug: __DEV__,
+  // Utiliser le hook correctement (toujours appelé, mais avec userId conditionnel)
+  useUserDeletionRealtime(
+    ENABLE_REALTIME_DELETION ? state.session?.user?.id : null,
+    {
+      debug: false, // Désactiver les logs verbose
       onUserDeleted: async () => {
         console.log('🚨 Realtime SessionContext: Utilisateur supprimé détecté, déconnexion...');
         
@@ -65,8 +67,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
           console.log('✅ Realtime SessionContext: Session forcée à null (fallback)');
         }
       }
-    });
-  }
+    }
+  );
 
   // Initialiser et écouter les changements de session
   useEffect(() => {

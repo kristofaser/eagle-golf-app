@@ -166,12 +166,26 @@ export function useUserDeletionRealtime(
       return;
     }
     
-    // Éviter les subscriptions multiples
-    if (isSubscribedRef.current && channelRef.current) {
+    // Éviter les subscriptions multiples pour le même userId
+    // Utiliser une ref stable pour comparer
+    const currentChannelName = channelRef.current?.topic;
+    const expectedChannelPrefix = `user-deletion-${userId}`;
+    
+    if (currentChannelName?.startsWith(expectedChannelPrefix) && isSubscribedRef.current) {
       if (debug) {
-        console.log('⏭️ Realtime User Deletion: Subscription déjà active');
+        console.log('⏭️ Realtime User Deletion: Subscription déjà active pour cet userId');
       }
       return;
+    }
+    
+    // Nettoyer l'ancienne subscription si elle existe (changement d'userId)
+    if (channelRef.current) {
+      if (debug) {
+        console.log('🔌 Realtime User Deletion: Nettoyage subscription précédente (changement userId)');
+      }
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+      isSubscribedRef.current = false;
     }
     
     if (debug) {

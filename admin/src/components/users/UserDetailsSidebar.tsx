@@ -3,6 +3,7 @@
 import { X, User, Mail, Phone, MapPin, Calendar, Shield, Briefcase, Trophy, Clock, CreditCard, Star, UserCheck, Trash2, Ban } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import ProAvailabilitiesSection from './ProAvailabilitiesSection';
 
 interface UserDetailsSidebarProps {
   user: any;
@@ -267,26 +268,8 @@ function ProfessionalContent({ user }: { user: any }) {
         </div>
       </div>
 
-      {/* Disponibilités */}
-      <div className="mb-6">
-        <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
-          Créneaux hebdomadaires
-        </h3>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Lundi - Vendredi</span>
-            <span className="text-gray-900">09:00 - 18:00</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Samedi</span>
-            <span className="text-gray-900">08:00 - 16:00</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Dimanche</span>
-            <span className="text-gray-400">Fermé</span>
-          </div>
-        </div>
-      </div>
+      {/* Disponibilités réelles */}
+      <ProAvailabilitiesSection proId={user.id} />
 
       {/* Actions */}
       <div className="space-y-2">
