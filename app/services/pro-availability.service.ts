@@ -16,7 +16,7 @@ export interface ProAvailability {
 }
 
 export interface ProAvailabilityWithCourse extends ProAvailability {
-  golf_courses: GolfParcours;
+  golf_parcours: GolfParcours;
 }
 
 export interface ProAvailabilityGroup {
@@ -35,7 +35,7 @@ export const proAvailabilityService = {
         .from('pro_availabilities')
         .select(`
           *,
-          golf_courses:golf_parcours(*)
+          golf_parcours:golf_parcours(*)
         `)
         .eq('pro_id', proId)
         .gte('date', new Date().toISOString().split('T')[0]) // Dates futures uniquement
@@ -55,7 +55,7 @@ export const proAvailabilityService = {
 
       data.forEach((availability) => {
         const courseId = availability.golf_course_id;
-        const course = availability.golf_courses;
+        const course = availability.golf_parcours;
 
         if (!grouped.has(courseId)) {
           grouped.set(courseId, {

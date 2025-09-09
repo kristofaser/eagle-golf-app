@@ -233,7 +233,7 @@ export function ProProfile({ profile, onRefresh }: ProProfileProps) {
                         <View style={styles.bookingInfo}>
                           <Ionicons name="location-outline" size={16} color={Colors.neutral.iron} />
                           <Text variant="caption" color="iron" numberOfLines={1}>
-                            {booking.golf_courses?.name || 'Golf Course'}
+                            {booking.golf_parcours?.name || 'Golf Course'}
                           </Text>
                         </View>
                         <View style={styles.bookingInfo}>

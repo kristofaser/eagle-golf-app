@@ -96,7 +96,7 @@ class ProfileAggregatedService {
         pro_profiles!left (*),
         amateur_profiles!left (
           *,
-          golf_courses!left (*)
+          golf_parcours!left (*)
         )
       `
       )
@@ -120,7 +120,7 @@ class ProfileAggregatedService {
       .select(
         `
         *,
-        golf_courses!left (
+        golf_parcours!left (
           id,
           name,
           city

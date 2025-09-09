@@ -89,7 +89,7 @@ export function AmateurProfile({ profile, onRefresh }: AmateurProfileProps) {
     pastBookings.length > 0
       ? pastBookings.reduce(
           (acc, booking) => {
-            const course = booking.golf_courses?.name || 'Golf Course';
+            const course = booking.golf_parcours?.name || 'Golf Course';
             acc[course] = (acc[course] || 0) + 1;
             return acc;
           },
@@ -199,7 +199,7 @@ export function AmateurProfile({ profile, onRefresh }: AmateurProfileProps) {
                           strokeWidth={2}
                         />
                         <Text variant="caption" color="charcoal" style={styles.courseName}>
-                          {booking.golf_courses?.name || 'Golf Course'}
+                          {booking.golf_parcours?.name || 'Golf Course'}
                         </Text>
                       </View>
 
