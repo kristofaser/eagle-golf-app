@@ -28,8 +28,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // const [loading, setLoading] = useState(true);
   // const [error, setError] = useState<Error | null>(null);
 
-  // ✅ APRÈS : Hook unifié
-  const userOperation = useAsyncOperation<AuthUser>();
+  // ✅ APRÈS : Hooks unifiés pour chaque opération
+  const userOperation = useAsyncOperation<AuthUser | null>();
+  const updateOperation = useAsyncOperation<Profile | null>();
+  const deleteOperation = useAsyncOperation<boolean>();
 
   // Fonction interne pour charger le profil (stable pour éviter la boucle)
   const loadUserProfileInternal = useCallback(
@@ -63,14 +65,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               // Laisser le temps à la création différée de profil amateur
               console.warn('⏳ UserContext: Profil manquant pour nouveau compte, attente création différée...');
               
-              // Attendre un peu avant de déclencher l'erreur
-              setTimeout(() => {
-                console.warn('🔄 UserContext: Tentative de rechargement après délai création');
-                // Recharger le profil après délai
-                loadUserProfile(userId);
-              }, 2000);
-              
               // Ne pas déconnecter pour l'instant, laisser la chance à la création différée
+              // Le profil sera rechargé automatiquement via l'effet dans SessionContext
               return null;
             } else {
               // Comptes anciens : comportement normal (vraie suppression admin)
@@ -175,7 +171,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   // Mise à jour du profil
   const updateProfile = useCallback(
     async (updates: Partial<Profile>) => {
-      const result = await userOperation.execute(async () => {
+      const result = await updateOperation.execute(async () => {
         if (!user?.id) throw new Error('Utilisateur non connecté');
 
         const { data, error } = await supabase
@@ -197,17 +193,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       if (result) {
         Alert.alert('Succès', 'Profil mis à jour');
-      } else if (userOperation.error) {
-        Alert.alert('Erreur', userOperation.error.message);
-        throw userOperation.error;
+      } else if (updateOperation.error) {
+        Alert.alert('Erreur', updateOperation.error.message);
+        throw updateOperation.error;
       }
     },
-    [user?.id, loadUserProfile]
+    [user?.id, loadUserProfile, updateOperation]
   );
 
   // Supprimer le compte utilisateur
   const deleteAccount = useCallback(async () => {
-    const result = await userOperation.execute(async () => {
+    const result = await deleteOperation.execute(async () => {
       if (!user?.id) throw new Error('Utilisateur non connecté');
 
       // Récupérer le token de session
@@ -246,15 +242,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         'Compte supprimé',
         'Votre compte et toutes vos données ont été supprimés définitivement.'
       );
-    } else if (userOperation.error) {
-      Alert.alert('Erreur', userOperation.error.message || 'Impossible de supprimer le compte');
-      throw userOperation.error;
+    } else if (deleteOperation.error) {
+      Alert.alert('Erreur', deleteOperation.error.message || 'Impossible de supprimer le compte');
+      throw deleteOperation.error;
     }
-  }, [user?.id, setUser]);
+  }, [user?.id, setUser, deleteOperation]);
 
   const value: UserContextValue = {
-    loading: userOperation.loading,
-    error: userOperation.error,
+    loading: userOperation.loading || updateOperation.loading || deleteOperation.loading,
+    error: userOperation.error || updateOperation.error || deleteOperation.error,
     loadUserProfile,
     updateProfile,
     deleteAccount,
