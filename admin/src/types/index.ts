@@ -5,7 +5,7 @@ export type Profile = Tables<'profiles'>;
 export type ProProfile = Tables<'pro_profiles'>;
 export type AmateurProfile = Tables<'amateur_profiles'>;
 export type Booking = Tables<'bookings'>;
-export type GolfCourse = Tables<'golf_courses'>;
+export type GolfParcours = Tables<'golf_parcours'>;
 export type Payment = Tables<'payments'>;
 export type Review = Tables<'reviews'>;
 export type ProAvailability = Tables<'pro_availabilities'>;
@@ -21,7 +21,7 @@ export type FullProfile = Profile & {
 export type BookingWithDetails = Booking & {
   profiles?: Profile;
   pro_profiles?: ProProfile;
-  golf_courses?: GolfCourse;
+  golf_parcours?: GolfParcours;
   amateur?: Profile;
 };
 

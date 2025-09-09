@@ -12,7 +12,7 @@ export type BookingWithDetails = WithDetails<
     pro_profile: Tables<'pro_profiles'> & {
       profile: Tables<'profiles'>;
     };
-    golf_courses: Tables<'golf_parcours'>;
+    golf_parcours: Tables<'golf_parcours'>;
   }
 >;
 
@@ -21,7 +21,7 @@ export type AvailabilityWithDetails = WithDetails<
   {
     profiles: Tables<'profiles'>;
     pro_profiles: Tables<'pro_profiles'>;
-    golf_courses: Tables<'golf_parcours'>;
+    golf_parcours: Tables<'golf_parcours'>;
   }
 >;
 
@@ -222,7 +222,7 @@ class BookingService extends BaseService {
       // Combiner les données
       const result = {
         ...booking,
-        golf_courses: golfData
+        golf_parcours: golfData
       } as BookingWithDetails;
 
       return {
@@ -316,7 +316,7 @@ class BookingService extends BaseService {
       // Combiner les données
       const result = bookings?.map(booking => ({
         ...booking,
-        golf_courses: golfData[booking.golf_course_id] || null
+        golf_parcours: golfData[booking.golf_course_id] || null
       })) as BookingWithDetails[];
 
       return {
@@ -463,7 +463,7 @@ class BookingService extends BaseService {
       // Combiner les données
       let result = availabilities?.map(availability => ({
         ...availability,
-        golf_courses: golfData[availability.golf_course_id] || null
+        golf_parcours: golfData[availability.golf_course_id] || null
       })) as AvailabilityWithDetails[];
 
       // Filtrer côté client si hasSlots est défini

@@ -50,7 +50,7 @@ export const amateurAvailabilityService = {
           max_players,
           current_bookings,
           golf_course_id,
-          golf_courses:golf_parcours(name)
+          golf_parcours:golf_parcours(name)
         `)
         .eq('pro_id', proId)
         .gte('date', startDate)
@@ -77,7 +77,7 @@ export const amateurAvailabilityService = {
           is_booked: avail.current_bookings >= avail.max_players,
           booking_id: null, // Les bookings individuels ne bloquent plus toute la journée
           golf_course_id: avail.golf_course_id,
-          golf_course_name: avail.golf_courses?.name,
+          golf_course_name: avail.golf_parcours?.name,
         }));
 
       return { data: transformedData, error: null };

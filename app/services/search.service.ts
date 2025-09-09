@@ -159,8 +159,8 @@ class SearchService extends BaseService {
       // Récupérer les parcours uniques
       const uniqueCourses = new Map<string, any>();
       availabilities.forEach((avail) => {
-        if (avail.golf_courses && !uniqueCourses.has(avail.golf_course_id)) {
-          uniqueCourses.set(avail.golf_course_id, avail.golf_courses);
+        if (avail.golf_parcours && !uniqueCourses.has(avail.golf_course_id)) {
+          uniqueCourses.set(avail.golf_course_id, avail.golf_parcours);
         }
       });
 
