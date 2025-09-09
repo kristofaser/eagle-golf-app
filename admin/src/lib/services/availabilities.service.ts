@@ -10,8 +10,9 @@ export interface ProAvailability {
   max_players: number;
   current_bookings: number;
   is_available: boolean;
-  golf_course?: {
+  golf_parcours?: {
     name: string;
+    city: string;
   };
 }
 
@@ -41,8 +42,9 @@ export const availabilitiesService = {
           max_players,
           current_bookings,
           is_available,
-          golf_courses!golf_course_id (
-            name
+          golf_parcours!golf_course_id (
+            name,
+            city
           )
         `)
         .eq('pro_id', proId)

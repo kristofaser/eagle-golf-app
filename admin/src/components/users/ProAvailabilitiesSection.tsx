@@ -16,8 +16,9 @@ interface ProAvailability {
   max_players: number;
   current_bookings: number;
   is_available: boolean;
-  golf_courses?: {
+  golf_parcours?: {
     name: string;
+    city: string;
   };
 }
 
@@ -119,11 +120,12 @@ export default function ProAvailabilitiesSection({ proId }: ProAvailabilitiesSec
                 </div>
 
                 {/* Parcours si disponible */}
-                {availability.golf_courses?.name && (
+                {availability.golf_parcours?.name && (
                   <div className="flex items-center gap-1 mt-1">
                     <MapPin className="h-3 w-3 text-gray-400" />
                     <span className="text-xs text-gray-500">
-                      {availability.golf_courses.name}
+                      {availability.golf_parcours.name}
+                      {availability.golf_parcours.city && ` - ${availability.golf_parcours.city}`}
                     </span>
                   </div>
                 )}
