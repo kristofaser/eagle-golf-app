@@ -177,7 +177,7 @@ export default function ProRequestValidationView({
     
     try {
       const result = action === 'approve' 
-        ? await onApprove(request.id, adminNotes.trim())
+        ? await onApprove(request.id, '') // Pas de notes pour l'approbation
         : await onReject(request.id, adminNotes.trim());
 
       if (result.success) {
@@ -469,36 +469,32 @@ export default function ProRequestValidationView({
                 }
               </p>
 
-              {/* Champ de notes obligatoire */}
-              <div className="mb-4">
-                <label htmlFor="admin-notes" className="block text-sm font-medium text-gray-700 mb-2">
-                  {showConfirmModal === 'approve' ? 'Notes d\'approbation' : 'Motif du rejet'} {showConfirmModal === 'reject' && '*'}
-                </label>
-                <textarea
-                  id="admin-notes"
-                  value={adminNotes}
-                  onChange={(e) => handleNotesChange(e.target.value)}
-                  placeholder={showConfirmModal === 'approve' 
-                    ? 'Optionnel : précisez les vérifications effectuées (SIRET, pièces d\'identité, etc.)...' 
-                    : 'Expliquez pourquoi la demande est rejetée (documents manquants, informations incorrectes, etc.)...'
-                  }
-                  rows={4}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
-                    notesError ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
-                  disabled={isSubmitting}
-                  required={showConfirmModal === 'reject'}
-                />
-                {notesError && (
-                  <p className="mt-1 text-sm text-red-600">{notesError}</p>
-                )}
-                <p className="mt-1 text-xs text-gray-500">
-                  {showConfirmModal === 'approve' 
-                    ? 'Optionnel : ces notes seront conservées dans l\'historique de validation.'
-                    : 'Obligatoire : ces informations pourront aider l\'utilisateur à corriger sa demande.'
-                  }
-                </p>
-              </div>
+              {/* Champ de notes obligatoire pour le rejet uniquement */}
+              {showConfirmModal === 'reject' && (
+                <div className="mb-4">
+                  <label htmlFor="admin-notes" className="block text-sm font-medium text-gray-700 mb-2">
+                    Motif du rejet *
+                  </label>
+                  <textarea
+                    id="admin-notes"
+                    value={adminNotes}
+                    onChange={(e) => handleNotesChange(e.target.value)}
+                    placeholder="Expliquez pourquoi la demande est rejetée (documents manquants, informations incorrectes, etc.)..."
+                    rows={4}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
+                      notesError ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
+                    disabled={isSubmitting}
+                    required
+                  />
+                  {notesError && (
+                    <p className="mt-1 text-sm text-red-600">{notesError}</p>
+                  )}
+                  <p className="mt-1 text-xs text-gray-500">
+                    Ces informations pourront aider l'utilisateur à corriger sa demande.
+                  </p>
+                </div>
+              )}
 
               {/* Affichage des erreurs de validation */}
               {validationError && (
