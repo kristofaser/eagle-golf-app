@@ -172,9 +172,7 @@ const styles = StyleSheet.create({
   },
   monthBadgesContainer: {
     marginTop: Spacing.m,
-    paddingTop: Spacing.m,
-    borderTopWidth: 1,
-    borderTopColor: Colors.neutral.mist,
+    paddingTop: Spacing.s,
   },
   monthBadgesScroll: {
     paddingHorizontal: Spacing.xs,
