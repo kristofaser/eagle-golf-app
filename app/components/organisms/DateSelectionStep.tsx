@@ -31,17 +31,20 @@ export const DateSelectionStep = memo(function DateSelectionStep({
     const months = new Map<string, { month: number; year: number; name: string }>();
     
     // Parcourir toutes les dates marquées
-    Object.keys(markedDates).forEach(dateString => {
-      const date = new Date(dateString);
-      const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
-      
-      if (!months.has(monthKey)) {
-        const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-        months.set(monthKey, {
-          month: date.getMonth(),
-          year: date.getFullYear(),
-          name: `${monthNames[date.getMonth()]} ${date.getFullYear()}`
-        });
+    Object.keys(markedDates || {}).forEach(dateString => {
+      // Vérifier que la date a bien une disponibilité (customStyles défini)
+      if (markedDates[dateString]?.customStyles) {
+        const date = new Date(dateString);
+        const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+        
+        if (!months.has(monthKey)) {
+          const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+          months.set(monthKey, {
+            month: date.getMonth(),
+            year: date.getFullYear(),
+            name: `${monthNames[date.getMonth()]} ${date.getFullYear()}`
+          });
+        }
       }
     });
     
@@ -56,8 +59,11 @@ export const DateSelectionStep = memo(function DateSelectionStep({
   const initialMonth = useMemo(() => {
     if (monthsWithAvailability.length > 0) {
       const firstMonth = monthsWithAvailability[0];
-      const date = new Date(firstMonth.year, firstMonth.month, 1);
-      return date.toISOString().split('T')[0];
+      // Ajouter 1 au mois car le Calendar component attend des mois de 1-12
+      const year = firstMonth.year;
+      const month = String(firstMonth.month + 1).padStart(2, '0');
+      const result = `${year}-${month}-01`;
+      return result;
     }
     return undefined;
   }, [monthsWithAvailability]);
@@ -73,8 +79,10 @@ export const DateSelectionStep = memo(function DateSelectionStep({
 
   // Fonction pour naviguer vers un mois spécifique
   const navigateToMonth = (month: number, year: number) => {
-    const date = new Date(year, month, 1);
-    setCurrentMonth(date.toISOString().split('T')[0]);
+    // month est déjà en format 0-11, on doit le convertir en format YYYY-MM-DD
+    const monthStr = String(month + 1).padStart(2, '0');
+    const dateStr = `${year}-${monthStr}-01`;
+    setCurrentMonth(dateStr);
   };
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
@@ -130,7 +138,7 @@ export const DateSelectionStep = memo(function DateSelectionStep({
         />
         
         {/* Badges de navigation par mois */}
-        {monthsWithAvailability.length > 1 && (
+        {monthsWithAvailability.length > 0 && (
           <View style={styles.monthBadgesContainer}>
             <ScrollView 
               horizontal 
