@@ -22,7 +22,8 @@ export function ProPricingDisplay({ proId }: ProPricingDisplayProps) {
 
   const getPrice = (holes: number, players: number): string => {
     const price = prices.find((p) => p.holes === holes && p.players_count === players);
-    return price ? `${price.price / 100}€` : '-';
+    // Les prix sont déjà en euros depuis le service (conversion faite dans getProPricing)
+    return price ? `${price.price}€` : '-';
   };
 
   if (loading) {
