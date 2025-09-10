@@ -88,20 +88,6 @@ export const DateSelectionStep = memo(function DateSelectionStep({
     <ScrollView showsVerticalScrollIndicator={false}>
       {/* Calendrier */}
       <View style={styles.section}>
-        <Text variant="body" weight="semiBold" color="charcoal" style={styles.sectionTitle}>
-          Choisissez une date
-        </Text>
-
-        {/* Légende */}
-        <View style={styles.calendarLegend}>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendCircle, { backgroundColor: Colors.semantic.success }]} />
-            <Text variant="caption" color="iron">
-              Disponible
-            </Text>
-          </View>
-        </View>
-
         <Calendar
           markedDates={markedDates}
           markingType="custom"
@@ -183,26 +169,6 @@ const styles = StyleSheet.create({
   section: {
     paddingHorizontal: Spacing.m,
     paddingVertical: Spacing.m,
-  },
-  sectionTitle: {
-    marginBottom: Spacing.s,
-  },
-  calendarLegend: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginBottom: Spacing.s,
-    paddingHorizontal: Spacing.xs,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: Spacing.m,
-  },
-  legendCircle: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: Spacing.xs,
   },
   monthBadgesContainer: {
     marginTop: Spacing.m,
