@@ -143,9 +143,7 @@ export default function BookProScreen() {
   const { data: pricing = [], isLoading: isLoadingPricing } = useQuery({
     queryKey: ['proPricing', proId],
     queryFn: async () => {
-      console.log('Loading pricing for proId:', proId);
       const proPricing = await pricingService.getProPricing(proId as string);
-      console.log('Pricing loaded:', proPricing);
       return proPricing || [];
     },
     enabled: !!proId,
@@ -172,12 +170,6 @@ export default function BookProScreen() {
       const endDate = new Date();
       endDate.setMonth(endDate.getMonth() + 3); // 3 mois pour correspondre aux disponibilités
 
-      console.log('📚 Chargement réservations pour pro:', {
-        proId,
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: endDate.toISOString().split('T')[0],
-      });
-
       // Récupérer toutes les réservations confirmées ET pending
       const { data, error } = await bookingService.listBookings({
         userId: proId as string,
@@ -195,12 +187,6 @@ export default function BookProScreen() {
       const filteredBookings = (data || []).filter(
         (booking) => booking.status === 'confirmed' || booking.status === 'pending'
       );
-
-      console.log('📋 Réservations trouvées:', {
-        total: data?.length || 0,
-        filtered: filteredBookings.length,
-        dates: filteredBookings.map((b) => ({ date: b.booking_date, status: b.status })),
-      });
 
       return filteredBookings;
     },
@@ -343,19 +329,13 @@ export default function BookProScreen() {
 
   // ✅ REFACTORISÉ - handlePaymentSuccess sans double paymentOperation.execute
   const handlePaymentSuccess = async (paymentIntentId: string) => {
-    console.log('🎯 handlePaymentSuccess appelé avec:', paymentIntentId);
-    
     if (!user) {
       console.error('❌ Aucun utilisateur connecté');
       Alert.alert('Erreur', 'Vous devez être connecté pour réserver');
       return;
     }
 
-    console.log('👤 Utilisateur connecté:', user.id);
-
     try {
-      console.log('🔄 Début du processus de création de réservation...');
-      
       // Récupérer l'ID du profil de l'utilisateur depuis la table profiles
       const { data: userProfile } = await profileService.getProfile(user.id);
       if (!userProfile) {
@@ -463,16 +443,11 @@ export default function BookProScreen() {
       } else {
         console.warn('⚠️ Aucun parcours sélectionné pour incrémenter le compteur');
       }
-
-      console.log('✅ Réservation créée avec succès, ID:', newBookingId);
-      console.log('🎯 Mise à jour de l\'état vers étape 5...');
       
       // Mettre à jour l'état immédiatement
       bookingState.setBookingId(newBookingId);
       bookingState.setBookingConfirmed(false); // En attente de validation admin
       bookingState.setCurrentStep(5);
-
-      console.log('✅ État mis à jour vers étape 5');
 
       // Afficher le message de succès
       Alert.alert(
@@ -501,8 +476,6 @@ export default function BookProScreen() {
     }
 
     await paymentOperation.execute(async () => {
-      console.log('🔥 Début du processus de paiement...');
-      
       // Créer le Payment Intent via notre service
       const response = await paymentService.createPaymentIntent({
         amount: priceCalculation.calculatedPrice * 100,
@@ -520,8 +493,6 @@ export default function BookProScreen() {
         console.error('❌ Erreur création Payment Intent:', response.error);
         throw new Error(response.error);
       }
-
-      console.log('✅ Payment Intent créé:', response.payment_intent_id);
 
       // Initialiser le Payment Sheet
       const { error } = await initPaymentSheet({
@@ -545,14 +516,11 @@ export default function BookProScreen() {
         throw new Error(error.message);
       }
 
-      console.log('✅ Payment Sheet initialisé');
-
       // Présenter le Payment Sheet
       const { error: paymentError } = await presentPaymentSheet();
 
       if (paymentError) {
         if (paymentError.code === 'Canceled') {
-          console.log('ℹ️ Paiement annulé par l\'utilisateur');
           return null; // Retourner null pour l'annulation
         } else {
           console.error('❌ Erreur Payment Sheet:', paymentError.message);
@@ -560,26 +528,16 @@ export default function BookProScreen() {
         }
       }
 
-      console.log('✅ Paiement réussi, retour de l\'ID:', response.payment_intent_id);
       // Paiement réussi - retourner l'ID pour handlePaymentSuccess
       return response.payment_intent_id;
     });
 
     // Gérer le résultat
-    console.log('📊 Résultat paiement:', { 
-      data: paymentOperation.data, 
-      error: paymentOperation.error,
-      hasData: !!paymentOperation.data 
-    });
-
     if (paymentOperation.data) {
-      console.log('🎯 Appel handlePaymentSuccess avec ID:', paymentOperation.data);
       await handlePaymentSuccess(paymentOperation.data);
     } else if (paymentOperation.error) {
       console.error('❌ Erreur paiement détectée:', paymentOperation.error.message);
       handlePaymentError(paymentOperation.error.message || 'Erreur lors du paiement');
-    } else {
-      console.log('ℹ️ Aucune donnée ni erreur - probablement annulé');
     }
   };
 
@@ -634,14 +592,8 @@ export default function BookProScreen() {
     const marked: any = {};
 
     if (!proDailyAvailabilities || proDailyAvailabilities.length === 0) {
-      console.log('📅 Aucune disponibilité journalière trouvée');
       return marked;
     }
-
-    console.log('🗓️ Génération des dates marquées...', {
-      totalDays: proDailyAvailabilities.length,
-      existingBookingsCount: existingBookings?.length || 0,
-    });
 
     // Marquer toutes les dates depuis pro_daily_availabilities
     let availableDates = 0;
@@ -669,8 +621,6 @@ export default function BookProScreen() {
             },
           };
           availableDates++;
-        } else {
-          console.log(`❌ Date ${avail.date} exclue du calendrier (réservée)`);
         }
       } else if (!avail.is_available) {
         // Jours non disponibles : non cliquables, style par défaut
@@ -680,8 +630,6 @@ export default function BookProScreen() {
         };
       }
     });
-
-    console.log(`✅ ${availableDates} dates disponibles marquées sur le calendrier`);
 
     // Marquer la date sélectionnée
     if (bookingState.selectedDate) {
