@@ -469,19 +469,22 @@ export default function BookProScreen() {
       console.log('🎯 Passage à l\'étape 5');
       bookingState.setCurrentStep(5);
 
-      // Afficher le message de succès
-      Alert.alert(
-        'Paiement réussi !',
-        'Votre paiement a été traité avec succès. Votre réservation est en attente de validation par notre équipe.',
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              console.log('🎯 Alert OK pressé - Étape actuelle:', bookingState.currentStep);
+      // Afficher le message de succès avec un délai pour s'assurer que l'état est mis à jour
+      setTimeout(() => {
+        Alert.alert(
+          'Paiement réussi !',
+          'Votre paiement a été traité avec succès. Votre réservation est en attente de validation par notre équipe.',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                console.log('🎯 Alert OK pressé');
+                // Ne pas référencer bookingState.currentStep ici car c'est une closure
+              }
             }
-          }
-        ]
-      );
+          ]
+        );
+      }, 100); // Petit délai pour s'assurer que l'état React est mis à jour
       
       // Return pour éviter toute exécution supplémentaire
       console.log('✅ Fin de handlePaymentSuccess - succès complet');
@@ -554,6 +557,7 @@ export default function BookProScreen() {
 
       if (paymentError) {
         if (paymentError.code === 'Canceled') {
+          console.log('⚠️ Paiement annulé par l\'utilisateur');
           return null; // Retourner null pour l'annulation
         } else {
           console.error('❌ Erreur Payment Sheet:', paymentError.message);
@@ -562,10 +566,19 @@ export default function BookProScreen() {
       }
 
       // Paiement réussi - retourner l'ID pour handlePaymentSuccess
+      console.log('✅ Payment Sheet validé avec succès');
+      console.log('🔄 Retour du payment_intent_id:', response.payment_intent_id);
       return response.payment_intent_id;
     });
 
     // Gérer le résultat
+    console.log('📊 Résultat paymentOperation:', {
+      hasData: !!paymentOperation.data,
+      data: paymentOperation.data,
+      hasError: !!paymentOperation.error,
+      error: paymentOperation.error?.message
+    });
+    
     if (paymentOperation.data) {
       console.log('💳 Payment Intent ID reçu:', paymentOperation.data);
       try {
@@ -578,6 +591,8 @@ export default function BookProScreen() {
     } else if (paymentOperation.error) {
       console.error('❌ Erreur paiement détectée:', paymentOperation.error.message);
       handlePaymentError(paymentOperation.error.message || 'Erreur lors du paiement');
+    } else {
+      console.warn('⚠️ Ni data ni error dans paymentOperation');
     }
   };
 
