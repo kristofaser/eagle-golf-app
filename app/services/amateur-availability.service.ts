@@ -259,6 +259,7 @@ export const amateurAvailabilityService = {
 
   /**
    * Incrémente le compteur de réservations après création d'une réservation
+   * Utilise la fonction RPC pour une opération atomique
    */
   async incrementBookingCount(
     proId: string, 
@@ -267,22 +268,39 @@ export const amateurAvailabilityService = {
     bookingId: string
   ): Promise<boolean> {
     try {
-      const { error } = await supabase
+      // Récupérer l'availability_id correspondante
+      const { data: availability, error: fetchError } = await supabase
         .from('pro_availabilities')
-        .update({
-          current_bookings: supabase.raw('current_bookings + 1'),
-        })
+        .select('id')
         .eq('pro_id', proId)
         .eq('date', date)
-        .eq('golf_course_id', golfCourseId);
+        .eq('golf_course_id', golfCourseId)
+        .single();
+
+      if (fetchError || !availability) {
+        console.error('Erreur récupération availability pour incrémentation:', fetchError);
+        return false;
+      }
+
+      // Appeler la fonction RPC pour incrémenter de manière atomique
+      const { data, error } = await (supabase.rpc as any)('update_booking_count', {
+        p_availability_id: availability.id,
+        p_delta: 1 // +1 pour incrémenter
+      });
 
       if (error) {
         console.error('Erreur incrémentation réservations:', error);
         return false;
       }
 
-      console.log(`✅ Réservation ${bookingId} ajoutée pour ${date} sur parcours ${golfCourseId}`);
-      return true;
+      if (data && data.success) {
+        console.log(`✅ Réservation ${bookingId} ajoutée pour ${date} sur parcours ${golfCourseId}`);
+        console.log(`   Compteur: ${data.previous_count} → ${data.new_count} / ${data.max_players}`);
+        return true;
+      } else {
+        console.error('Erreur incrémentation:', data?.error || 'Erreur inconnue');
+        return false;
+      }
     } catch (err) {
       console.error('Erreur incrémentation réservations:', err);
       return false;
@@ -291,6 +309,7 @@ export const amateurAvailabilityService = {
 
   /**
    * Décrémente le compteur de réservations après annulation d'une réservation
+   * Utilise la fonction RPC pour une opération atomique
    */
   async decrementBookingCount(
     proId: string, 
@@ -299,22 +318,39 @@ export const amateurAvailabilityService = {
     bookingId: string
   ): Promise<boolean> {
     try {
-      const { error } = await supabase
+      // Récupérer l'availability_id correspondante
+      const { data: availability, error: fetchError } = await supabase
         .from('pro_availabilities')
-        .update({
-          current_bookings: supabase.raw('GREATEST(current_bookings - 1, 0)'), // Éviter les valeurs négatives
-        })
+        .select('id')
         .eq('pro_id', proId)
         .eq('date', date)
-        .eq('golf_course_id', golfCourseId);
+        .eq('golf_course_id', golfCourseId)
+        .single();
+
+      if (fetchError || !availability) {
+        console.error('Erreur récupération availability pour décrémentation:', fetchError);
+        return false;
+      }
+
+      // Appeler la fonction RPC pour décrémenter de manière atomique
+      const { data, error } = await (supabase.rpc as any)('update_booking_count', {
+        p_availability_id: availability.id,
+        p_delta: -1 // -1 pour décrémenter
+      });
 
       if (error) {
         console.error('Erreur décrémentation réservations:', error);
         return false;
       }
 
-      console.log(`✅ Réservation ${bookingId} annulée pour ${date} sur parcours ${golfCourseId}`);
-      return true;
+      if (data && data.success) {
+        console.log(`✅ Réservation ${bookingId} annulée pour ${date} sur parcours ${golfCourseId}`);
+        console.log(`   Compteur: ${data.previous_count} → ${data.new_count} / ${data.max_players}`);
+        return true;
+      } else {
+        console.error('Erreur décrémentation:', data?.error || 'Erreur inconnue');
+        return false;
+      }
     } catch (err) {
       console.error('Erreur décrémentation réservations:', err);
       return false;
@@ -436,6 +472,40 @@ export const amateurAvailabilityService = {
   async markDayAsAvailable(proId: string, date: string): Promise<boolean> {
     console.warn('⚠️ markDayAsAvailable est déprécié. Utilisez decrementBookingCount avec golfCourseId.');
     return true; // Retourne true pour éviter les erreurs dans l'ancien code
+  },
+
+  /**
+   * Incrémente le compteur de réservations en utilisant directement l'availability_id
+   * Version optimisée pour éviter une requête supplémentaire
+   */
+  async incrementBookingCountById(
+    availabilityId: string,
+    bookingId: string
+  ): Promise<boolean> {
+    try {
+      // Appeler directement la fonction RPC avec l'availability_id
+      const { data, error } = await (supabase.rpc as any)('update_booking_count', {
+        p_availability_id: availabilityId,
+        p_delta: 1 // +1 pour incrémenter
+      });
+
+      if (error) {
+        console.error('Erreur incrémentation réservations:', error);
+        return false;
+      }
+
+      if (data && data.success) {
+        console.log(`✅ Réservation ${bookingId} ajoutée`);
+        console.log(`   Compteur: ${data.previous_count} → ${data.new_count} / ${data.max_players}`);
+        return true;
+      } else {
+        console.error('Erreur incrémentation:', data?.error || 'Erreur inconnue');
+        return false;
+      }
+    } catch (err) {
+      console.error('Erreur incrémentation réservations:', err);
+      return false;
+    }
   },
 
   /**

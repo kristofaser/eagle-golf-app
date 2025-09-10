@@ -444,11 +444,9 @@ export default function BookProScreen() {
       }
 
       // Incrémenter le compteur de réservations dans pro_availabilities
-      if (bookingState.selectedCourse) {
-        const bookingIncremented = await amateurAvailabilityService.incrementBookingCount(
-          proId as string,
-          bookingState.selectedDate,
-          bookingState.selectedCourse,
+      if (bookingState.availabilityId) {
+        const bookingIncremented = await amateurAvailabilityService.incrementBookingCountById(
+          bookingState.availabilityId,
           newBookingId
         );
 
@@ -457,7 +455,7 @@ export default function BookProScreen() {
           // On continue quand même car la réservation est créée
         }
       } else {
-        console.warn('⚠️ Aucun parcours sélectionné pour incrémenter le compteur');
+        console.warn('⚠️ Aucun availability_id pour incrémenter le compteur');
       }
       
       // Mettre à jour l'état immédiatement
