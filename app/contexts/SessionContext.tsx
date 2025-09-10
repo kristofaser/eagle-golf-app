@@ -34,7 +34,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   // 🚨 NOUVEAU : Écoute Realtime pour déconnexion automatique si utilisateur supprimé
   // Flag de sécurité pour désactiver en cas de problème
-  const ENABLE_REALTIME_DELETION = !process.env.JEST_WORKER_ID && process.env.NODE_ENV !== 'test';
+  // ⚠️ DÉSACTIVÉ TEMPORAIREMENT : Realtime n'est pas activé sur la table profiles dans Supabase
+  const ENABLE_REALTIME_DELETION = false; // !process.env.JEST_WORKER_ID && process.env.NODE_ENV !== 'test';
   
   // Utiliser le hook correctement (toujours appelé, mais avec userId conditionnel)
   useUserDeletionRealtime(
