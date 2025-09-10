@@ -29,7 +29,7 @@ interface UsePriceCalculationReturn extends PriceBreakdown {
 // Constantes de calcul des prix
 const PRICING_CONFIG = {
   // Frais de plateforme (en pourcentage)
-  PLATFORM_FEE_RATE: 0.1, // 10%
+  PLATFORM_FEE_RATE: 0.2, // 20%
 
   // Prix de base par joueur par trou (en euros)
   BASE_PRICE_PER_PLAYER_PER_HOLE: {
@@ -120,7 +120,7 @@ export function calculateBookingPrice(params: PriceCalculationParams): PriceBrea
   const proFee = Math.max(basePrice * numberOfPlayers, PRICING_CONFIG.MIN_PRO_FEE);
 
   const platformFee = Math.max(
-    proFee * PRICING_CONFIG.PLATFORM_FEE_RATE,
+    proFee * 0.2, // 20% de commission
     PRICING_CONFIG.MIN_PLATFORM_FEE
   );
 

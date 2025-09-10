@@ -286,20 +286,16 @@ export default function BookProScreen() {
     );
 
     if (exactPrice && exactPrice.price > 0) {
-      // Prix exact trouvé - utiliser le hook pour calculer avec ce prix
-      const prices = priceCalculation.calculatePrices({
-        numberOfPlayers: bookingState.numberOfPlayers,
-        holes: bookingState.holes,
-        baseProPrice: exactPrice.price,
-      });
-
-      // Appliquer les prix calculés par le hook mais garder la logique commission 20%
-      const totalWithCommission = Math.round(exactPrice.price * 1.2);
-      const commission = totalWithCommission - exactPrice.price;
+      // Prix exact trouvé - le prix est PAR JOUEUR
+      const totalProFee = exactPrice.price * bookingState.numberOfPlayers;
+      
+      // Appliquer la commission de 20%
+      const totalWithCommission = Math.round(totalProFee * 1.2);
+      const commission = totalWithCommission - totalProFee;
 
       priceCalculation.setPrices({
         calculatedPrice: totalWithCommission,
-        proFee: exactPrice.price,
+        proFee: totalProFee,
         platformFee: commission,
       });
     } else {
