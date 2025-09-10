@@ -43,34 +43,44 @@ export const TimeSlotSelectionStep = memo(function TimeSlotSelectionStep({
         </Text>
 
         {availableSlots.length > 0 ? (
-          <View style={styles.slotsGrid}>
-            {availableSlots.map((slot, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.slotButton,
-                  selectedSlot?.time === slot.time && styles.slotButtonSelected,
-                  !slot.available && styles.slotButtonDisabled,
-                ]}
-                onPress={() => slot.available && onSlotSelect(slot)}
-                disabled={!slot.available}
-              >
-                <Text
-                  variant="body"
-                  weight={selectedSlot?.time === slot.time ? 'semiBold' : 'medium'}
-                  color={
-                    !slot.available
-                      ? 'mist'
-                      : selectedSlot?.time === slot.time
-                        ? 'white'
-                        : 'charcoal'
-                  }
+          <>
+            <View style={styles.slotsGrid}>
+              {availableSlots.map((slot, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.slotButton,
+                    selectedSlot?.time === slot.time && styles.slotButtonSelected,
+                    !slot.available && styles.slotButtonDisabled,
+                  ]}
+                  onPress={() => slot.available && onSlotSelect(slot)}
+                  disabled={!slot.available}
                 >
-                  {slot.time}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+                  <Text
+                    variant="body"
+                    weight={selectedSlot?.time === slot.time ? 'semiBold' : 'medium'}
+                    color={
+                      !slot.available
+                        ? 'mist'
+                        : selectedSlot?.time === slot.time
+                          ? 'white'
+                          : 'charcoal'
+                    }
+                  >
+                    {slot.time}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            
+            {/* Message de confirmation */}
+            <View style={styles.confirmationMessage}>
+              <Ionicons name="information-circle-outline" size={18} color={Colors.neutral.iron} />
+              <Text variant="caption" color="iron" style={styles.confirmationText}>
+                L'heure exacte de départ sera confirmée par Eagle après validation auprès du parcours.
+              </Text>
+            </View>
+          </>
         ) : (
           <View style={styles.noSlotsContainer}>
             <Ionicons name="calendar-outline" size={48} color={Colors.neutral.mist} />
@@ -131,5 +141,19 @@ const styles = StyleSheet.create({
   noSlotsText: {
     marginTop: Spacing.s,
     textAlign: 'center',
+  },
+  confirmationMessage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.neutral.cloud,
+    padding: Spacing.s,
+    borderRadius: BorderRadius.small,
+    marginTop: Spacing.l,
+    marginHorizontal: Spacing.s,
+  },
+  confirmationText: {
+    marginLeft: Spacing.xs,
+    flex: 1,
+    lineHeight: 18,
   },
 });
