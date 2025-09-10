@@ -163,8 +163,8 @@ export default function ProfileScreen() {
 
       if (pricesForPlayers.length > 0) {
         const minPrice = Math.min(...pricesForPlayers);
-        // Ajouter la commission de 20% et convertir en centimes
-        return Math.round(minPrice * 1.2 * 100);
+        // Ajouter la commission de 20% (prix déjà en euros depuis le service)
+        return Math.round(minPrice * 1.2);
       }
 
       // Si pas de prix pour ce nombre de joueurs, prendre le minimum global
@@ -178,8 +178,8 @@ export default function ProfileScreen() {
     }
 
     const minPrice = Math.min(...validPrices);
-    // Ajouter la commission de 20% et convertir en centimes
-    return Math.round(minPrice * 1.2 * 100);
+    // Ajouter la commission de 20% (prix déjà en euros depuis le service)
+    return Math.round(minPrice * 1.2);
   };
 
   // Fonction pour gérer la sélection d'un parcours
@@ -221,7 +221,7 @@ export default function ProfileScreen() {
         params: {
           proId: profileId,
           proName: `${profile?.first_name} ${profile?.last_name}`,
-          price: Math.round(minPrice / 100).toString(),
+          price: minPrice.toString(),
           players: numberOfPlayers.toString(),
           courseId: selectedCourseId,
           courseName: selectedCourseName,
@@ -659,7 +659,7 @@ export default function ProfileScreen() {
               {minPrice > 0 ? (
                 <>
                   <Text style={styles.bookingPricePrefix}>À partir de</Text>
-                  <Text style={styles.bookingPrice}>{Math.round(minPrice / 100)}€</Text>
+                  <Text style={styles.bookingPrice}>{minPrice}€</Text>
                 </>
               ) : (
                 <Text style={styles.bookingPrice}>Sur devis</Text>

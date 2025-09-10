@@ -266,9 +266,8 @@ export default function BookProScreen() {
       return;
     }
 
-    // Utiliser le prix minimum pour 1 joueur (convertir de centimes en euros)
-    const minPriceInCents = Math.min(...pricesForOnePlayer);
-    const minPriceInEuros = minPriceInCents / 100;
+    // Utiliser le prix minimum pour 1 joueur (prix déjà en euros depuis le service)
+    const minPriceInEuros = Math.min(...pricesForOnePlayer);
 
     // Appliquer la commission de 20% sur le prix minimum pour l'affichage préliminaire
     const totalWithCommission = Math.round(minPriceInEuros * 1.2);
