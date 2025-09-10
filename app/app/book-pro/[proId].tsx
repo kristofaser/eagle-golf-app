@@ -256,24 +256,22 @@ export default function BookProScreen() {
       return;
     }
 
-    // Trouver le prix minimum parmi tous les tarifs configurés par le pro
-    const validPrices = pricing.filter((p) => p.price > 0).map((p) => p.price);
+    // Trouver le prix minimum pour 1 joueur uniquement
+    const pricesForOnePlayer = pricing
+      .filter((p) => p.players_count === 1 && p.price > 0)
+      .map((p) => p.price);
 
-    if (validPrices.length === 0) {
+    if (pricesForOnePlayer.length === 0) {
       priceCalculation.setPrices({ calculatedPrice: 0 });
       return;
     }
 
-    // Utiliser le hook pour calculer le prix avec le minimum
-    const minProPrice = Math.min(...validPrices);
-    const prices = priceCalculation.calculatePrices({
-      numberOfPlayers: bookingState.numberOfPlayers,
-      holes: bookingState.holes,
-      baseProPrice: minProPrice,
-    });
+    // Utiliser le prix minimum pour 1 joueur (convertir de centimes en euros)
+    const minPriceInCents = Math.min(...pricesForOnePlayer);
+    const minPriceInEuros = minPriceInCents / 100;
 
     // Appliquer la commission de 20% sur le prix minimum pour l'affichage préliminaire
-    const totalWithCommission = Math.round(minProPrice * 1.2);
+    const totalWithCommission = Math.round(minPriceInEuros * 1.2);
     priceCalculation.setPrices({ calculatedPrice: totalWithCommission });
   }, [pricing, bookingState.numberOfPlayers, bookingState.holes, priceCalculation]);
 
