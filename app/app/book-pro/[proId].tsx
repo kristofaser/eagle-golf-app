@@ -116,22 +116,26 @@ export default function BookProScreen() {
 
   // Utiliser React Query pour charger les disponibilités du pro (nouveau système)
   const { data: proDailyAvailabilities = [], isLoading: isLoadingAvailability } = useQuery({
-    queryKey: ['proAvailabilities', proId, bookingState.selectedCourse],
+    queryKey: ['proAvailabilities', proId, bookingState.selectedCourse || courseId],
     queryFn: async () => {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() + 4); // 4 jours à partir d'aujourd'hui
       const endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + 2); // 2 mois
+      endDate.setMonth(endDate.getMonth() + 3); // 3 mois pour capturer toutes les disponibilités
 
+      // Utiliser courseId passé en paramètre ou selectedCourse de bookingState
+      const golfCourseId = bookingState.selectedCourse || (courseId as string) || undefined;
+      
       const { data: availabilities } = await amateurAvailabilityService.getProAvailableDays(
         proId as string,
         startDate.toISOString().split('T')[0],
         endDate.toISOString().split('T')[0],
-        bookingState.selectedCourse // Filtrer par parcours sélectionné
+        golfCourseId // Filtrer par parcours sélectionné
       );
+      
       return availabilities || [];
     },
-    enabled: !!proId && !!bookingState.selectedCourse,
+    enabled: !!proId && !!(bookingState.selectedCourse || courseId),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
@@ -166,7 +170,7 @@ export default function BookProScreen() {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() + 4);
       const endDate = new Date();
-      endDate.setMonth(endDate.getMonth() + 2);
+      endDate.setMonth(endDate.getMonth() + 3); // 3 mois pour correspondre aux disponibilités
 
       console.log('📚 Chargement réservations pour pro:', {
         proId,
@@ -614,11 +618,9 @@ export default function BookProScreen() {
     // Vérifier s'il y a des réservations confirmées pour cette date et parcours
     // On utilise les données existingBookings si disponibles
     if (existingBookings && existingBookings.length > 0) {
+      const currentCourseId = bookingState.selectedCourse || (courseId as string);
       const hasBooking = existingBookings.some(
-        (booking) => booking.booking_date === dateString && booking.golf_course_id === bookingState.selectedCourse
-      );
-      console.log(
-        `🔍 Vérification date ${dateString} sur parcours ${bookingState.selectedCourse}: ${hasBooking ? 'RÉSERVÉ' : 'LIBRE'} (depuis cache)`
+        (booking) => booking.booking_date === dateString && booking.golf_course_id === currentCourseId
       );
       return !hasBooking; // Libre si pas de réservation sur ce parcours
     }
@@ -717,10 +719,10 @@ export default function BookProScreen() {
     return minDate.toISOString().split('T')[0];
   };
 
-  // Obtenir la date maximum (2 mois)
+  // Obtenir la date maximum (3 mois)
   const getMaxDate = () => {
     const maxDate = new Date();
-    maxDate.setMonth(maxDate.getMonth() + 2);
+    maxDate.setMonth(maxDate.getMonth() + 3); // 3 mois pour correspondre aux disponibilités
     return maxDate.toISOString().split('T')[0];
   };
 
