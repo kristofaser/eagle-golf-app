@@ -344,6 +344,9 @@ export default function BookProScreen() {
 
   // ✅ REFACTORISÉ - handlePaymentSuccess sans double paymentOperation.execute
   const handlePaymentSuccess = async (paymentIntentId: string) => {
+    console.log('🎯 handlePaymentSuccess appelé avec Payment Intent:', paymentIntentId);
+    console.log('🎯 État actuel - Étape:', bookingState.currentStep);
+    
     if (!user) {
       console.error('❌ Aucun utilisateur connecté');
       Alert.alert('Erreur', 'Vous devez être connecté pour réserver');
@@ -459,15 +462,30 @@ export default function BookProScreen() {
       }
       
       // Mettre à jour l'état immédiatement
+      console.log('🎯 Mise à jour de l\'état - Booking ID:', newBookingId);
       bookingState.setBookingId(newBookingId);
       bookingState.setBookingConfirmed(false); // En attente de validation admin
+      
+      console.log('🎯 Passage à l\'étape 5');
       bookingState.setCurrentStep(5);
 
       // Afficher le message de succès
       Alert.alert(
         'Paiement réussi !',
-        'Votre paiement a été traité avec succès. Votre réservation est en attente de validation par notre équipe.'
+        'Votre paiement a été traité avec succès. Votre réservation est en attente de validation par notre équipe.',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              console.log('🎯 Alert OK pressé - Étape actuelle:', bookingState.currentStep);
+            }
+          }
+        ]
       );
+      
+      // Return pour éviter toute exécution supplémentaire
+      console.log('✅ Fin de handlePaymentSuccess - succès complet');
+      return;
 
     } catch (error: any) {
       console.error('❌ Erreur dans handlePaymentSuccess:', error);
@@ -549,7 +567,14 @@ export default function BookProScreen() {
 
     // Gérer le résultat
     if (paymentOperation.data) {
-      await handlePaymentSuccess(paymentOperation.data);
+      console.log('💳 Payment Intent ID reçu:', paymentOperation.data);
+      try {
+        await handlePaymentSuccess(paymentOperation.data);
+        console.log('✅ handlePaymentSuccess terminé avec succès');
+      } catch (error) {
+        console.error('❌ Erreur dans handlePaymentSuccess:', error);
+        // Ne pas throw l'erreur pour éviter de bloquer le flux
+      }
     } else if (paymentOperation.error) {
       console.error('❌ Erreur paiement détectée:', paymentOperation.error.message);
       handlePaymentError(paymentOperation.error.message || 'Erreur lors du paiement');
