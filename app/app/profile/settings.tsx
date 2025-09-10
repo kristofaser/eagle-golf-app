@@ -140,35 +140,6 @@ export default function ProfileSettingsScreen() {
             </View>
           </View>
 
-          {/* Section Professionnel - Visible seulement pour les pros */}
-          {isPro && (
-            <View style={styles.section}>
-              <Text variant="caption" color="gray" style={styles.sectionTitle}>
-                PROFESSIONNEL
-              </Text>
-              <View style={styles.sectionContent}>
-                <TouchableOpacity
-                  style={styles.settingItem}
-                  onPress={() => router.push('/profile/pro-settings')}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.settingIcon}>
-                    <Ionicons name="star" size={24} color={Colors.primary.accent} />
-                  </View>
-                  <View style={styles.settingContent}>
-                    <Text variant="body" color="charcoal" style={styles.settingTitle}>
-                      Profil professionnel
-                    </Text>
-                    <Text variant="caption" color="gray" style={styles.settingSubtitle}>
-                      Division, classement mondial, compétences
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={Colors.neutral.course} />
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
-
           {/* Section Notifications */}
           <View style={styles.section}>
             <Text variant="caption" color="gray" style={styles.sectionTitle}>

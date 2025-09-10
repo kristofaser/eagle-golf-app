@@ -289,6 +289,17 @@ export function ProProfile({ profile, onRefresh }: ProProfileProps) {
                   Gérer mes disponibilités
                 </Text>
               </TouchableOpacity>
+              
+              {/* Bouton Profil Professionnel */}
+              <TouchableOpacity 
+                style={[styles.actionButton, { marginTop: Spacing.s }]} 
+                onPress={() => router.push('/profile/pro-settings')}
+              >
+                <Ionicons name="star-outline" size={20} color={Colors.primary.accent} />
+                <Text variant="body" color="accent" weight="medium">
+                  Profil professionnel
+                </Text>
+              </TouchableOpacity>
             </View>
           </Animated.View>
         )}
