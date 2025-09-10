@@ -510,7 +510,7 @@ export default function BookProScreen() {
       return;
     }
 
-    await paymentOperation.execute(async () => {
+    try {
       // Créer le Payment Intent via notre service
       const response = await paymentService.createPaymentIntent({
         amount: priceCalculation.calculatedPrice * 100,
@@ -565,34 +565,17 @@ export default function BookProScreen() {
         }
       }
 
-      // Paiement réussi - retourner l'ID pour handlePaymentSuccess
+      // Paiement réussi - appeler directement handlePaymentSuccess
       console.log('✅ Payment Sheet validé avec succès');
-      console.log('🔄 Retour du payment_intent_id:', response.payment_intent_id);
-      return response.payment_intent_id;
-    });
-
-    // Gérer le résultat
-    console.log('📊 Résultat paymentOperation:', {
-      hasData: !!paymentOperation.data,
-      data: paymentOperation.data,
-      hasError: !!paymentOperation.error,
-      error: paymentOperation.error?.message
-    });
-    
-    if (paymentOperation.data) {
-      console.log('💳 Payment Intent ID reçu:', paymentOperation.data);
-      try {
-        await handlePaymentSuccess(paymentOperation.data);
-        console.log('✅ handlePaymentSuccess terminé avec succès');
-      } catch (error) {
-        console.error('❌ Erreur dans handlePaymentSuccess:', error);
-        // Ne pas throw l'erreur pour éviter de bloquer le flux
-      }
-    } else if (paymentOperation.error) {
-      console.error('❌ Erreur paiement détectée:', paymentOperation.error.message);
-      handlePaymentError(paymentOperation.error.message || 'Erreur lors du paiement');
-    } else {
-      console.warn('⚠️ Ni data ni error dans paymentOperation');
+      console.log('🔄 Payment Intent ID:', response.payment_intent_id);
+      
+      // Appeler directement handlePaymentSuccess sans passer par le return
+      await handlePaymentSuccess(response.payment_intent_id);
+      console.log('✅ handlePaymentSuccess terminé avec succès');
+      
+    } catch (error: any) {
+      console.error('❌ Erreur pendant le paiement:', error);
+      handlePaymentError(error.message || 'Erreur lors du paiement');
     }
   };
 
