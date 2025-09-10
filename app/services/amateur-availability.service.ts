@@ -438,4 +438,56 @@ export const amateurAvailabilityService = {
     return true; // Retourne true pour éviter les erreurs dans l'ancien code
   },
 
+  /**
+   * Récupère l'availability_id pour une réservation
+   * Trouve la disponibilité correspondant à la date, au parcours et au pro
+   */
+  async getAvailabilityId(
+    proId: string,
+    golfCourseId: string,
+    date: string
+  ): Promise<{ availability_id: string | null; error?: string }> {
+    try {
+      const { data, error } = await supabase
+        .from('pro_availabilities')
+        .select('id, max_players, current_bookings')
+        .eq('pro_id', proId)
+        .eq('golf_course_id', golfCourseId)
+        .eq('date', date)
+        .single();
+
+      if (error) {
+        console.error('❌ Erreur récupération availability_id:', error);
+        return { 
+          availability_id: null, 
+          error: `Aucune disponibilité trouvée pour cette date et ce parcours` 
+        };
+      }
+
+      if (!data) {
+        return { 
+          availability_id: null, 
+          error: 'Aucune disponibilité trouvée' 
+        };
+      }
+
+      // Vérifier qu'il reste de la place
+      if (data.current_bookings >= data.max_players) {
+        return { 
+          availability_id: null, 
+          error: 'Plus de place disponible pour ce créneau' 
+        };
+      }
+
+      console.log('✅ Availability trouvée:', data.id);
+      return { availability_id: data.id };
+    } catch (err: any) {
+      console.error('❌ Erreur getAvailabilityId:', err);
+      return { 
+        availability_id: null, 
+        error: err.message || 'Erreur lors de la récupération de la disponibilité' 
+      };
+    }
+  },
+
 };

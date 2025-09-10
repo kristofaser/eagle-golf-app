@@ -89,43 +89,41 @@ export const paymentService = {
   },
 
   /**
-   * Trouver ou créer une availability pour le créneau via Edge Function
+   * Vérifier qu'une availability existe et a de la place
    */
-  async findOrCreateAvailability(
-    proId: string,
-    golfCourseId: string,
-    date: string,
-    startTime: string
-  ): Promise<{ availability_id: string | null; error?: string }> {
+  async verifyAvailability(
+    availabilityId: string
+  ): Promise<{ valid: boolean; error?: string }> {
     try {
-      // SOLUTION TEMPORAIRE: Créer une availability à la volée via SQL direct
-      console.log('🔧 Creating temporary availability for booking...');
-
-      const { data: newAvailability, error: createError } = await supabase
+      const { data, error } = await supabase
         .from('pro_availabilities')
-        .insert({
-          pro_id: proId,
-          golf_course_id: golfCourseId,
-          date: date,
-          start_time: startTime,
-          end_time: this.calculateEndTime(startTime),
-          max_players: 4,
-          current_bookings: 0,
-        })
-        .select('id')
+        .select('id, max_players, current_bookings')
+        .eq('id', availabilityId)
         .single();
 
-      if (createError) {
-        // Si erreur RLS, utiliser un ID fixe temporaire
-        console.warn('⚠️ RLS error, using fallback ID:', createError.message);
-        return { availability_id: '550e8400-e29b-41d4-a716-446655440000' }; // UUID fixe temporaire
+      if (error || !data) {
+        console.error('❌ Availability non trouvée:', error);
+        return { 
+          valid: false, 
+          error: 'Disponibilité non trouvée' 
+        };
       }
 
-      return { availability_id: newAvailability.id };
+      if (data.current_bookings >= data.max_players) {
+        return { 
+          valid: false, 
+          error: 'Plus de place disponible pour ce créneau' 
+        };
+      }
+
+      console.log('✅ Availability vérifiée:', availabilityId);
+      return { valid: true };
     } catch (error: any) {
-      console.error('❌ Error in findOrCreateAvailability:', error);
-      // En cas d'erreur, utiliser un UUID fixe temporaire
-      return { availability_id: '550e8400-e29b-41d4-a716-446655440000' };
+      console.error('❌ Error in verifyAvailability:', error);
+      return { 
+        valid: false, 
+        error: error.message || 'Erreur lors de la vérification' 
+      };
     }
   },
 
@@ -156,18 +154,19 @@ export const paymentService = {
         };
       }
 
-      // Trouver ou créer l'availability_id
-      const availabilityResult = await this.findOrCreateAvailability(
-        bookingData.pro_id,
-        bookingData.golf_course_id,
-        bookingData.booking_date,
-        bookingData.start_time
-      );
-
-      if (!availabilityResult.availability_id) {
+      // Vérifier que l'availability_id existe et est valide
+      if (!bookingData.availability_id) {
         return {
           success: false,
-          error: `Impossible de créer le créneau: ${availabilityResult.error}`,
+          error: 'Aucune disponibilité sélectionnée',
+        };
+      }
+
+      const availabilityCheck = await this.verifyAvailability(bookingData.availability_id);
+      if (!availabilityCheck.valid) {
+        return {
+          success: false,
+          error: availabilityCheck.error || 'Disponibilité invalide',
         };
       }
 
@@ -176,7 +175,6 @@ export const paymentService = {
         .from('bookings')
         .insert({
           ...bookingData,
-          availability_id: availabilityResult.availability_id,
           payment_intent_id: paymentIntentId,
           payment_status: 'paid',
           status: 'pending', // En attente de validation admin

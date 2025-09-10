@@ -210,10 +210,10 @@ export default function BookProScreen() {
 
   // Charger les créneaux disponibles quand la date change
   useEffect(() => {
-    if (bookingState.selectedDate && proId) {
+    if (bookingState.selectedDate && proId && bookingState.selectedCourse) {
       loadAvailableSlots();
     }
-  }, [bookingState.selectedDate]);
+  }, [bookingState.selectedDate, bookingState.selectedCourse]);
 
   // Recalculer le prix quand les paramètres changent
   useEffect(() => {
@@ -232,14 +232,35 @@ export default function BookProScreen() {
   const loadAvailableSlots = async () => {
     if (!bookingState.selectedDate) {
       bookingState.setAvailableSlots([]);
+      bookingState.setAvailabilityId(null);
       return;
     }
 
     const slots = await slotsOperation.execute(async () => {
-      return await amateurAvailabilityService.getAvailableSlotsForDate(
+      // Récupérer les créneaux disponibles
+      const availableSlots = await amateurAvailabilityService.getAvailableSlotsForDate(
         proId as string,
         bookingState.selectedDate
       );
+      
+      // Récupérer l'availability_id pour cette date et ce parcours
+      if (bookingState.selectedCourse && availableSlots.length > 0) {
+        const { availability_id } = await amateurAvailabilityService.getAvailabilityId(
+          proId as string,
+          bookingState.selectedCourse,
+          bookingState.selectedDate
+        );
+        
+        if (availability_id) {
+          bookingState.setAvailabilityId(availability_id);
+          console.log('🎯 Availability ID récupéré:', availability_id);
+        } else {
+          console.warn('⚠️ Aucune availability_id trouvée pour cette date/parcours');
+          bookingState.setAvailabilityId(null);
+        }
+      }
+      
+      return availableSlots;
     });
 
     if (slots) {
@@ -247,6 +268,7 @@ export default function BookProScreen() {
     } else if (slotsOperation.error) {
       console.error('Erreur chargement créneaux:', slotsOperation.error);
       bookingState.setAvailableSlots([]);
+      bookingState.setAvailabilityId(null);
     }
   };
 
@@ -397,6 +419,7 @@ export default function BookProScreen() {
         amateur_id: userProfile.id,
         pro_id: proId as string,
         golf_course_id: bookingState.selectedCourse, // Use the selected golf course
+        availability_id: bookingState.availabilityId, // Utiliser l'availability_id stockée
         booking_date: bookingState.selectedDate,
         start_time: actualStartTime,
         number_of_players: bookingState.numberOfPlayers,
@@ -478,6 +501,7 @@ export default function BookProScreen() {
           amateur_id: user.id,
           booking_date: bookingState.selectedDate,
           start_time: bookingState.selectedSlot?.hour || '',
+          availability_id: bookingState.availabilityId || '', // Ajouter l'availability_id
           description: `Réservation golf avec ${proName || 'professionnel'} le ${formatDateShort(bookingState.selectedDate)} à ${bookingState.selectedSlot?.time}`,
         },
       });

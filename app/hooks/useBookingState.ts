@@ -50,6 +50,10 @@ interface UseBookingStateReturn {
   setBookingConfirmed: (confirmed: boolean) => void;
   bookingId: string | null;
   setBookingId: (id: string | null) => void;
+  
+  // Availability
+  availabilityId: string | null;
+  setAvailabilityId: (id: string | null) => void;
 
   // Utilitaires
   resetBooking: () => void;
@@ -78,6 +82,7 @@ export function useBookingState(initialPlayers: number = 1): UseBookingStateRetu
   // Confirmation
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
+  const [availabilityId, setAvailabilityId] = useState<string | null>(null);
 
   // Navigation helpers
   const goToNextStep = useCallback(() => {
@@ -120,6 +125,7 @@ export function useBookingState(initialPlayers: number = 1): UseBookingStateRetu
     setPlatformFee(0);
     setBookingConfirmed(false);
     setBookingId(null);
+    setAvailabilityId(null);
   }, [initialPlayers]);
 
   return {
@@ -158,6 +164,10 @@ export function useBookingState(initialPlayers: number = 1): UseBookingStateRetu
     setBookingConfirmed,
     bookingId,
     setBookingId,
+    
+    // Availability
+    availabilityId,
+    setAvailabilityId,
 
     // Utilitaires
     resetBooking,
