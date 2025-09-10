@@ -32,6 +32,14 @@ export interface BookingCheck {
   golf_course_id?: string;
 }
 
+export interface ProCourseAvailability {
+  golf_course_id: string;
+  golf_course_name: string;
+  distance_km?: number;
+  city: string;
+  available_slots_count: number;
+}
+
 export const amateurAvailabilityService = {
   /**
    * Récupère les jours disponibles d'un pro (vue amateur) - nouveau système
@@ -310,6 +318,106 @@ export const amateurAvailabilityService = {
     } catch (err) {
       console.error('Erreur décrémentation réservations:', err);
       return false;
+    }
+  },
+
+  /**
+   * Récupère les parcours où un pro est disponible avec le nombre de créneaux
+   */
+  async getProAvailableCourses(
+    proId: string,
+    userLatitude?: number,
+    userLongitude?: number
+  ): Promise<{ data: ProCourseAvailability[] | null; error: unknown }> {
+    try {
+      // Récupérer les disponibilités futures du pro groupées par parcours
+      const today = new Date();
+      const endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + 3); // Étendre à 3 mois pour capturer plus de disponibilités
+
+      const { data: availabilities, error } = await supabase
+        .from('pro_availabilities')
+        .select(`
+          golf_course_id,
+          date,
+          max_players,
+          current_bookings,
+          golf_parcours!inner (
+            id,
+            name,
+            city,
+            latitude,
+            longitude
+          )
+        `)
+        .eq('pro_id', proId)
+        .gte('date', today.toISOString().split('T')[0])
+        .lte('date', endDate.toISOString().split('T')[0]);
+
+      if (error) throw error;
+
+      if (!availabilities || availabilities.length === 0) {
+        return { data: [], error: null };
+      }
+
+      // Grouper par parcours et compter les créneaux disponibles
+      const courseMap = new Map<string, ProCourseAvailability>();
+
+      availabilities.forEach((avail) => {
+        const courseId = avail.golf_course_id;
+        const course = avail.golf_parcours as any;
+        
+        if (!course) return;
+        
+        // Vérifier que le créneau est disponible
+        if (avail.current_bookings >= avail.max_players) return;
+
+        if (!courseMap.has(courseId)) {
+          let distance_km: number | undefined;
+          
+          // Calculer la distance si on a la position de l'utilisateur
+          if (userLatitude && userLongitude && course.latitude && course.longitude) {
+            const R = 6371; // Rayon de la Terre en km
+            const dLat = (course.latitude - userLatitude) * Math.PI / 180;
+            const dLon = (course.longitude - userLongitude) * Math.PI / 180;
+            const a = 
+              Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(userLatitude * Math.PI / 180) * Math.cos(course.latitude * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            distance_km = Math.round(R * c);
+          }
+
+          courseMap.set(courseId, {
+            golf_course_id: courseId,
+            golf_course_name: course.name,
+            city: course.city || '',
+            distance_km,
+            available_slots_count: 0
+          });
+        }
+
+        // Incrémenter le nombre de créneaux disponibles
+        const courseData = courseMap.get(courseId)!;
+        const slotsAvailable = avail.max_players - avail.current_bookings;
+        courseData.available_slots_count += slotsAvailable;
+      });
+
+      // Convertir en array et trier par distance
+      let coursesArray = Array.from(courseMap.values());
+      
+      // Trier par distance si disponible, sinon par nom
+      coursesArray.sort((a, b) => {
+        if (a.distance_km !== undefined && b.distance_km !== undefined) {
+          return a.distance_km - b.distance_km;
+        }
+        return a.golf_course_name.localeCompare(b.golf_course_name);
+      });
+
+      return { data: coursesArray, error: null };
+    } catch (err) {
+      console.error('Erreur récupération parcours disponibles:', err);
+      return { data: null, error: err };
     }
   },
 

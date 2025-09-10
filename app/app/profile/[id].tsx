@@ -38,7 +38,10 @@ import { Colors, Spacing, Elevation, Typography, BorderRadius } from '@/constant
 import { ProPricingManager } from '@/components/organisms/ProPricingManager';
 import { useProProfile } from '@/hooks/useProProfile';
 import { ProfileSkeleton } from '@/components/atoms/ProfileSkeleton';
+import { ProAvailabilityCards } from '@/components/molecules/ProAvailabilityCards';
+import { amateurAvailabilityService, ProCourseAvailability } from '@/services/amateur-availability.service';
 import { useQuery } from '@tanstack/react-query';
+import { useGeolocation } from '@/hooks/useGeolocation';
 
 // Image par défaut si pas d'avatar
 const DEFAULT_PRO_IMAGE =
@@ -85,10 +88,38 @@ export default function ProfileScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<FullProfile | null>(null);
   const [numberOfPlayers, setNumberOfPlayers] = useState(1); // Par défaut 1 joueur
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [selectedCourseName, setSelectedCourseName] = useState<string | null>(null);
 
   // Vérifier si c'est mon profil
   const isMyProfile = user?.id === profileId;
   const isPro = profile?.user_type === 'pro';
+
+  // Récupérer la géolocalisation pour calculer les distances
+  const { location: userLocation } = useGeolocation();
+
+  // Récupérer les parcours où le pro est disponible
+  const { data: proCourses = [], isLoading: isLoadingCourses } = useQuery({
+    queryKey: ['proCourses', profileId, userLocation?.latitude, userLocation?.longitude],
+    queryFn: async () => {
+      if (!profileId || !isPro) return [];
+      
+      const { data, error } = await amateurAvailabilityService.getProAvailableCourses(
+        profileId,
+        userLocation?.latitude,
+        userLocation?.longitude
+      );
+      
+      if (error) {
+        console.error('Erreur chargement parcours:', error);
+        return [];
+      }
+      
+      return data || [];
+    },
+    enabled: !!profileId && isPro,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
 
   // Charger les parcours de golf
   useEffect(() => {
@@ -151,6 +182,12 @@ export default function ProfileScreen() {
     return Math.round(minPrice * 1.2 * 100);
   };
 
+  // Fonction pour gérer la sélection d'un parcours
+  const handleCourseSelect = (courseId: string, courseName: string) => {
+    setSelectedCourseId(courseId);
+    setSelectedCourseName(courseName);
+  };
+
   // Fonction pour gérer la réservation
   const handleBooking = () => {
     const minPrice = getMinPrice(numberOfPlayers);
@@ -171,6 +208,12 @@ export default function ProfileScreen() {
           },
         ]
       );
+    } else if (!selectedCourseId || !selectedCourseName) {
+      Alert.alert(
+        'Sélection requise',
+        'Veuillez sélectionner un parcours de golf avant de réserver.',
+        [{ text: 'OK', style: 'default' }]
+      );
     } else {
       const proDetails = profile?.pro_profiles;
       router.push({
@@ -180,6 +223,8 @@ export default function ProfileScreen() {
           proName: `${profile?.first_name} ${profile?.last_name}`,
           price: Math.round(minPrice / 100).toString(),
           players: numberOfPlayers.toString(),
+          courseId: selectedCourseId,
+          courseName: selectedCourseName,
         },
       });
     }
@@ -555,21 +600,26 @@ export default function ProfileScreen() {
                   </Animated.View>
                 )}
 
-              {/* Bloc Golfs */}
-              <Animated.View
-                entering={FadeIn.delay(400).duration(300)}
-                style={[styles.card, { backgroundColor: '#FFFFFF' }]}
-              >
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>Golf</Text>
-                </View>
-                <View style={[styles.accentLine, { backgroundColor: Colors.primary.accent }]} />
+              {/* Bloc Disponibilités */}
+              {proCourses.length > 0 && (
+                <Animated.View
+                  entering={FadeIn.delay(400).duration(300)}
+                  style={[styles.card, { backgroundColor: '#FFFFFF' }]}
+                >
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.cardTitle}>Disponibilités</Text>
+                  </View>
+                  <View style={[styles.accentLine, { backgroundColor: Colors.primary.accent }]} />
 
-                {/* Conteneur de la carte */}
-                <View style={styles.mapContainer}>
-                  <Text style={styles.mapPlaceholder}>Map à intégrer</Text>
-                </View>
-              </Animated.View>
+                  {/* Cards des parcours disponibles */}
+                  <ProAvailabilityCards
+                    availabilities={proCourses}
+                    selectedCourseId={selectedCourseId}
+                    onCourseSelect={handleCourseSelect}
+                    loading={isLoadingCourses}
+                  />
+                </Animated.View>
+              )}
             </Animated.View>
           </Animated.ScrollView>
 

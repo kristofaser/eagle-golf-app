@@ -80,7 +80,7 @@ const STEPS = [
 ];
 
 export default function BookProScreen() {
-  const { proId, proName, players: initialPlayers } = useLocalSearchParams();
+  const { proId, proName, players: initialPlayers, courseId, courseName } = useLocalSearchParams();
   const router = useRouter();
   const { user } = useAuth();
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
@@ -210,10 +210,13 @@ export default function BookProScreen() {
 
   // Définir le parcours par défaut une fois chargé
   useEffect(() => {
-    if (golfCourses.length > 0 && !bookingState.selectedCourse) {
+    // Si un courseId est passé en paramètre, l'utiliser en priorité
+    if (courseId && typeof courseId === 'string') {
+      bookingState.setSelectedCourse(courseId);
+    } else if (golfCourses.length > 0 && !bookingState.selectedCourse) {
       bookingState.setSelectedCourse(golfCourses[0].id);
     }
-  }, [golfCourses]);
+  }, [golfCourses, courseId]);
 
   // Charger les créneaux disponibles quand la date change
   useEffect(() => {
@@ -1000,7 +1003,7 @@ export default function BookProScreen() {
               {proName}
             </Text>
             <Text variant="body" color="iron">
-              Professionnel de golf
+              {courseName ? courseName : 'Professionnel de golf'}
             </Text>
           </View>
           <View style={styles.priceContainer}>
