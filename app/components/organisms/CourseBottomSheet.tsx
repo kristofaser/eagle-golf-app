@@ -67,19 +67,31 @@ export const CourseBottomSheet = forwardRef<BottomSheetModal, CourseBottomSheetP
     }, [course]);
 
     const loadAllPros = async () => {
+      if (!course) return;
+      
       setIsLoadingPros(true);
       try {
-        console.log('Chargement de tous les pros...');
-        const { data, error } = await profileService.listProProfiles(
-          {}, // Pas de filtres pour l'instant
-          { page: 1, pageSize: 50 }
+        console.log(`Chargement des pros pour le parcours ${course.name}...`);
+        
+        // Récupérer uniquement les pros qui ont des disponibilités sur ce parcours
+        const { data, error } = await profileService.getProsByGolfCourse(
+          course.id,
+          {
+            onlyAvailable: false, // Montrer tous les pros avec des disponibilités (même si complet)
+            limit: 20
+          }
         );
 
         if (data && !error) {
+          console.log(`${data.length} pros trouvés pour ce parcours`);
           setAllPros(data);
+        } else if (error) {
+          console.error('Erreur chargement pros:', error);
+          setAllPros([]);
         }
       } catch (error) {
-        // Erreur silencieuse pour l'instant
+        console.error('Erreur chargement pros:', error);
+        setAllPros([]);
       } finally {
         setIsLoadingPros(false);
       }
@@ -197,8 +209,17 @@ export const CourseBottomSheet = forwardRef<BottomSheetModal, CourseBottomSheetP
                 </ScrollView>
               ) : (
                 <View style={styles.emptyState}>
-                  <Text variant="body" color="course">
-                    Aucun pro trouvé
+                  <Icon 
+                    name="person-off" 
+                    size={32} 
+                    color={Colors.neutral.course} 
+                    family="MaterialIcons" 
+                  />
+                  <Text variant="body" color="course" style={{ marginTop: Spacing.s }}>
+                    Aucun professionnel disponible sur ce parcours
+                  </Text>
+                  <Text variant="caption" color="gray" style={{ marginTop: Spacing.xs, textAlign: 'center' }}>
+                    Les professionnels apparaîtront ici lorsqu'ils auront indiqué leurs disponibilités
                   </Text>
                 </View>
               )}
@@ -235,8 +256,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyState: {
-    paddingVertical: Spacing.l,
+    paddingVertical: Spacing.xl,
     alignItems: 'center',
+    paddingHorizontal: Spacing.l,
   },
   centeredTitle: {
     textAlign: 'center',

@@ -257,6 +257,78 @@ class ProfileService extends BaseService {
   }
 
   /**
+   * Récupérer les pros qui ont des disponibilités sur un parcours spécifique
+   */
+  async getProsByGolfCourse(
+    golfCourseId: string,
+    options?: {
+      onlyAvailable?: boolean;
+      limit?: number;
+    }
+  ): Promise<ServiceResponse<ProProfileWithDetails[]>> {
+    try {
+      // D'abord, récupérer les IDs des pros qui ont des disponibilités sur ce parcours
+      const today = new Date().toISOString().split('T')[0];
+      
+      let availabilityQuery = this.supabase
+        .from('pro_availabilities')
+        .select('pro_id')
+        .eq('golf_course_id', golfCourseId)
+        .gte('date', today); // Disponibilités futures uniquement
+
+      // Si on veut seulement ceux qui ont des créneaux disponibles
+      if (options?.onlyAvailable) {
+        availabilityQuery = availabilityQuery.gt('max_players', 'current_bookings');
+      }
+
+      const { data: availabilities, error: availError } = await availabilityQuery;
+
+      if (availError) {
+        console.error('[ProfileService] Erreur récupération disponibilités:', availError);
+        throw availError;
+      }
+
+      if (!availabilities || availabilities.length === 0) {
+        return {
+          data: [],
+          error: null,
+        };
+      }
+
+      // Récupérer les IDs uniques des pros
+      const proIds = [...new Set(availabilities.map(a => a.pro_id))];
+      
+      // Maintenant récupérer les profils complets de ces pros
+      const { data: profiles, error: profilesError } = await this.supabase
+        .from('profiles')
+        .select(
+          `
+          *,
+          pro_profiles!inner(*)
+        `
+        )
+        .in('id', proIds)
+        .eq('user_type', 'pro')
+        .limit(options?.limit || 20);
+
+      if (profilesError) {
+        console.error('[ProfileService] Erreur récupération profils:', profilesError);
+        throw profilesError;
+      }
+
+      return {
+        data: profiles || [],
+        error: null,
+      };
+    } catch (error: any) {
+      return {
+        data: null,
+        error: this.handleError(error),
+      };
+    }
+  }
+
+  /**
    * Soumettre un nouveau parcours de golf
    */
   async submitGolfCourse(
