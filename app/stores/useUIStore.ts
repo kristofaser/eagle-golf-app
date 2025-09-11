@@ -8,7 +8,6 @@ import { devtools } from 'zustand/middleware';
 interface UIState {
   // Modals et overlays
   activeModal: string | null;
-  isSearchOverlayOpen: boolean;
   isFilterPanelOpen: boolean;
 
   // Loading states
@@ -34,7 +33,6 @@ interface UIState {
 
   // Actions
   setActiveModal: (modalId: string | null) => void;
-  toggleSearchOverlay: () => void;
   toggleFilterPanel: () => void;
   setLoading: (key: string, isLoading: boolean) => void;
   showToast: (message: string, type?: UIState['toast']['type']) => void;
@@ -48,7 +46,6 @@ interface UIState {
 
 const initialState = {
   activeModal: null,
-  isSearchOverlayOpen: false,
   isFilterPanelOpen: false,
   loadingStates: {},
   toast: null,
@@ -70,9 +67,6 @@ export const useUIStore = create<UIState>()(
       setActiveModal: (modalId) => set({ activeModal: modalId }),
 
       // Overlays
-      toggleSearchOverlay: () =>
-        set((state) => ({ isSearchOverlayOpen: !state.isSearchOverlayOpen })),
-
       toggleFilterPanel: () => set((state) => ({ isFilterPanelOpen: !state.isFilterPanelOpen })),
 
       // Loading
@@ -130,7 +124,6 @@ export const useUIStore = create<UIState>()(
 
 // Sélecteurs optimisés
 export const useActiveModal = () => useUIStore((state) => state.activeModal);
-export const useIsSearchOpen = () => useUIStore((state) => state.isSearchOverlayOpen);
 export const useIsFilterOpen = () => useUIStore((state) => state.isFilterPanelOpen);
 export const useToast = () => useUIStore((state) => state.toast);
 export const useActiveTab = () => useUIStore((state) => state.activeTab);

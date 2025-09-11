@@ -300,7 +300,7 @@ class SearchService extends BaseService {
   }
 
   /**
-   * Recherche duale pour le SearchOverlay
+   * Recherche duale pour la page de recherche
    * Permet de rechercher soit par parcours, soit par professionnel
    */
   async searchDual(params: {

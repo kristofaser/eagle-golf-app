@@ -23,7 +23,6 @@ export type GolfCourseFilters = FilterParams<{
   minGreenFee?: number;
   maxGreenFee?: number;
   amenities?: string[];
-  active?: boolean;
   nearLocation?: {
     lat: number;
     lng: number;
@@ -255,7 +254,7 @@ class GolfCourseService extends BaseService {
         .select('*')
         .not('latitude', 'is', null)
         .not('longitude', 'is', null)
-        .eq('active', true);
+        ;
 
       if (error) {
         console.error('❌ Erreur requête:', error);
@@ -315,7 +314,7 @@ class GolfCourseService extends BaseService {
         .select('*')
         .not('latitude', 'is', null)
         .not('longitude', 'is', null)
-        .eq('active', true);
+        ;
 
       if (error) throw error;
 

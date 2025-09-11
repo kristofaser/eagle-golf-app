@@ -64,8 +64,8 @@ function RootLayoutContent() {
                   name="search"
                   options={{
                     headerShown: false,
-                    presentation: 'modal',
-                    animation: 'slide_from_bottom',
+                    presentation: 'card',
+                    animation: 'fade',
                   }}
                 />
                 <Stack.Screen

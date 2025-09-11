@@ -38,6 +38,23 @@ export default function SearchScreen() {
   const [loading, setLoading] = useState(false);
   const [prosResults, setProsResults] = useState<JoueurData[]>([]);
   const [coursesResults, setCoursesResults] = useState<CourseCardData[]>([]);
+  const inputRef = React.useRef<TextInput>(null);
+
+  // Focus sur le champ de recherche après le montage
+  useEffect(() => {
+    // Délai pour éviter les conflits avec l'animation de navigation
+    const timer = setTimeout(() => {
+      inputRef.current?.focus();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Gestionnaire de changement de texte robuste
+  const handleTextChange = useCallback((text: string) => {
+    // S'assurer que le texte est bien une chaîne
+    const safeText = text || '';
+    setSearchQuery(safeText);
+  }, []);
 
   // Fonction de recherche
   const performSearch = useCallback(async (query: string, category: SearchCategory) => {
@@ -249,12 +266,18 @@ export default function SearchScreen() {
             style={styles.searchIcon}
           />
           <TextInput
+            ref={inputRef}
             value={searchQuery}
-            onChangeText={setSearchQuery}
+            onChangeText={handleTextChange}
             placeholder="Rechercher des pros ou des parcours..."
             placeholderTextColor={Colors.neutral.course}
             style={styles.searchInput}
-            autoFocus
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="search"
+            enablesReturnKeyAutomatically
+            editable={true}
+            keyboardType="default"
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
