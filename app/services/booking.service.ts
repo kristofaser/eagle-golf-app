@@ -251,6 +251,16 @@ class BookingService extends BaseService {
         pro_profile:pro_profiles!bookings_pro_id_fkey(
           *,
           profile:profiles(*)
+        ),
+        profiles:amateur_id(
+          id,
+          first_name,
+          last_name,
+          avatar_url
+        ),
+        golf_parcours:golf_course_id(
+          id,
+          name
         )
       `,
       { count: 'exact' }
