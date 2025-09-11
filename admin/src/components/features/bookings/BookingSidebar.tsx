@@ -48,7 +48,6 @@ interface BookingSidebarProps {
 export default function BookingSidebar({ isOpen, onClose, booking, onValidate }: BookingSidebarProps) {
   const [action, setAction] = useState<'confirm' | 'reject' | 'alternative'>('confirm');
   const [adminNotes, setAdminNotes] = useState('');
-  const [alternativeDate, setAlternativeDate] = useState('');
   const [alternativeTime, setAlternativeTime] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -73,18 +72,20 @@ export default function BookingSidebar({ isOpen, onClose, booking, onValidate }:
 
     setIsSubmitting(true);
     try {
+      // Pour une alternative, on utilise la date originale de la réservation
+      const dateToUse = action === 'alternative' ? booking.booking_date : undefined;
+      
       await onValidate(
         booking.id,
         action,
         adminNotes,
-        alternativeDate,
+        dateToUse,
         alternativeTime
       );
       onClose();
       // Reset form
       setAction('confirm');
       setAdminNotes('');
-      setAlternativeDate('');
       setAlternativeTime('');
     } catch (error) {
       console.error('Erreur lors de la validation:', error);
@@ -322,31 +323,22 @@ export default function BookingSidebar({ isOpen, onClose, booking, onValidate }:
                 </label>
               </div>
 
-              {/* Alternative date/time */}
+              {/* Alternative time only */}
               {action === 'alternative' && (
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Date alternative
-                    </label>
-                    <input
-                      type="date"
-                      value={alternativeDate}
-                      onChange={(e) => setAlternativeDate(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Heure alternative
-                    </label>
-                    <input
-                      type="time"
-                      value={alternativeTime}
-                      onChange={(e) => setAlternativeTime(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    />
-                  </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Heure alternative (même jour)
+                  </label>
+                  <input
+                    type="time"
+                    value={alternativeTime}
+                    onChange={(e) => setAlternativeTime(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    required={action === 'alternative'}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Proposez un autre créneau horaire pour la même date : {booking.booking_date ? formatDate(booking.booking_date) : ''}
+                  </p>
                 </div>
               )}
 
