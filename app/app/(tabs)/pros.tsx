@@ -307,9 +307,11 @@ function ProsScreen() {
 
           return (
             <View key={division} style={styles.sectionContainer}>
-              <Text variant="h3" color="charcoal" style={styles.sectionTitle}>
-                {division}
-              </Text>
+              <View style={styles.sectionHeader}>
+                <Text variant="h3" color="charcoal" style={styles.sectionTitle}>
+                  {division}
+                </Text>
+              </View>
               <ScrollView
                 horizontal={true}
                 showsHorizontalScrollIndicator={false}
