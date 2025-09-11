@@ -74,11 +74,6 @@ export function ProProfile({ profile, onRefresh }: ProProfileProps) {
         },
         { limit: 10 }
       );
-
-      // Debug: Afficher la structure des données
-      if (filteredUpcoming.length > 0) {
-        console.log('🔍 Structure booking:', JSON.stringify(filteredUpcoming[0], null, 2));
-      }
       
       setUpcomingBookings(filteredUpcoming);
       setPastBookings(past || []);
