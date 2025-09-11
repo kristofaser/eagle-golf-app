@@ -53,6 +53,8 @@ export type AvailabilityFilters = FilterParams<{
 // Type pour les filtres de réservations
 export type BookingFilters = FilterParams<{
   userId?: string;
+  proId?: string;
+  amateurId?: string;
   status?: Booking['status'];
   startDate?: string;
   endDate?: string;
@@ -273,6 +275,12 @@ class BookingService extends BaseService {
     if (filters) {
       if (filters.userId) {
         query = query.or(`amateur_id.eq.${filters.userId},pro_id.eq.${filters.userId}`);
+      }
+      if (filters.proId) {
+        query = query.eq('pro_id', filters.proId);
+      }
+      if (filters.amateurId) {
+        query = query.eq('amateur_id', filters.amateurId);
       }
       if (filters.status) {
         query = query.eq('status', filters.status);
