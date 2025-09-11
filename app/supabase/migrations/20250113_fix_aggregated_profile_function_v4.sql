@@ -49,8 +49,7 @@ BEGIN
         'golf_affiliations', pp.golf_affiliations,
         'can_travel', pp.can_travel,
         'travel_radius_km', pp.travel_radius_km,
-        'created_at', pp.created_at,
-        'updated_at', pp.updated_at
+        'created_at', pp.created_at
       )
       FROM pro_profiles pp
       WHERE pp.user_id = p.id
@@ -64,8 +63,7 @@ BEGIN
         'prefers_morning', ap.prefers_morning,
         'home_course', ap.home_course,
         'seeking_pro_tips', ap.seeking_pro_tips,
-        'created_at', ap.created_at,
-        'updated_at', ap.updated_at
+        'created_at', ap.created_at
       )
       FROM amateur_profiles ap
       WHERE ap.user_id = p.id
