@@ -12,6 +12,7 @@ export type BookingWithDetails = WithDetails<
     pro_profile: Tables<'pro_profiles'> & {
       profile: Tables<'profiles'>;
     };
+    amateur: Tables<'profiles'>;
     golf_parcours: Tables<'golf_parcours'>;
   }
 >;
@@ -254,14 +255,11 @@ class BookingService extends BaseService {
           *,
           profile:profiles(*)
         ),
-        amateur_profiles!bookings_amateur_id_fkey(
-          user_id,
-          profiles!amateur_profiles_user_id_fkey(
-            id,
-            first_name,
-            last_name,
-            avatar_url
-          )
+        amateur:profiles!bookings_amateur_id_fkey(
+          id,
+          first_name,
+          last_name,
+          avatar_url
         ),
         golf_parcours!bookings_golf_course_id_fkey(
           id,
