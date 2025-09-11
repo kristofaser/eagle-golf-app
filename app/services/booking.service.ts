@@ -256,7 +256,7 @@ class BookingService extends BaseService {
         ),
         amateur_profiles!bookings_amateur_id_fkey(
           user_id,
-          profiles:user_id(
+          profiles!amateur_profiles_user_id_fkey(
             id,
             first_name,
             last_name,
