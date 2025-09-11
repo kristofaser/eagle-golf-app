@@ -45,7 +45,7 @@ export async function POST(
         email,
         is_active
       `)
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .eq('is_active', true)
       .single();
     
@@ -117,9 +117,9 @@ export async function POST(
       .update({
         status: newStatus,
         admin_id: adminProfile.id, // Utiliser l'ID admin_profiles
-        admin_notes,
-        alternative_date,
-        alternative_time,
+        admin_notes: admin_notes || null,
+        alternative_date: alternative_date || null,
+        alternative_time: alternative_time || null,
         validated_at: new Date().toISOString(),
       })
       .eq('booking_id', bookingId);
