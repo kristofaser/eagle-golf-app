@@ -203,7 +203,7 @@ export function ProProfile({ profile, onRefresh }: ProProfileProps) {
                     <View key={booking.id} style={styles.bookingCard}>
                       <View style={styles.bookingDate}>
                         <Text variant="body" weight="semiBold" color="charcoal">
-                          {new Date(booking.date).toLocaleDateString('fr-FR', {
+                          {new Date(booking.booking_date).toLocaleDateString('fr-FR', {
                             weekday: 'long',
                             day: 'numeric',
                             month: 'long',

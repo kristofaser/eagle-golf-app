@@ -102,10 +102,6 @@ export async function POST(
         newStatus = 'alternative_proposed';
         bookingStatus = 'pending';
         break;
-      case 'checking':
-        newStatus = 'checking_availability';
-        bookingStatus = 'pending';
-        break;
       default:
         return NextResponse.json({ error: 'Action non valide' }, { status: 400 });
     }
@@ -200,11 +196,11 @@ export async function POST(
       } catch (golfError: unknown) {
         console.error('Erreur lors de la réservation golf:', golfError);
         
-        // En cas d'échec, repasser en statut "checking"
+        // En cas d'échec, repasser en statut "pending"
         await supabase
           .from('admin_booking_validations')
           .update({
-            status: 'checking_availability',
+            status: 'pending',
             admin_id: adminProfile.id, // Utiliser l'admin_id
             admin_notes: `Erreur lors de la réservation golf: ${golfError instanceof Error ? golfError.message : 'Erreur inconnue'}`,
             validated_at: new Date().toISOString(),
@@ -215,7 +211,7 @@ export async function POST(
           .from('bookings')
           .update({
             status: 'pending',
-            admin_validation_status: 'checking_availability',
+            admin_validation_status: 'pending',
           })
           .eq('id', bookingId);
 

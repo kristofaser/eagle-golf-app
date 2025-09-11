@@ -46,7 +46,7 @@ interface BookingSidebarProps {
 }
 
 export default function BookingSidebar({ isOpen, onClose, booking, onValidate }: BookingSidebarProps) {
-  const [action, setAction] = useState<'confirm' | 'reject' | 'alternative' | 'checking'>('confirm');
+  const [action, setAction] = useState<'confirm' | 'reject' | 'alternative'>('confirm');
   const [adminNotes, setAdminNotes] = useState('');
   const [alternativeDate, setAlternativeDate] = useState('');
   const [alternativeTime, setAlternativeTime] = useState('');
@@ -291,22 +291,10 @@ export default function BookingSidebar({ isOpen, onClose, booking, onValidate }:
                     name="action"
                     value="confirm"
                     checked={action === 'confirm'}
-                    onChange={(e) => setAction(e.target.value as 'confirm' | 'reject' | 'alternative' | 'checking')}
+                    onChange={(e) => setAction(e.target.value as 'confirm' | 'reject' | 'alternative')}
                     className="text-green-600"
                   />
                   <span className="text-sm font-medium">Confirmer la réservation</span>
-                </label>
-                
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="action"
-                    value="checking"
-                    checked={action === 'checking'}
-                    onChange={(e) => setAction(e.target.value as 'confirm' | 'reject' | 'alternative' | 'checking')}
-                    className="text-blue-600"
-                  />
-                  <span className="text-sm font-medium">Vérification en cours</span>
                 </label>
 
                 <label className="flex items-center gap-3 cursor-pointer">
@@ -315,7 +303,7 @@ export default function BookingSidebar({ isOpen, onClose, booking, onValidate }:
                     name="action"
                     value="alternative"
                     checked={action === 'alternative'}
-                    onChange={(e) => setAction(e.target.value as 'confirm' | 'reject' | 'alternative' | 'checking')}
+                    onChange={(e) => setAction(e.target.value as 'confirm' | 'reject' | 'alternative')}
                     className="text-orange-600"
                   />
                   <span className="text-sm font-medium">Proposer une alternative</span>
@@ -327,7 +315,7 @@ export default function BookingSidebar({ isOpen, onClose, booking, onValidate }:
                     name="action"
                     value="reject"
                     checked={action === 'reject'}
-                    onChange={(e) => setAction(e.target.value as 'confirm' | 'reject' | 'alternative' | 'checking')}
+                    onChange={(e) => setAction(e.target.value as 'confirm' | 'reject' | 'alternative')}
                     className="text-red-600"
                   />
                   <span className="text-sm font-medium">Refuser la réservation</span>
