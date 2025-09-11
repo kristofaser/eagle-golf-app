@@ -12,7 +12,7 @@ import { useRouter } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
-import { GolfCartIcon } from '@hugeicons/core-free-icons';
+import { GolfCartIcon, Location05Icon } from '@hugeicons/core-free-icons';
 import { Colors, Spacing, Typography, BorderRadius, Elevation } from '@/constants/theme';
 import { Text, LoadingScreen, Avatar } from '@/components/atoms';
 import { ProPricingDisplay } from '@/components/molecules/ProPricingDisplay';
@@ -198,49 +198,63 @@ export function ProProfile({ profile, onRefresh }: ProProfileProps) {
               </View>
 
               {upcomingBookings.length > 0 ? (
-                <View style={styles.bookingsList}>
+                <View style={styles.bookingsContainer}>
                   {upcomingBookings.slice(0, 5).map((booking) => (
                     <View key={booking.id} style={styles.bookingCard}>
-                      <View style={styles.bookingDate}>
-                        <Text variant="body" weight="semiBold" color="charcoal">
-                          {new Date(booking.booking_date).toLocaleDateString('fr-FR', {
-                            weekday: 'long',
-                            day: 'numeric',
-                            month: 'long',
-                          })}
-                        </Text>
-                        <Text variant="caption" color="iron">
-                          {booking.start_time}
-                        </Text>
+                      <View style={styles.bookingContent}>
+                        {/* Avatar à gauche */}
+                        <Avatar
+                          imageUrl={booking.profiles?.avatar_url}
+                          name={`${booking.profiles?.first_name || 'Amateur'} ${booking.profiles?.last_name || ''}`}
+                          size="large"
+                        />
 
-                        {/* Badge statut sous la date */}
-                        <View
-                          style={[
-                            styles.statusBadgeInline,
-                            booking.status === 'confirmed'
-                              ? styles.confirmedBadge
-                              : styles.pendingBadge,
-                          ]}
-                        >
-                          <Text variant="caption" color="white" weight="medium">
-                            {booking.status === 'confirmed'
-                              ? 'Confirmé'
-                              : 'En attente de confirmation'}
-                          </Text>
-                        </View>
-                      </View>
-                      <View style={styles.bookingDetails}>
+                        {/* Informations empilées à droite */}
                         <View style={styles.bookingInfo}>
-                          <Ionicons name="location-outline" size={16} color={Colors.neutral.iron} />
-                          <Text variant="caption" color="iron" numberOfLines={1}>
-                            {booking.golf_parcours?.name || 'Golf Course'}
+                          {/* Nom de l'amateur */}
+                          <Text variant="body" color="charcoal" weight="semiBold">
+                            {booking.profiles?.first_name || 'Amateur'}{' '}
+                            {booking.profiles?.last_name || ''}
                           </Text>
-                        </View>
-                        <View style={styles.bookingInfo}>
-                          <Ionicons name="person-outline" size={16} color={Colors.neutral.iron} />
-                          <Text variant="caption" color="iron" numberOfLines={1}>
-                            {booking.profiles?.first_name} {booking.profiles?.last_name}
+
+                          {/* Golf avec icône */}
+                          <View style={styles.bookingLocation}>
+                            <HugeiconsIcon
+                              icon={Location05Icon}
+                              size={14}
+                              color={Colors.primary.accent}
+                              strokeWidth={2}
+                            />
+                            <Text variant="caption" color="charcoal" style={styles.courseName}>
+                              {booking.golf_parcours?.name || 'Golf Course'}
+                            </Text>
+                          </View>
+
+                          {/* Date et heure */}
+                          <Text variant="caption" color="iron">
+                            {new Date(booking.booking_date).toLocaleDateString('fr-FR', {
+                              weekday: 'long',
+                              day: '2-digit',
+                              month: 'long',
+                            })}{' '}
+                            à {booking.start_time.slice(0, 5)}
                           </Text>
+
+                          {/* Badge statut sous la date */}
+                          <View
+                            style={[
+                              styles.statusBadgeInline,
+                              booking.status === 'confirmed'
+                                ? styles.confirmedBadge
+                                : styles.pendingBadge,
+                            ]}
+                          >
+                            <Text variant="caption" color="white" weight="medium">
+                              {booking.status === 'confirmed'
+                                ? 'Confirmé'
+                                : 'En attente de confirmation'}
+                            </Text>
+                          </View>
                         </View>
                       </View>
                     </View>
@@ -383,32 +397,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.m,
   },
-  bookingsList: {
+  bookingsContainer: {
     gap: Spacing.s,
   },
   bookingCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: Spacing.m,
     backgroundColor: Colors.neutral.white,
-    borderRadius: BorderRadius.small,
-    borderLeftWidth: 4,
-    borderLeftColor: Colors.primary.accent,
+    borderRadius: BorderRadius.medium,
+    padding: Spacing.m,
     marginBottom: Spacing.s,
     ...Elevation.small,
   },
-  bookingDate: {
-    flex: 2,
-  },
-  bookingDetails: {
-    flex: 3,
-    gap: Spacing.xxs,
-    marginLeft: Spacing.s,
+  bookingContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
   },
   bookingInfo: {
+    flex: 1,
+    marginLeft: Spacing.m,
+    gap: Spacing.xs,
+  },
+  bookingLocation: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    gap: Spacing.xxs,
+  },
+  courseName: {
+    flex: 1,
   },
   statusBadgeInline: {
     alignSelf: 'flex-start',
