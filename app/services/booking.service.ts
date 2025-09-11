@@ -252,13 +252,13 @@ class BookingService extends BaseService {
           *,
           profile:profiles(*)
         ),
-        profiles:amateur_id(
+        profiles!bookings_amateur_id_fkey(
           id,
           first_name,
           last_name,
           avatar_url
         ),
-        golf_parcours:golf_course_id(
+        golf_parcours!bookings_golf_course_id_fkey(
           id,
           name
         )
