@@ -12,7 +12,7 @@ export type BookingWithDetails = WithDetails<
     pro_profile: Tables<'pro_profiles'> & {
       profile: Tables<'profiles'>;
     };
-    amateur: Tables<'profiles'>;
+    amateur_profile: Tables<'profiles'> | null;
     golf_parcours: Tables<'golf_parcours'>;
   }
 >;
@@ -254,16 +254,6 @@ class BookingService extends BaseService {
         pro_profile:pro_profiles!bookings_pro_id_fkey(
           *,
           profile:profiles(*)
-        ),
-        amateur:profiles!bookings_amateur_id_fkey(
-          id,
-          first_name,
-          last_name,
-          avatar_url
-        ),
-        golf_parcours!bookings_golf_course_id_fkey(
-          id,
-          name
         )
       `,
       { count: 'exact' }
@@ -332,10 +322,29 @@ class BookingService extends BaseService {
         }
       }
 
+      // Récupérer les IDs d'amateurs uniques
+      const amateurIds = [...new Set(bookings?.map(b => b.amateur_id).filter(Boolean))];
+      
+      // Récupérer les données des amateurs en une seule requête
+      let amateurData: Record<string, any> = {};
+      if (amateurIds.length > 0) {
+        const { data: amateurs } = await this.supabase
+          .from('profiles')
+          .select('id, first_name, last_name, avatar_url')
+          .in('id', amateurIds);
+
+        if (amateurs) {
+          amateurs.forEach(amateur => {
+            amateurData[amateur.id] = amateur;
+          });
+        }
+      }
+
       // Combiner les données
       const result = bookings?.map(booking => ({
         ...booking,
-        golf_parcours: golfData[booking.golf_course_id] || null
+        golf_parcours: golfData[booking.golf_course_id] || null,
+        amateur_profile: amateurData[booking.amateur_id] || null
       })) as BookingWithDetails[];
 
       return {

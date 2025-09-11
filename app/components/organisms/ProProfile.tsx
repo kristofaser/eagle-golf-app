@@ -209,8 +209,8 @@ export function ProProfile({ profile, onRefresh }: ProProfileProps) {
                       <View style={styles.bookingContent}>
                         {/* Avatar à gauche */}
                         <Avatar
-                          imageUrl={booking.amateur?.avatar_url}
-                          name={`${booking.amateur?.first_name || 'Amateur'} ${booking.amateur?.last_name || ''}`}
+                          imageUrl={booking.amateur_profile?.avatar_url}
+                          name={`${booking.amateur_profile?.first_name || 'Amateur'} ${booking.amateur_profile?.last_name || ''}`}
                           size="large"
                         />
 
@@ -218,8 +218,8 @@ export function ProProfile({ profile, onRefresh }: ProProfileProps) {
                         <View style={styles.bookingInfo}>
                           {/* Nom de l'amateur */}
                           <Text variant="body" color="charcoal" weight="semiBold">
-                            {booking.amateur?.first_name || 'Amateur'}{' '}
-                            {booking.amateur?.last_name || ''}
+                            {booking.amateur_profile?.first_name || 'Amateur'}{' '}
+                            {booking.amateur_profile?.last_name || ''}
                           </Text>
 
                           {/* Golf avec icône */}
