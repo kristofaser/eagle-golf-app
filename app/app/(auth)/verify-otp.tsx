@@ -61,7 +61,33 @@ export default function VerifyOtpScreen() {
 
   // Gestion de la saisie du code
   const handleCodeChange = (value: string, index: number) => {
-    // Ne garder que les chiffres
+    // Détection du collage (si plus d'un caractère)
+    if (value.length > 1) {
+      // Extraire tous les chiffres collés
+      const digits = value.replace(/[^0-9]/g, '').slice(0, 6);
+      
+      if (digits.length > 0) {
+        // Distribuer les chiffres dans tous les champs
+        const newCode = [...code];
+        const digitsArray = digits.split('');
+        
+        // Remplir à partir de l'index actuel
+        for (let i = 0; i < digitsArray.length && (index + i) < 6; i++) {
+          newCode[index + i] = digitsArray[i];
+        }
+        
+        setCode(newCode);
+        setError(''); // Effacer l'erreur
+        
+        // Focus sur le prochain champ vide ou le dernier
+        const nextEmptyIndex = newCode.findIndex((digit, idx) => idx > index && !digit);
+        const focusIndex = nextEmptyIndex !== -1 ? nextEmptyIndex : Math.min(index + digits.length, 5);
+        inputRefs.current[focusIndex]?.focus();
+      }
+      return;
+    }
+
+    // Traitement normal pour un seul caractère
     const digit = value.replace(/[^0-9]/g, '').slice(-1);
 
     const newCode = [...code];
@@ -79,15 +105,6 @@ export default function VerifyOtpScreen() {
   const handleKeyPress = (key: string, index: number) => {
     if (key === 'Backspace' && !code[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  // Gestion du collage
-  const handlePaste = (pastedText: string) => {
-    const digits = pastedText.replace(/[^0-9]/g, '').slice(0, 6);
-    if (digits.length === 6) {
-      const newCode = digits.split('');
-      setCode(newCode);
     }
   };
 
@@ -234,17 +251,10 @@ export default function VerifyOtpScreen() {
                     onChangeText={(value) => handleCodeChange(value, index)}
                     onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, index)}
                     keyboardType="number-pad"
-                    maxLength={1}
+                    maxLength={7} // Augmenté pour permettre le collage complet
                     selectTextOnFocus
                     autoComplete={Platform.OS === 'ios' ? 'one-time-code' : 'off'}
                     textContentType={index === 0 ? 'oneTimeCode' : 'none'}
-                    onPaste={(e: any) => {
-                      if (index === 0) {
-                        e.preventDefault();
-                        const pastedText = e.nativeEvent?.clipboardData?.getData('text') || '';
-                        handlePaste(pastedText);
-                      }
-                    }}
                     editable={!isLoading}
                   />
                 ))}
