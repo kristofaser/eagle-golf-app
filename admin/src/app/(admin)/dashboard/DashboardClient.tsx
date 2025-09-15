@@ -34,28 +34,28 @@ export default function DashboardClient({ stats, recentBookings }: DashboardClie
   const statsCards = [
     {
       name: 'Utilisateurs totaux',
-      value: stats.totalUsers.toLocaleString(),
+      value: stats.totalUsers.toLocaleString('fr-FR'),
       change: `+${stats.userGrowth.toFixed(1)}%`,
       changeType: 'positive' as const,
       icon: Users,
     },
     {
       name: 'Réservations actives',
-      value: stats.activeBookings.toLocaleString(),
+      value: stats.activeBookings.toLocaleString('fr-FR'),
       change: '+8.2%',
       changeType: 'positive' as const,
       icon: Calendar,
     },
     {
       name: 'Revenus du mois',
-      value: `€${stats.totalRevenue.toLocaleString()}`,
+      value: `€${stats.totalRevenue.toLocaleString('fr-FR')}`,
       change: `+${stats.revenueGrowth.toFixed(1)}%`,
       changeType: 'positive' as const,
       icon: DollarSign,
     },
     {
       name: 'Pros actifs',
-      value: stats.totalPros.toLocaleString(),
+      value: stats.totalPros.toLocaleString('fr-FR'),
       change: '+4.5%',
       changeType: 'positive' as const,
       icon: UserCheck,
