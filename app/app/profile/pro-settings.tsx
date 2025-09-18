@@ -14,6 +14,8 @@ import {
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import { Video02Icon } from '@hugeicons/core-free-icons';
 import { useAuth } from '@/hooks/useAuth';
 import { profileService, FullProfile } from '@/services/profile.service';
 import { Text, Button, Input, LoadingScreen } from '@/components/atoms';
@@ -36,9 +38,10 @@ interface SkillSliderProps {
   label: string;
   value: number;
   onValueChange: (value: number) => void;
+  onCameraPress?: () => void;
 }
 
-const SkillSlider: React.FC<SkillSliderProps> = ({ label, value, onValueChange }) => {
+const SkillSlider: React.FC<SkillSliderProps> = ({ label, value, onValueChange, onCameraPress }) => {
   // S'assurer que value est un nombre valide
   const safeValue = isNaN(value) || value === undefined || value === null ? 0 : value;
 
@@ -50,9 +53,25 @@ const SkillSlider: React.FC<SkillSliderProps> = ({ label, value, onValueChange }
   return (
     <View style={styles.skillContainer}>
       <View style={styles.skillHeader}>
-        <Text variant="body" color="charcoal" weight="medium" style={styles.skillLabel}>
-          {label}
-        </Text>
+        <View style={styles.skillLabelContainer}>
+          <Text variant="body" color="charcoal" weight="medium" style={styles.skillLabel}>
+            {label}
+          </Text>
+          {onCameraPress && (
+            <TouchableOpacity
+              style={styles.cameraButton}
+              onPress={onCameraPress}
+              activeOpacity={0.7}
+            >
+              <HugeiconsIcon
+                icon={Video02Icon}
+                size={16}
+                color={Colors.primary.accent}
+                strokeWidth={1.5}
+              />
+            </TouchableOpacity>
+          )}
+        </View>
         <View style={styles.skillValue}>
           <Text variant="body" color="accent" weight="semiBold">
             {safeValue}%
@@ -429,6 +448,10 @@ export default function ProSettingsScreen() {
   // État pour le modal d'expérience
   const [showExperienceModal, setShowExperienceModal] = useState(false);
 
+  // État pour le modal d'upload vidéo
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [selectedSkill, setSelectedSkill] = useState<string>('');
+
   // États pour les données modifiables
   const [division, setDivision] = useState('');
   const [worldRanking, setWorldRanking] = useState('');
@@ -542,6 +565,11 @@ export default function ProSettingsScreen() {
     setExperiences((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleCameraPress = (skillKey: string) => {
+    setSelectedSkill(skillKey);
+    setShowVideoModal(true);
+  };
+
   if (loading) {
     return <LoadingScreen message="Chargement de votre profil professionnel..." />;
   }
@@ -613,21 +641,47 @@ export default function ProSettingsScreen() {
                 Évaluez vos compétences de 0 à 100%
               </Text>
               <View style={styles.sectionContent}>
-                <SkillSlider label="Driving" value={skillDriving} onValueChange={setSkillDriving} />
+                <SkillSlider
+                  label="Driving"
+                  value={skillDriving}
+                  onValueChange={setSkillDriving}
+                  onCameraPress={() => handleCameraPress('driving')}
+                />
 
-                <SkillSlider label="Fers" value={skillIrons} onValueChange={setSkillIrons} />
+                <SkillSlider
+                  label="Fers"
+                  value={skillIrons}
+                  onValueChange={setSkillIrons}
+                  onCameraPress={() => handleCameraPress('irons')}
+                />
 
-                <SkillSlider label="Wedging" value={skillWedging} onValueChange={setSkillWedging} />
+                <SkillSlider
+                  label="Wedging"
+                  value={skillWedging}
+                  onValueChange={setSkillWedging}
+                  onCameraPress={() => handleCameraPress('wedging')}
+                />
 
                 <SkillSlider
                   label="Chipping"
                   value={skillChipping}
                   onValueChange={setSkillChipping}
+                  onCameraPress={() => handleCameraPress('chipping')}
                 />
 
-                <SkillSlider label="Putting" value={skillPutting} onValueChange={setSkillPutting} />
+                <SkillSlider
+                  label="Putting"
+                  value={skillPutting}
+                  onValueChange={setSkillPutting}
+                  onCameraPress={() => handleCameraPress('putting')}
+                />
 
-                <SkillSlider label="Mental" value={skillMental} onValueChange={setSkillMental} />
+                <SkillSlider
+                  label="Mental"
+                  value={skillMental}
+                  onValueChange={setSkillMental}
+                  onCameraPress={() => handleCameraPress('mental')}
+                />
               </View>
             </View>
 
@@ -683,6 +737,7 @@ export default function ProSettingsScreen() {
                 </TouchableOpacity>
               </View>
             </View>
+
           </ScrollView>
 
           {/* Bouton de sauvegarde fixe */}
@@ -705,6 +760,38 @@ export default function ProSettingsScreen() {
         onClose={() => setShowExperienceModal(false)}
         onAdd={handleAddExperience}
       />
+
+      {/* Modal d'upload vidéo */}
+      <Modal
+        visible={showVideoModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowVideoModal(false)}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text variant="h4" color="charcoal" weight="semiBold">
+              Gérer la vidéo - {selectedSkill}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setShowVideoModal(false)}
+              style={styles.modalCloseButton}
+            >
+              <Ionicons name="close" size={24} color={Colors.neutral.charcoal} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.modalContent}>
+            <Text variant="body" color="charcoal" style={{ marginBottom: Spacing.m }}>
+              Fonctionnalité d'upload vidéo à implémenter...
+            </Text>
+            <Button
+              title="Fermer"
+              onPress={() => setShowVideoModal(false)}
+            />
+          </View>
+        </SafeAreaView>
+      </Modal>
     </>
   );
 }
@@ -749,8 +836,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing.s,
   },
-  skillLabel: {
+  skillLabelContainer: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  skillLabel: {
+    flex: 0,
+  },
+  cameraButton: {
+    padding: Spacing.xs,
+    marginLeft: Spacing.xs,
   },
   skillValue: {
     minWidth: 50,
@@ -947,6 +1043,7 @@ const styles = StyleSheet.create({
   addExperienceText: {
     marginLeft: Spacing.xs,
   },
+
 
   // Styles pour AddExperienceBottomSheet
   typeSelector: {

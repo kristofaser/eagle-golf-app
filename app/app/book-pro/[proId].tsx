@@ -535,7 +535,7 @@ export default function BookProScreen() {
         merchantDisplayName: 'Eagle Golf',
         paymentIntentClientSecret: response.client_secret,
         returnURL: 'eagle://payment-complete',
-        customFlow: false,
+        customFlow: true, // Contrôle total sur les méthodes de paiement
         style: 'alwaysDark',
         googlePay: {
           merchantCountryCode: 'FR',
@@ -544,6 +544,21 @@ export default function BookProScreen() {
         applePay: {
           merchantCountryCode: 'FR',
         },
+        allowsDelayedPaymentMethods: false,
+        // Configuration française
+        defaultBillingDetails: {},
+        appearance: {
+          primaryButton: {
+            colors: {
+              background: '#4F46E5', // Couleur du bouton principal
+            },
+          },
+        },
+        // Localisation française
+        locale: 'fr',
+        // Désactiver Link
+        paymentMethodOrder: ['card', 'apple_pay', 'google_pay'],
+        // Désactiver explicitement toutes les méthodes différées
         allowsDelayedPaymentMethods: false,
       });
 
@@ -558,7 +573,7 @@ export default function BookProScreen() {
       if (paymentError) {
         if (paymentError.code === 'Canceled') {
           console.log('⚠️ Paiement annulé par l\'utilisateur');
-          return null; // Retourner null pour l'annulation
+          return; // Annulé par l'utilisateur, ne pas montrer d'erreur
         } else {
           console.error('❌ Erreur Payment Sheet:', paymentError.message);
           throw new Error(paymentError.message);
@@ -568,7 +583,7 @@ export default function BookProScreen() {
       // Paiement réussi - appeler directement handlePaymentSuccess
       console.log('✅ Payment Sheet validé avec succès');
       console.log('🔄 Payment Intent ID:', response.payment_intent_id);
-      
+
       // Appeler directement handlePaymentSuccess sans passer par le return
       await handlePaymentSuccess(response.payment_intent_id);
       console.log('✅ handlePaymentSuccess terminé avec succès');

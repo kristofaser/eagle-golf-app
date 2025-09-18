@@ -58,11 +58,13 @@ BEGIN
       SELECT json_build_object(
         'user_id', ap.user_id,
         'handicap', ap.handicap,
-        'play_frequency', ap.play_frequency,
-        'play_days', ap.play_days,
-        'prefers_morning', ap.prefers_morning,
-        'home_course', ap.home_course,
-        'seeking_pro_tips', ap.seeking_pro_tips,
+        'preferred_play_style', ap.preferred_play_style,
+        'budget_range', ap.budget_range,
+        'experience_level', ap.experience_level,
+        'preferred_game_duration', ap.preferred_game_duration,
+        'club_affiliation', ap.club_affiliation,
+        'golf_course_id', ap.golf_course_id,
+        'license_number', ap.license_number,
         'created_at', ap.created_at
       )
       FROM amateur_profiles ap

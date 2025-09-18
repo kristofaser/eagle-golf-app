@@ -50,8 +50,11 @@ serve(async (req) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount), // Montant en centimes
       currency: currency.toLowerCase(),
+      // Remplacer automatic_payment_methods par des méthodes spécifiques
+      payment_method_types: ['card'],
+      // Désactiver explicitement toutes les méthodes automatiques
       automatic_payment_methods: {
-        enabled: true,
+        enabled: false,
       },
       metadata: {
         ...metadata,

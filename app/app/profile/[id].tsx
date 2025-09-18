@@ -27,6 +27,7 @@ import {
   AiBrain01Icon,
   Clapping02Icon,
   GolfHoleIcon,
+  Video02Icon,
 } from '@hugeicons/core-free-icons';
 import { useRouter } from 'expo-router';
 import { profileService, FullProfile } from '@/services/profile.service';
@@ -376,11 +377,18 @@ export default function ProfileScreen() {
     return {};
   });
 
-  // Fonction pour afficher une barre de compétence
-  const renderSkillBar = (label: string, value: number | null | undefined, icon?: any) => {
+  // Fonction pour afficher une barre de compétence avec icône vidéo
+  const renderSkillBar = (label: string, value: number | null | undefined, icon?: any, skillKey?: string) => {
     // Les valeurs sont stockées sur une échelle de 0-100 dans la DB
     const skillValue = value || 0;
     const percentage = Math.min(100, Math.max(0, skillValue)); // Clamp entre 0 et 100
+
+    const handleVideoPress = () => {
+      if (skillKey) {
+        console.log(`🎥 Navigation vers vidéo ${skillKey} pour ${profileId}`);
+        router.push(`/video-skill/${profileId}/${skillKey}`);
+      }
+    };
 
     return (
       <View style={styles.skillRow} key={label}>
@@ -397,6 +405,22 @@ export default function ProfileScreen() {
               </View>
             )}
             <Text style={styles.skillLabel}>{label}</Text>
+
+            {/* Icône vidéo juste à côté du nom */}
+            {skillKey && (
+              <TouchableOpacity
+                style={styles.videoIconButton}
+                onPress={handleVideoPress}
+                activeOpacity={0.7}
+              >
+                <HugeiconsIcon
+                  icon={Video02Icon}
+                  size={18}
+                  color={Colors.primary.accent}
+                  strokeWidth={1.5}
+                />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
         <View style={styles.skillBarContainer}>
@@ -539,8 +563,29 @@ export default function ProfileScreen() {
                 </Animated.View>
               </View>
 
+              {/* Bloc Disponibilités */}
+              {proCourses.length > 0 && (
+                <Animated.View
+                  entering={FadeIn.delay(300).duration(300)}
+                  style={[styles.card, { backgroundColor: '#FFFFFF' }]}
+                >
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.cardTitle}>Disponibilités</Text>
+                  </View>
+                  <View style={[styles.accentLine, { backgroundColor: Colors.primary.accent }]} />
+
+                  {/* Cards des parcours disponibles */}
+                  <ProAvailabilityCards
+                    availabilities={proCourses}
+                    selectedCourseId={selectedCourseId}
+                    onCourseSelect={handleCourseSelect}
+                    loading={isLoadingCourses}
+                  />
+                </Animated.View>
+              )}
+
               <Animated.View
-                entering={FadeIn.delay(300).duration(300)}
+                entering={FadeIn.delay(350).duration(300)}
                 style={[styles.card, { backgroundColor: sectionColors.level.background }]}
               >
                 <View style={styles.cardHeader}>
@@ -548,14 +593,14 @@ export default function ProfileScreen() {
                 </View>
                 <View style={[styles.accentLine, { backgroundColor: Colors.primary.accent }]} />
 
-                {/* Skills avec barres de progression */}
+                {/* Skills avec barres de progression et icônes vidéo */}
                 <View style={styles.skillsContainer}>
-                  {renderSkillBar('Driving', proDetails?.skill_driving, BombIcon)}
-                  {renderSkillBar('Fers', proDetails?.skill_irons, GolfBatIcon)}
-                  {renderSkillBar('Wedging', proDetails?.skill_wedging, Target02Icon)}
-                  {renderSkillBar('Chipping', proDetails?.skill_chipping, Clapping02Icon)}
-                  {renderSkillBar('Putting', proDetails?.skill_putting, GolfHoleIcon)}
-                  {renderSkillBar('Mental', proDetails?.skill_mental, AiBrain01Icon)}
+                  {renderSkillBar('Driving', proDetails?.skill_driving, BombIcon, 'driving')}
+                  {renderSkillBar('Fers', proDetails?.skill_irons, GolfBatIcon, 'irons')}
+                  {renderSkillBar('Wedging', proDetails?.skill_wedging, Target02Icon, 'wedging')}
+                  {renderSkillBar('Chipping', proDetails?.skill_chipping, Clapping02Icon, 'chipping')}
+                  {renderSkillBar('Putting', proDetails?.skill_putting, GolfHoleIcon, 'putting')}
+                  {renderSkillBar('Mental', proDetails?.skill_mental, AiBrain01Icon, 'mental')}
                 </View>
               </Animated.View>
 
@@ -564,7 +609,7 @@ export default function ProfileScreen() {
                 Array.isArray(proDetails.experience) &&
                 proDetails.experience.length > 0 && (
                   <Animated.View
-                    entering={FadeIn.delay(350).duration(300)}
+                    entering={FadeIn.delay(400).duration(300)}
                     style={[styles.card, { backgroundColor: sectionColors.experience.background }]}
                   >
                     <View style={styles.cardHeader}>
@@ -599,27 +644,6 @@ export default function ProfileScreen() {
                     </View>
                   </Animated.View>
                 )}
-
-              {/* Bloc Disponibilités */}
-              {proCourses.length > 0 && (
-                <Animated.View
-                  entering={FadeIn.delay(400).duration(300)}
-                  style={[styles.card, { backgroundColor: '#FFFFFF' }]}
-                >
-                  <View style={styles.cardHeader}>
-                    <Text style={styles.cardTitle}>Disponibilités</Text>
-                  </View>
-                  <View style={[styles.accentLine, { backgroundColor: Colors.primary.accent }]} />
-
-                  {/* Cards des parcours disponibles */}
-                  <ProAvailabilityCards
-                    availabilities={proCourses}
-                    selectedCourseId={selectedCourseId}
-                    onCourseSelect={handleCourseSelect}
-                    loading={isLoadingCourses}
-                  />
-                </Animated.View>
-              )}
             </Animated.View>
           </Animated.ScrollView>
 
@@ -1196,6 +1220,10 @@ const styles = StyleSheet.create({
     color: Colors.neutral.iron,
     minWidth: 45,
     textAlign: 'right',
+  },
+  videoIconButton: {
+    marginLeft: 8,
+    padding: 2,
   },
 
   // Styles pour l'expérience

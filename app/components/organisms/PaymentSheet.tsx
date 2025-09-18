@@ -49,7 +49,7 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
         merchantDisplayName: 'Eagle Golf',
         paymentIntentClientSecret: response.client_secret,
         returnURL: 'eagle://payment-complete',
-        customFlow: false,
+        customFlow: true, // Contrôle total sur les méthodes de paiement
         style: 'alwaysDark', // ou 'alwaysLight' selon votre thème
         googlePay: {
           merchantCountryCode: 'FR',
@@ -58,6 +58,21 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
         applePay: {
           merchantCountryCode: 'FR',
         },
+        allowsDelayedPaymentMethods: false,
+        // Configuration française
+        defaultBillingDetails: {},
+        appearance: {
+          primaryButton: {
+            colors: {
+              background: '#4F46E5', // Couleur du bouton principal
+            },
+          },
+        },
+        // Localisation française
+        locale: 'fr',
+        // Méthodes de paiement autorisées (Link exclu)
+        paymentMethodOrder: ['card', 'apple_pay', 'google_pay'],
+        // Désactiver explicitement Link
         allowsDelayedPaymentMethods: false,
       });
 

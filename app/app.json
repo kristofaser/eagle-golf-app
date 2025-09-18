@@ -49,7 +49,14 @@
           "merchantIdentifier": "merchant.com.cigalo.eagle",
           "enableGooglePay": true
         }
-      ]
+      ],
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ],
+      "expo-av"
     ],
     "experiments": {
       "typedRoutes": true

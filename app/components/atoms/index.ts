@@ -9,3 +9,4 @@ export { Logo } from './Logo';
 export { EagleLogo } from './EagleLogo';
 export { LoadingScreen } from './LoadingScreen';
 export { ErrorScreen } from './ErrorScreen';
+export { SkillTag } from './SkillTag';
