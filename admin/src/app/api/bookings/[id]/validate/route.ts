@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
-import { golfApiService } from '@/lib/golf-api';
 
 export async function POST(
   request: NextRequest,
@@ -152,75 +151,9 @@ export async function POST(
       throw bookingUpdateError;
     }
 
-    // Si c'est une confirmation, essayer de réserver auprès du golf
-    if (action === 'confirm') {
-      try {
-        // Récupérer les données du profil amateur pour la réservation
-        const { data: amateurProfile } = await supabase
-          .from('profiles')
-          .select('first_name, last_name, email, phone')
-          .eq('id', booking.amateur_id)
-          .single();
-
-        // Effectuer la réservation auprès du golf
-        const golfBookingResult = await golfApiService.makeBooking(
-          booking.golf_course_id,
-          {
-            golf_course_id: booking.golf_course_id,
-            date: booking.booking_date,
-            time: booking.start_time,
-            players: booking.number_of_players || 1,
-            player_details: {
-              name: `${amateurProfile?.first_name || ''} ${amateurProfile?.last_name || ''}`.trim(),
-              email: amateurProfile?.email || '',
-              phone: amateurProfile?.phone,
-            },
-            special_requests: booking.special_requests,
-          }
-        );
-
-        if (!golfBookingResult.success) {
-          throw new Error(golfBookingResult.error || 'Échec de la réservation golf');
-        }
-
-        // Enregistrer l'ID de réservation du golf
-        await supabase
-          .from('bookings')
-          .update({
-            golf_booking_id: golfBookingResult.booking_id,
-          })
-          .eq('id', bookingId);
-
-        console.log(`✅ Réservation golf confirmée: ${golfBookingResult.booking_id}`);
-        
-      } catch (golfError: unknown) {
-        console.error('Erreur lors de la réservation golf:', golfError);
-        
-        // En cas d'échec, repasser en statut "pending"
-        await supabase
-          .from('admin_booking_validations')
-          .update({
-            status: 'pending',
-            admin_id: adminProfile.id, // Utiliser l'admin_id
-            admin_notes: `Erreur lors de la réservation golf: ${golfError instanceof Error ? golfError.message : 'Erreur inconnue'}`,
-            validated_at: new Date().toISOString(),
-          })
-          .eq('booking_id', bookingId);
-
-        await supabase
-          .from('bookings')
-          .update({
-            status: 'pending',
-            admin_validation_status: 'pending',
-          })
-          .eq('id', bookingId);
-
-        return NextResponse.json({
-          success: false,
-          error: `Erreur lors de la réservation golf: ${golfError instanceof Error ? golfError.message : 'Erreur inconnue'}`,
-        });
-      }
-    }
+    // La réservation a été validée manuellement par l'admin (appel téléphonique au golf)
+    // Plus besoin d'API automatique - le processus humain prime
+    console.log(`✅ Réservation validée manuellement par l'admin: ${adminProfile.email}`);
 
     return NextResponse.json({ 
       success: true, 

@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
-import { Video, ResizeMode } from 'expo-av';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { Text, Button } from '@/components/atoms';
 import { HugeiconsIcon } from '@hugeicons/react-native';
@@ -251,6 +251,15 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
   const hasCurrentVideo = !!currentVideoUrl;
   const hasSelectedVideo = !!selectedVideo;
 
+  // Create video player for preview
+  const previewVideoUrl = selectedVideo || currentVideoUrl;
+  const player = useVideoPlayer(previewVideoUrl || '', player => {
+    if (previewVideoUrl) {
+      player.play();
+      player.loop = false;
+    }
+  });
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -269,13 +278,11 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
       {/* Vidéo actuelle ou sélectionnée */}
       {(hasCurrentVideo || hasSelectedVideo) && (
         <View style={styles.videoPreview}>
-          <Video
-            source={{ uri: selectedVideo || currentVideoUrl }}
+          <VideoView
+            player={player}
             style={styles.videoThumbnail}
-            useNativeControls={true}
-            resizeMode={ResizeMode.CONTAIN}
-            shouldPlay={false}
-            isLooping={false}
+            nativeControls={true}
+            contentFit="contain"
             onError={(error) => {
               console.error('Erreur lecture vidéo:', error);
             }}

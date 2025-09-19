@@ -464,8 +464,8 @@ export default function BookProScreen() {
       // Mettre à jour l'état immédiatement
       console.log('🎯 Mise à jour de l\'état - Booking ID:', newBookingId);
       bookingState.setBookingId(newBookingId);
-      bookingState.setBookingConfirmed(false); // En attente de validation admin
-      
+      bookingState.setBookingConfirmed(false); // En attente de confirmation webhook
+
       console.log('🎯 Passage à l\'étape 5');
       bookingState.setCurrentStep(5);
 
@@ -473,7 +473,7 @@ export default function BookProScreen() {
       setTimeout(() => {
         Alert.alert(
           'Paiement réussi !',
-          'Votre paiement a été traité avec succès. Votre réservation est en attente de validation par notre équipe.',
+          'Votre paiement a été traité avec succès. Votre réservation sera automatiquement confirmée dans quelques secondes.',
           [
             {
               text: 'OK',
@@ -887,7 +887,7 @@ export default function BookProScreen() {
           Paiement réussi !
         </Text>
         <Text variant="body" color="iron" style={styles.successText}>
-          Votre réservation est en attente de validation par notre équipe. Vous recevrez une confirmation par email une fois validée.
+          Votre réservation sera automatiquement confirmée dans quelques secondes. Vous recevrez une confirmation par email.
         </Text>
 
         <View style={styles.confirmationDetails}>

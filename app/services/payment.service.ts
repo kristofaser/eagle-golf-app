@@ -138,21 +138,17 @@ export const paymentService = {
 
   /**
    * Confirmer le paiement et créer la réservation
+   * Fait confiance au Payment Sheet Stripe (bonnes pratiques officielles)
    */
   async confirmPaymentAndBooking(
     paymentIntentId: string,
     bookingData: any
   ): Promise<{ success: boolean; booking_id?: string; error?: string }> {
     try {
-      // Vérifier d'abord que le paiement est réussi
-      const paymentStatus = await this.checkPaymentStatus(paymentIntentId);
-
-      if (!paymentStatus.success) {
-        return {
-          success: false,
-          error: "Le paiement n'a pas été validé",
-        };
-      }
+      // ✅ Suppression de la double vérification qui causait la race condition
+      // Le Payment Sheet Stripe garantit que le paiement est valide
+      // Le webhook confirmera automatiquement quand Stripe notifie le succès
+      console.log('✅ Payment Intent validé par Stripe Payment Sheet:', paymentIntentId);
 
       // Vérifier que l'availability_id existe et est valide
       if (!bookingData.availability_id) {
@@ -170,16 +166,16 @@ export const paymentService = {
         };
       }
 
-      // Créer la réservation directement confirmée après paiement réussi
+      // Créer la réservation avec statut pending - le webhook confirmera automatiquement
       const { data: booking, error: bookingError } = await supabase
         .from('bookings')
         .insert({
           ...bookingData,
           payment_intent_id: paymentIntentId,
-          payment_status: 'paid',
-          status: 'pending', // En attente de validation admin
+          payment_status: 'pending', // ← Pending au début, webhook mettra 'paid'
+          status: 'pending', // En attente de confirmation webhook
           admin_validation_status: 'pending', // En attente de validation
-          confirmed_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
         })
         .select()
         .single();

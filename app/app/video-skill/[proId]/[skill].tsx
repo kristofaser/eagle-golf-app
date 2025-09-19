@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Video, ResizeMode } from 'expo-av';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { Colors, Spacing } from '@/constants/theme';
 import { Text } from '@/components/atoms';
 import { s3, getPublicUrl, generateVideoKey, BUCKET_NAME } from '@/utils/scaleway';
@@ -24,6 +24,14 @@ export default function VideoSkillScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [proName, setProName] = useState<string>('');
+
+  // Create video player
+  const player = useVideoPlayer(videoUrl, player => {
+    if (videoUrl) {
+      player.play();
+      player.loop = true;
+    }
+  });
 
   const skillName = Array.isArray(skill) ? skill[0] : skill;
   const proIdString = Array.isArray(proId) ? proId[0] : proId;
@@ -165,16 +173,11 @@ export default function VideoSkillScreen() {
           )}
 
           {videoUrl && !isLoading && !error && (
-            <Video
-              source={{ uri: videoUrl }}
-              rate={1.0}
-              volume={1.0}
-              isMuted={false}
-              resizeMode={ResizeMode.CONTAIN}
-              shouldPlay={true}
-              isLooping={true}
-              useNativeControls
+            <VideoView
+              player={player}
               style={styles.video}
+              nativeControls={true}
+              contentFit="contain"
               onError={(error) => {
                 console.error('Video playback error:', error);
                 setError('Erreur de lecture vidéo');
