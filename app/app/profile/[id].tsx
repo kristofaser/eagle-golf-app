@@ -37,7 +37,7 @@ import { proAvailabilityService } from '@/services/pro-availability.service';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Spacing, Elevation, Typography, BorderRadius } from '@/constants/theme';
 import { ProPricingManager } from '@/components/organisms/ProPricingManager';
-import { useProProfile } from '@/hooks/useProProfile';
+import { useProProfile, useProFavorite } from '@/hooks/useProProfile';
 import { ProfileSkeleton } from '@/components/atoms/ProfileSkeleton';
 import { ProAvailabilityCards } from '@/components/molecules/ProAvailabilityCards';
 import { amateurAvailabilityService, ProCourseAvailability } from '@/services/amateur-availability.service';
@@ -70,6 +70,9 @@ export default function ProfileScreen() {
     error: queryError,
     refetch,
   } = useProProfile(profileId || '', !!profileId);
+
+  // Hook pour gérer les favoris
+  const { isFavorite, toggleFavorite, isToggling } = useProFavorite(profileId || '');
 
   // Récupérer les paramètres de disponibilité du pro (incluant is_globally_available)
   const { data: proAvailabilitySettings } = useQuery({
@@ -665,7 +668,13 @@ export default function ProfileScreen() {
                   </Text>
                 </View>
               </View>
-              <Ionicons name="heart-outline" size={28} color="black" />
+              <TouchableOpacity onPress={toggleFavorite} disabled={isToggling}>
+                <Ionicons
+                  name={isFavorite ? "heart" : "heart-outline"}
+                  size={28}
+                  color={isFavorite ? Colors.semantic.error : "black"}
+                />
+              </TouchableOpacity>
             </Animated.View>
 
             {/* Icônes blanches (visibles quand pas scrollé) */}
@@ -673,7 +682,13 @@ export default function ProfileScreen() {
               style={[styles.headerContent, styles.headerIcons, animatedHeaderIconsStyle]}
             >
               <Ionicons name="arrow-back" size={28} color="white" onPress={() => router.back()} />
-              <Ionicons name="heart-outline" size={28} color="white" />
+              <TouchableOpacity onPress={toggleFavorite} disabled={isToggling}>
+                <Ionicons
+                  name={isFavorite ? "heart" : "heart-outline"}
+                  size={28}
+                  color={isFavorite ? Colors.semantic.error : "white"}
+                />
+              </TouchableOpacity>
             </Animated.View>
           </Animated.View>
 

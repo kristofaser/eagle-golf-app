@@ -1,9 +1,3 @@
-/**
- * FavoritesScreen - Écran de gestion des favoris pros
- *
- * Écran principal pour afficher et gérer les favoris pros.
- * Liste simple avec possibilité de supprimer et naviguer.
- */
 import React from 'react';
 import {
   View,
@@ -12,31 +6,44 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, LoadingScreen } from '@/components/atoms';
-import { ProCard } from '@/components/molecules';
+import { Text, LoadingScreen, Avatar, FavoriteBadge } from '@/components/atoms';
 import type { JoueurData } from '@/components/molecules/ContentCard';
+import { ProCard } from '@/components/molecules/ProCard';
 import { useFavorites } from '@/hooks/useFavorites';
-import { Colors, Spacing, Typography } from '@/constants/theme';
+import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
+import { Ionicons } from '@expo/vector-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
-import { ArrowLeft01Icon, Delete01Icon } from '@hugeicons/core-free-icons';
+import {
+  ArrowLeft01Icon,
+  Search01Icon,
+  FavouriteIcon,
+  UserIcon,
+  Delete01Icon,
+} from '@hugeicons/core-free-icons';
 import { useQuery } from '@tanstack/react-query';
 import { profileService } from '@/services/profile.service';
+import { useAuth } from '@/hooks/useAuth';
+import { useUser } from '@/hooks/useUser';
+import { useTotalFavorites } from '@/hooks/useFavorites';
 
 export default function FavoritesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const favorites = useFavorites();
+  const { isAuthenticated } = useAuth();
+  const { profile } = useUser();
+  const totalFavorites = useTotalFavorites();
 
   // Récupérer les données des pros favoris
-  const { data: prosData, isLoading } = useQuery({
+  const { data: prosData, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['favoriteProProfiles', favorites.ids],
     queryFn: async () => {
       if (favorites.ids.length === 0) return [];
 
-      // Récupérer les profils pros un par un
       const profiles = await Promise.allSettled(
         favorites.ids.map(id => profileService.getFullProfile(id))
       );
@@ -47,13 +54,12 @@ export default function FavoritesScreen() {
           const profile = result.value?.data || result.value;
           if (!profile) return null;
 
-          // Transformer les données du profil en format JoueurData
           return {
             id: profile.id,
             title: `${profile.first_name} ${profile.last_name}`,
             imageUrl: profile.avatar_url || '',
             type: 'joueur' as const,
-            age: 30, // Valeur par défaut si pas d'âge
+            age: 30,
             region: profile.city || 'Non spécifié',
             handicap: 'Pro',
             scoreAverage: 72,
@@ -63,12 +69,12 @@ export default function FavoritesScreen() {
             circuits: profile.pro_profiles?.division || 'Alps Tour',
             meilleurResultat: 'Victoire professionnelle',
             victoires: 1,
-            tarif: '150€/h',
-            rating: 4.8,
-            isPremium: true,
+            tarif: profile.pro_profiles?.hourly_rate ? `${Math.round(profile.pro_profiles.hourly_rate / 100)}€/h` : '',
+            rating: profile.pro_profiles?.rating || null,
+            isPremium: profile.pro_profiles?.hourly_rate > 10000,
             isAvailable: profile.pro_profiles?.is_globally_available || false,
             division: profile.pro_profiles?.division || 'Alps Tour',
-            worldRanking: profile.pro_profiles?.world_ranking || 2500,
+            worldRanking: profile.pro_profiles?.world_ranking || null,
             distance: 0,
           };
         })
@@ -85,12 +91,12 @@ export default function FavoritesScreen() {
 
   const handleClearAllFavorites = () => {
     Alert.alert(
-      'Effacer tous les favoris',
-      'Êtes-vous sûr de vouloir supprimer tous vos pros favoris ? Cette action est irréversible.',
+      'Supprimer tous les favoris',
+      'Voulez-vous vraiment supprimer tous vos pros favoris ?',
       [
         { text: 'Annuler', style: 'cancel' },
         {
-          text: 'Effacer',
+          text: 'Supprimer',
           style: 'destructive',
           onPress: () => favorites.actions.clearAllFavorites(),
         },
@@ -102,59 +108,83 @@ export default function FavoritesScreen() {
     router.push(`/profile/${proData.id}`);
   };
 
-
   const renderProItem = ({ item }: { item: JoueurData }) => (
-    <View style={styles.cardContainer}>
-      <ProCard
-        data={item}
-        onPress={handleProPress}
-        showDivisionBadge={true}
-      />
-    </View>
+    <ProCard
+      data={item}
+      onPress={handleProPress}
+      isHorizontal={true}
+      showDivisionBadge={true}
+      showDeleteButton={true}
+    />
   );
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyTitle}>Aucun pro favori</Text>
-      <Text style={styles.emptyMessage}>
-        Ajoutez des pros à vos favoris en appuyant sur le cœur dans leur carte.
+      <View style={styles.emptyIconWrapper}>
+        <Ionicons name="heart-outline" size={64} color={Colors.neutral.mist} />
+      </View>
+      <Text variant="h3" color="charcoal" weight="semiBold" style={styles.emptyTitle}>
+        Aucun favori
       </Text>
+      <Text variant="body" color="course" style={styles.emptyMessage}>
+        Ajoutez des pros à vos favoris pour les retrouver rapidement ici
+      </Text>
+      <TouchableOpacity
+        style={styles.browseButton}
+        onPress={() => router.push('/(tabs)/pros')}
+      >
+        <Text variant="body" color="ball" weight="semiBold">
+          Parcourir les pros
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 
   const hasData = prosData && prosData.length > 0;
 
+  const handleSearchPress = () => {
+    router.push('/search');
+  };
+
   return (
-    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+    <SafeAreaView style={styles.container}>
       <Stack.Screen
         options={{
-          headerShown: false,
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: Colors.neutral.ball,
+            elevation: 0,
+            shadowOpacity: 0,
+            borderBottomWidth: 1,
+            borderBottomColor: Colors.neutral.mist,
+          },
+          headerTitleStyle: {
+            fontFamily: Typography.fontFamily.primary,
+            fontSize: Typography.fontSize.h2,
+            fontWeight: Typography.fontWeight.bold,
+            color: Colors.neutral.charcoal,
+          },
+          headerTitle: 'Mes Favoris',
+          headerLeft: () => (
+            <TouchableOpacity onPress={handleGoBack} style={{ marginLeft: 16 }}>
+              <HugeiconsIcon icon={ArrowLeft01Icon} size={24} color={Colors.primary.accent} />
+            </TouchableOpacity>
+          ),
+          headerRight: () => (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}>
+              {/* Bouton Search */}
+              <TouchableOpacity onPress={handleSearchPress}>
+                <HugeiconsIcon icon={Search01Icon} size={24} color={Colors.primary.accent} />
+              </TouchableOpacity>
+            </View>
+          ),
         }}
       />
 
-      {/* Header personnalisé */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-          <HugeiconsIcon icon={ArrowLeft01Icon} size={24} color={Colors.primary.accent} />
-        </TouchableOpacity>
-
-        <Text style={styles.headerTitle}>Pros Favoris</Text>
-
-        <TouchableOpacity
-          style={[styles.clearButton, !favorites.hasAny && styles.clearButtonHidden]}
-          onPress={handleClearAllFavorites}
-          disabled={!favorites.hasAny}
-        >
-          {favorites.hasAny && (
-            <HugeiconsIcon icon={Delete01Icon} size={20} color={'#ef4444'} />
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* Contenu principal */}
+      {/* Contenu */}
       <View style={styles.content}>
         {isLoading ? (
-          <LoadingScreen />
+          <LoadingScreen message="Chargement de vos favoris..." />
         ) : hasData ? (
           <FlatList
             data={prosData}
@@ -162,6 +192,14 @@ export default function FavoritesScreen() {
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContainer}
             showsVerticalScrollIndicator={false}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefetching}
+                onRefresh={refetch}
+                tintColor={Colors.primary.accent}
+              />
+            }
           />
         ) : (
           renderEmptyState()
@@ -174,46 +212,18 @@ export default function FavoritesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.neutral.ball,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    backgroundColor: Colors.neutral.ball,
-    elevation: 0,
-    shadowOpacity: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.neutral.mist,
-  },
-  backButton: {
-    padding: Spacing.xs,
-  },
-  headerTitle: {
-    fontFamily: Typography.fontFamily.primary,
-    fontSize: Typography.fontSize.h2,
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.neutral.charcoal,
-  },
-  clearButton: {
-    padding: Spacing.xs,
-  },
-  clearButtonHidden: {
-    opacity: 0,
+    backgroundColor: Colors.neutral.background,
   },
   content: {
     flex: 1,
-    paddingTop: Spacing.md,
   },
   listContainer: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
+    paddingTop: Spacing.m,
+    paddingBottom: Spacing.xl,
   },
-  cardContainer: {
-    marginBottom: Spacing.md,
-    marginHorizontal: Spacing.xs,
+  separator: {
+    height: Spacing.m,
+    marginHorizontal: Spacing.m,
   },
   emptyContainer: {
     flex: 1,
@@ -221,19 +231,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.xl,
   },
+  emptyIconWrapper: {
+    marginBottom: Spacing.l,
+  },
   emptyTitle: {
-    fontSize: Typography.fontSize.h2,
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.neutral.course,
-    fontFamily: Typography.fontFamily.primary,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.s,
     textAlign: 'center',
   },
   emptyMessage: {
-    fontSize: Typography.fontSize.body,
-    color: Colors.neutral.course,
-    fontFamily: Typography.fontFamily.primary,
     textAlign: 'center',
+    marginBottom: Spacing.l,
     lineHeight: 22,
+  },
+  browseButton: {
+    backgroundColor: Colors.primary.accent,
+    paddingHorizontal: Spacing.l,
+    paddingVertical: Spacing.m,
+    borderRadius: BorderRadius.round,
   },
 });

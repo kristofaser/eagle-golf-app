@@ -17,6 +17,8 @@ interface ProCardProps {
   isHidden?: boolean;
   onHover?: (profileId: string) => void;
   showDivisionBadge?: boolean;
+  isHorizontal?: boolean;
+  showDeleteButton?: boolean;
 }
 
 // Fonction pour obtenir le nom court de la division
@@ -54,6 +56,8 @@ const ProCardComponent: React.FC<ProCardProps> = ({
   isHidden,
   onHover,
   showDivisionBadge = false,
+  isHorizontal = false,
+  showDeleteButton = false,
 }) => {
   const viewRef = useRef<View>(null);
   const { cardWidth, cardHeight } = useResponsiveCardSize();
@@ -94,6 +98,108 @@ const ProCardComponent: React.FC<ProCardProps> = ({
     width: cardWidth,
     opacity: isHidden ? 0 : 1,
   };
+
+  if (isHorizontal) {
+    return (
+      <Pressable onPress={handlePress} onPressIn={handlePressIn} style={styles.horizontalPressable}>
+        <View style={[styles.horizontalContainer, { opacity: isHidden ? 0 : 1 }]} ref={viewRef}>
+          {/* Image à gauche - propre sans overlays */}
+          <View style={styles.horizontalImageContainer}>
+            <Animated.Image
+              source={{ uri: data.imageUrl }}
+              style={styles.horizontalImage}
+              sharedTransitionTag={`image-${data.id}`}
+              cachePolicy={IMAGE_CONFIG.CACHE_POLICY}
+              transition={IMAGE_CONFIG.TRANSITION_DURATION}
+              contentFit={IMAGE_CONFIG.CONTENT_FIT}
+              placeholder={IMAGE_CONFIG.PLACEHOLDER}
+              onError={(error) => {
+                console.warn('Image failed to load:', data.imageUrl, error);
+              }}
+            />
+          </View>
+
+          {/* Informations à droite */}
+          <View style={styles.horizontalInfoContainer}>
+            <View style={styles.horizontalTitleRow}>
+              {data.isAvailable && <View style={styles.statusDot} />}
+              <Text
+                variant="body"
+                color="charcoal"
+                weight="semiBold"
+                numberOfLines={1}
+                style={styles.horizontalName}
+              >
+                {data.title}
+              </Text>
+            </View>
+
+            {/* Division */}
+            {data.division && (
+              <View style={[styles.horizontalDivisionBadge, getDivisionBadgeStyle(data.division)]}>
+                <Text variant="caption" color="ball" weight="semiBold" style={styles.horizontalDivisionText}>
+                  {getDivisionShortName(data.division)}
+                </Text>
+              </View>
+            )}
+
+            {/* Localisation */}
+            <View style={styles.horizontalLocationRow}>
+              <Icon
+                name="location-on"
+                size={12}
+                color={Colors.neutral.course}
+                family="MaterialIcons"
+              />
+              <Text variant="caption" color="course" numberOfLines={1} style={styles.locationText}>
+                {data.region}
+                {data.distance !== undefined && ` • ${formatDistance(data.distance)}`}
+              </Text>
+            </View>
+
+            {/* Note */}
+            {data.rating && (
+              <View style={styles.horizontalRatingContainer}>
+                <Icon name="star" size={12} color={Colors.primary.accent} family="FontAwesome" />
+                <Text variant="caption" color="charcoal" weight="medium" style={styles.horizontalRatingText}>
+                  {data.rating.toFixed(1)}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Bouton favori ou supprimer */}
+          <TouchableOpacity
+            style={styles.horizontalFavoriteButton}
+            onPress={handleFavoritePress}
+            activeOpacity={0.7}
+          >
+            {showDeleteButton ? (
+              <Ionicons
+                name="trash-outline"
+                size={20}
+                color={Colors.semantic.error}
+              />
+            ) : (
+              <View style={[styles.heartContainer, isToggling && styles.heartAnimating]}>
+                <Ionicons
+                  name="heart"
+                  size={20}
+                  color={isFavorite ? Colors.semantic.error : Colors.neutral.course}
+                />
+                <Ionicons
+                  name="heart-outline"
+                  size={20}
+                  color={Colors.neutral.course}
+                  style={styles.heartOutline}
+                />
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+      </Pressable>
+    );
+  }
 
   return (
     <Pressable onPress={handlePress} onPressIn={handlePressIn} style={styles.pressable}>
@@ -284,5 +390,90 @@ const styles = StyleSheet.create({
   divisionText: {
     fontSize: 8,
     letterSpacing: 0.3,
+  },
+  // Styles horizontaux
+  horizontalPressable: {
+    marginHorizontal: Spacing.m,
+  },
+  horizontalContainer: {
+    flexDirection: 'row',
+    backgroundColor: Colors.neutral.ball,
+    borderRadius: BorderRadius.large,
+    borderWidth: 0,
+    borderColor: 'transparent',
+    padding: Spacing.m,
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    elevation: 1,
+  },
+  horizontalImageContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    overflow: 'hidden',
+    backgroundColor: Colors.neutral.mist,
+  },
+  horizontalImage: {
+    width: '100%',
+    height: '100%',
+  },
+  horizontalInfoContainer: {
+    flex: 1,
+    paddingLeft: Spacing.m,
+    justifyContent: 'center',
+  },
+  horizontalTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginBottom: 4,
+  },
+  horizontalName: {
+    flex: 1,
+    fontSize: 17,
+  },
+  horizontalDivisionBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: Spacing.s,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginBottom: 6,
+  },
+  horizontalDivisionText: {
+    fontSize: 11,
+    letterSpacing: 0.5,
+  },
+  horizontalLocationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xxs,
+    marginBottom: Spacing.xs,
+  },
+  horizontalRatingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xxs,
+  },
+  horizontalRatingText: {
+    fontSize: 12,
+  },
+  horizontalFavoriteButton: {
+    position: 'absolute',
+    top: Spacing.m,
+    right: Spacing.m,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
+    elevation: 2,
   },
 });
