@@ -162,140 +162,139 @@ b4c70cac-41df-4af0-93c0-c2bfc3b0fc7d,UGolf Reims-Bezannes,Bezannes,51430,51,49.3
 44f85e20-153f-4895-a651-78074cd8d8ab,Golf de Reims,Gueux,51390,51,49.24908100,3.89726700,corrected
 acddd60d-feed-44b0-9635-b058c4c0ccda,Golf Club du Pays de Laval,Changé,53810,53,48.11300000,-0.76600000,corrected
 669f885d-e647-429a-bd56-d233db2253a8,Golf de Nancy-Aingeray,Aingeray,54600,54,48.73829000,6.04286000,corrected
-a99cb501-5920-4aad-a8be-70b1d8a9e733,UGOLF Grand Nancy Pulnoy,Pulnoy,54425,54,48.70149610,6.26394460,requires_check
-a15d8243-7b86-4aac-b4c8-5805d5766e1c,Golf de Combles-en-Barrois,Combles-en-Barrois,55000,55,48.75330000,5.11620000,to_verify
-bed627b7-ca59-4932-8db7-c21fa4cfb7fa,Golf de Madine,Nonsard-Lamarche,55210,55,48.93204370,5.74954310,to_verify
-40fabbc1-48e9-4504-b3df-04e1656578a4,Golf Bluegreen Baden,Baden,56870,56,47.62315660,-2.93656330,to_verify
-7cabbb96-a7da-4467-87ea-9835de4594fd,Golf Bluegreen Ploemeur Océan,Ploemeur,56270,56,47.72438570,-3.47973300,to_verify
-aefd84ef-7ddd-4022-aea4-ade5602eb898,Golf de Bitche,Bitche,57230,57,49.05186740,7.44711980,to_verify
-67d49f0b-688f-4a17-a131-c2c3e68b6efa,Golf de Faulquemont-Pontpierre,Faulquemont,57380,57,49.05638510,6.62712810,to_verify
-b9151628-de0d-4a60-b2b3-7c3d8bdb1597,Golf de la Grange aux Ormes,Marly,57155,57,49.07747550,6.15274440,to_verify
-ea90460d-b16f-4af2-b479-49354cd6fb77,UGolf Metz - Garden Golf Metz Technopole,Metz,57070,57,49.09950730,6.22498200,to_verify
-37d4709c-7162-425c-9963-33f03c62287a,Golf de Sarreguemines Confluences,Sarreguemines,57200,57,49.12240440,7.02439750,to_verify
-ce7b6eac-7fc8-496b-9f06-dfc97d7aee4d,Golf Public du Nivernais,Magny-Cours,58470,58,46.87055580,3.16618800,to_verify
-8262cb8f-2aee-4608-84f1-824c5dfe00d0,Golf Blue Green Dunkerque,Coudekerque Village,59380,59,50.98858580,2.40382420,to_verify
-58b4e125-60e9-4020-8486-4ac90dc65893,Golf de Brigode,Villeneuve d'Ascq,59650,59,50.62889860,3.16279570,to_verify
-44b50071-399b-476f-91be-44242ee3ba6d,Golf de Bondues,,59910,59,50.70880000,3.07740000,to_verify
-76690d25-498e-4b58-8687-e3f5a17dc882,Golf d'Apremont,Apremont,60300,60,46.74935200,-1.74180500,to_verify
-d564d2d0-57c0-4976-9442-dab63cae07d0,Golf de Rebetz,Chaumont-en-Vexin,60240,60,49.26848540,1.89736880,to_verify
-29c00321-dc0c-40d8-b289-08ea213531b6,UGOLF Templiers,Ivry-le-Temple,60173,60,49.22531140,2.03339630,to_verify
-35d35bb6-8e70-41ef-a583-7de223c68418,Golf du Lys Chantilly,Lamorlaye,60260,60,49.17156100,2.41557900,to_verify
-d015cc66-c589-4b73-b84d-3fe0e798973e,Golf du Château d'Humières,Monchy-Humières,60113,60,49.47023770,2.73011660,to_verify
-e9cc7da5-f02b-4045-836f-998e5f48f3f8,Golf du Château de Raray,Raray,60810,60,49.26227900,2.70693810,to_verify
-72d4a7ab-9750-47ab-af8e-0515665249ba,Golf de Chantilly,Vineuil-Saint-Firmin,60500,60,49.20610770,2.47945640,to_verify
-a81be51a-c7ce-4f89-8ac5-ff20897993ce,UGOLF Forêt de Chantilly,Vineuil-Saint-Firmin,60500,60,49.20425600,2.49688800,to_verify
-9c1da318-54af-4a8d-be22-d49297808b65,Golf Flers Le Houlme,La Selle-la-Forge,61100,61,48.73196700,-0.54345660,to_verify
-f8dc852d-9dc5-41e4-9aa2-c9c97d3ff045,Golf de Bellême,Saint-Martin-du-Vieux-Bellême,61130,61,48.36944920,0.55517970,to_verify
-9dd71eeb-8736-4861-bc82-3ab5122a13fd,Golf du Touquet,Le Touquet-Paris-Plage,62520,62,50.49981570,1.59791160,to_verify
-5ef6b9bf-70d3-4f32-aacd-4184f7ac5608,Golf d'Hardelot,Neufchâtel-Hardelot,62152,62,50.63827940,1.60324540,to_verify
-8c3f96f2-696d-4104-aca1-49dc1bd52c42,Golf de Wimereux,,62930,62,50.78813170,1.61221760,to_verify
-8e5f2f1c-72e3-42bd-848e-353157c2b783,Golf du Val d'Auzon,Le Crest,63450,63,45.69680920,3.15220520,to_verify
-324864df-c70c-4050-8856-fcc4d01498ba,Golf des Volcans,Orcines,63870,63,45.78714620,2.98874460,to_verify
-3b206f89-62d4-4a7f-9c91-717a700b4a4b,Golf de Royat-Charade,Royat,63130,63,45.74948120,3.02965370,to_verify
-3fdb5c05-c065-4f6d-be8d-2c31740d46e0,Golf de Chiberta,Anglet,64600,64,43.51311710,-1.52442980,to_verify
-3e630a47-99b6-4e06-bca5-3e63f3fa0fca,Golf d'Arcangues,Arcangues,64200,64,43.43722650,-1.52845410,to_verify
-5ca835d1-e19e-4dcb-b399-9e1a9903f787,Golf Bluegreen Pau-Artiguelouve,Artiguelouve,64230,64,43.31732390,-0.45777910,to_verify
-f489047a-db77-47a3-9865-542a79d62ff5,Golf de Makila,Bassussarry,64200,64,43.44161220,-1.48965750,to_verify
-e8c148e6-46e3-4b41-a471-761dce2ebfa2,Golf de Bayonne,Bayonne,64100,64,43.49337980,-1.47573940,to_verify
-a461ebb1-539b-425c-9689-dbce3483381d,Golf de Biarritz le Phare,Biarritz,64200,64,43.49105460,-1.54465630,to_verify
-b23e63e8-a7fc-4677-ba44-41944a2322b1,Pau Golf Club 1856,Billère,64140,64,43.29636730,-0.39329000,to_verify
-db8934c4-c04a-485c-9dfd-792fbcaec873,Golf de Salies-de-Béarn,Salies-de-Béarn,64270,64,43.47326230,-0.91522370,to_verify
-8c87b108-2fa8-4191-99cf-99f9110996ef,Golf d'Epherra,Souraïde,64250,64,43.36317820,-1.48438330,to_verify
-4e414e58-7aaf-4349-ae91-b4a2bb99795f,Golf de Tarbes les Tumulus,Laloubère,65310,65,43.20773990,0.07150110,to_verify
-79a8393b-ccd9-4dff-8843-8534cec18912,Golf de Lannemezan,Lannemezan,65300,65,43.11136420,0.41713030,to_verify
-d534a8f8-8ca2-44a2-8e89-272ca0b11d98,Lourdes Pyrénées Golf Club,Lourdes,65100,65,43.10540880,-0.08421060,to_verify
-f33fbc05-a5fa-4a76-abc4-9c90e28ef9d4,Golf Country Club de Bigorre,Pouzac,65200,65,43.09058200,0.15361200,to_verify
-30068f28-d8ab-4375-99df-a0818772bf51,Golf de Saint-Cyprien,Saint-Cyprien,66750,66,42.61783000,3.00418200,to_verify
-cbe35e2a-38ab-45ed-99d1-87a987e68f1c,Golf Club de Strasbourg,Illkirch-Graffenstaden,67400,67,48.50615000,7.73170820,to_verify
-007a6c34-dd91-451d-b698-f8fe961a040a,Golf du Fort,Illkirch-Graffenstaden,67400,67,48.51165930,7.71772650,to_verify
-121e26c3-f5ae-4487-bf85-f6d5a0857935,Golf de La Wantzenau,La Wantzenau,67610,67,48.67329580,7.80335610,to_verify
-1bf60049-2554-4867-96f5-840ee360f13d,Golf du Kempferhof,Plobsheim,67115,67,48.46018620,7.74487980,to_verify
-ea4ac4a3-0fa0-4529-904b-5e955da976b8,Golf Club Soufflenheim Baden-Baden,Soufflenheim,67620,67,48.81335380,7.94836190,to_verify
-58911972-f0d0-473e-b8e7-1bdbf47b8598,Golf du Rhin,Chalampé,68490,68,47.85149710,7.56151700,to_verify
-2ea15d2b-76a4-4560-bba8-61034c8d3ea2,Alsace Golf Links,Rouffach,68250,68,47.96880650,7.33560330,to_verify
-31a73d47-4527-4b8f-be6e-7221573b0268,Golf des Bouleaux,Wittelsheim,68310,68,47.77662680,7.21944770,to_verify
-02c84ea2-f7d7-4d90-8c49-8fd6e5bdeb76,Golf de Lyon Salvagny,La Tour-de-Salvagny,69890,69,45.82207480,4.70532410,to_verify
-bfd3e69b-3fc3-4a51-b303-e3a1ceef669a,Golf de Luxeuil-Bellevue,Genevrey,70240,70,47.73229380,6.31761330,to_verify
-feb7de83-c512-4fdf-86e8-78772e155ea8,Golf de Chalon-sur-Saône,Chalon-sur-Saône,71100,71,46.78104420,4.85413060,to_verify
-6ef3ab81-a2a5-4397-acfc-e46226a3d796,Golf de Mâcon La Salle,La Salle,71260,71,46.40217560,4.83615800,to_verify
-96024086-21c7-46c5-984c-32ad3afaeaa1,Golf des 24 Heures Le Mans,Mulsanne,72230,72,47.91699250,0.23906880,to_verify
-60fc446e-5e22-4347-a45c-aff15ca9d830,Golf de Sablé-Solesmes,Sablé-sur-Sarthe,72300,72,47.81914650,-0.35853920,to_verify
-1e4b4321-cdf5-4acc-8a44-a42a1656cd31,Le Mans Golf Club - Sargé,Sargé-lès-le-Mans,72190,72,48.04191560,0.24642810,to_verify
-1b20f486-2dde-44c5-a793-513436e8cca1,Golf Club d'Aix-les-Bains,Aix-les-Bains,73100,73,45.67762560,5.90835510,to_verify
-e451c78a-bc1e-40c6-ad41-3aba45dd3129,Golf du Mont d'Arbois,Megève,74120,74,45.85353630,6.63219550,to_verify
-a6093541-2c3d-456d-ac79-dbd1b76a1625,Golf Club Esery,Reignier-Esery,74930,74,46.14258160,6.23884820,to_verify
-9794c2c4-8985-4f6f-a0c2-a578725babe9,Golf Club du Lac d'Annecy,Talloires,74290,74,45.83971180,6.21475560,to_verify
-fb44abde-4645-4a0e-9585-6eb331ebdda8,Golf & Country Club de Bossey,,74160,74,46.15325920,6.16739170,to_verify
-acc1653d-cc09-448b-b9dd-f530c643c8fd,Golf Club Chamonix,,74400,74,45.94277710,6.88831440,to_verify
-984953aa-257e-4266-8d87-dafd7b5d012b,Golf de Dieppe-Pourville,Dieppe,76200,76,49.92055560,1.05306700,to_verify
-a202edc8-806f-40d9-bf4d-ac3d2bceb76b,Golf d'Étretat,,76790,76,49.70524660,0.19994090,to_verify
-d1546097-fd21-40d3-b819-ae109df08b77,Golf de Forges-les-Eaux,,76440,76,49.60960950,1.53520590,to_verify
-f6f8acf5-3fff-4d19-9b5f-d5c2e8d7c838,Golf de Rouen Mont-Saint-Aignan,,76130,76,49.47793570,1.08103830,to_verify
-a47123dc-5c28-4052-91aa-ed17e0215c24,Exclusiv Golf Château de Cély,Cély-en-Bière,77930,77,48.46656570,2.52475800,to_verify
-7480aef8-8766-475d-afec-abcbabe679cb,Golf de Fontainebleau,,77300,77,48.39418780,2.68074820,to_verify
-d4d7ac26-cf9d-4a1c-863a-ba47bae23fbf,Le Golf National,Guyancourt,78114,78,48.76670000,2.08330000,to_verify
-1222fe97-5021-49b0-99c2-79546ccd213d,Le Golf National,Guyancourt,78114,78,48.75155890,2.07841330,to_verify
-4876843f-55c6-4cd9-b3bf-49b9aac62141,Golf Isabella,Plaisir,78370,78,48.79660700,1.94203400,to_verify
-e55ca173-7e71-4bbe-a096-f0adf918b08b,Golf de Saint-Nom-la-Bretèche,Saint-Nom-la-Bretèche,78860,78,48.88330000,2.13330000,to_verify
-fbd4984d-a55a-419d-96f3-e173d60af16a,Exclusiv Golf de Feucherolles,,78810,78,48.87376500,1.98514000,to_verify
-5c95c74b-8b84-49d2-860c-4b882e12bb8a,Golf de Saint-Germain,,78100,78,48.91837800,2.05621680,to_verify
-cdcefcb6-2141-4a7e-ba12-29c406d17afc,Golf de Saint-Nom-la-Bretèche,,78860,78,48.85211070,2.03666070,to_verify
-70d22f38-6cf2-4094-9109-03413c6cd864,Golf des Yvelines (Fourqueux),,78112,78,48.88630800,2.06457300,to_verify
-6ba49100-cdd8-4117-8e4d-6d8279771515,Golf de Bressuire,Bressuire,79300,79,46.85690920,-0.50352840,to_verify
-ef13fb6c-adb7-4a0a-bb7e-72e6f7aac30e,Golf du Château des Forges,Les Forges,79340,79,46.54212440,-0.03214560,to_verify
+a99cb501-5920-4aad-a8be-70b1d8a9e733,UGOLF Grand Nancy Pulnoy,Pulnoy,54425,54,48.70251000,6.26012000,corrected
+a15d8243-7b86-4aac-b4c8-5805d5766e1c,Golf de Combles-en-Barrois,Combles-en-Barrois,55000,55,48.75330000,5.11620000,verified
+bed627b7-ca59-4932-8db7-c21fa4cfb7fa,Golf de Madine,Nonsard-Lamarche,55210,55,48.93204370,5.74954310,verified
+40fabbc1-48e9-4504-b3df-04e1656578a4,Golf Bluegreen Baden,Baden,56870,56,47.62315660,-2.93656330,verified
+7cabbb96-a7da-4467-87ea-9835de4594fd,Golf Bluegreen Ploemeur Océan,Ploemeur,56270,56,47.72438570,-3.47973300,verified
+aefd84ef-7ddd-4022-aea4-ade5602eb898,Golf de Bitche,Bitche,57230,57,49.05355000,7.43815000,corrected
+67d49f0b-688f-4a17-a131-c2c3e68b6efa,Golf de Faulquemont-Pontpierre,Faulquemont,57380,57,49.05638510,6.62712810,verified
+b9151628-de0d-4a60-b2b3-7c3d8bdb1597,Golf de la Grange aux Ormes,Marly,57155,57,49.07747550,6.15274440,verified
+ea90460d-b16f-4af2-b479-49354cd6fb77,UGolf Metz - Garden Golf Metz Technopole,Metz,57070,57,49.09950730,6.22498200,verified
+37d4709c-7162-425c-9963-33f03c62287a,Golf de Sarreguemines Confluences,Sarreguemines,57200,57,49.12240440,7.02439750,verified
+ce7b6eac-7fc8-496b-9f06-dfc97d7aee4d,Golf Public du Nivernais,Magny-Cours,58470,58,46.87055580,3.16618800,verified
+8262cb8f-2aee-4608-84f1-824c5dfe00d0,Golf Blue Green Dunkerque,Coudekerque Village,59380,59,50.98858580,2.40382420,verified
+58b4e125-60e9-4020-8486-4ac90dc65893,Golf de Brigode,Villeneuve d'Ascq,59650,59,50.62889860,3.16279570,verified
+44b50071-399b-476f-91be-44242ee3ba6d,Golf de Bondues,Bondues,59910,59,50.70880000,3.07740000,verified
+76690d25-498e-4b58-8687-e3f5a17dc882,Golf d'Apremont,Apremont,60300,60,49.23282600,2.52733700,corrected
+d564d2d0-57c0-4976-9442-dab63cae07d0,Golf de Rebetz,Chaumont-en-Vexin,60240,60,49.26848540,1.89736880,requires_check
+29c00321-dc0c-40d8-b289-08ea213531b6,UGOLF Templiers,Ivry-le-Temple,60173,60,49.22531140,2.03339630,verified
+35d35bb6-8e70-41ef-a583-7de223c68418,Golf du Lys Chantilly,Lamorlaye,60260,60,49.17156100,2.41557900,verified
+d015cc66-c589-4b73-b84d-3fe0e798973e,Golf du Château d'Humières,Monchy-Humières,60113,60,49.46986000,2.74129000,corrected
+e9cc7da5-f02b-4045-836f-998e5f48f3f8,Golf du Château de Raray,Raray,60810,60,49.26003000,2.71220000,corrected
+72d4a7ab-9750-47ab-af8e-0515665249ba,Golf de Chantilly,Vineuil-Saint-Firmin,60500,60,49.20837400,2.48630500,corrected
+a81be51a-c7ce-4f89-8ac5-ff20897993ce,UGOLF Forêt de Chantilly,Vineuil-Saint-Firmin,60500,60,49.20133600,2.48984300,corrected
+9c1da318-54af-4a8d-be22-d49297808b65,Golf Flers Le Houlme,La Selle-la-Forge,61100,61,48.73196700,-0.54345660,verified
+f8dc852d-9dc5-41e4-9aa2-c9c97d3ff045,Golf de Bellême,Saint-Martin-du-Vieux-Bellême,61130,61,48.36944920,0.55517970,verified
+9dd71eeb-8736-4861-bc82-3ab5122a13fd,Golf du Touquet,Le Touquet-Paris-Plage,62520,62,50.52425500,1.58684400,corrected
+5ef6b9bf-70d3-4f32-aacd-4184f7ac5608,Golf d'Hardelot,Neufchâtel-Hardelot,62152,62,50.63827940,1.60324540,verified
+8c3f96f2-696d-4104-aca1-49dc1bd52c42,Golf de Wimereux,,62930,62,50.76102200,1.60846300,corrected
+8e5f2f1c-72e3-42bd-848e-353157c2b783,Golf du Val d'Auzon,Le Crest,63450,63,45.69680920,3.15220520,verified
+324864df-c70c-4050-8856-fcc4d01498ba,Golf des Volcans,Orcines,63870,63,45.78714620,2.98874460,verified
+3b206f89-62d4-4a7f-9c91-717a700b4a4b,Golf de Royat-Charade,Royat,63130,63,45.74948120,3.02965370,verified
+3fdb5c05-c065-4f6d-be8d-2c31740d46e0,Golf de Chiberta,Anglet,64600,64,43.51311710,-1.52442980,verified
+3e630a47-99b6-4e06-bca5-3e63f3fa0fca,Golf d'Arcangues,Arcangues,64200,64,43.43722650,-1.52845410,verified
+5ca835d1-e19e-4dcb-b399-9e1a9903f787,Golf Bluegreen Pau-Artiguelouve,Artiguelouve,64230,64,43.317000,-0.476000,corrected
+f489047a-db77-47a3-9865-542a79d62ff5,Golf de Makila,Bassussarry,64200,64,43.44161220,-1.48965750,verified
+a461ebb1-539b-425c-9689-dbce3483381d,Golf de Biarritz le Phare,Biarritz,64200,64,43.49105460,-1.54465630,verified
+b23e63e8-a7fc-4677-ba44-41944a2322b1,Pau Golf Club 1856,Billère,64140,64,43.29636730,-0.39329000,verified
+db8934c4-c04a-485c-9dfd-792fbcaec873,Golf de Salies-de-Béarn,Salies-de-Béarn,64270,64,43.47326230,-0.91522370,verified
+8c87b108-2fa8-4191-99cf-99f9110996ef,Golf d'Epherra,Souraïde,64250,64,43.36317820,-1.48438330,verified
+4e414e58-7aaf-4349-ae91-b4a2bb99795f,Golf de Tarbes les Tumulus,Laloubère,65310,65,43.20773990,0.07150110,verified
+79a8393b-ccd9-4dff-8843-8534cec18912,Golf de Lannemezan,Lannemezan,65300,65,43.11136420,0.41713030,verified
+d534a8f8-8ca2-44a2-8e89-272ca0b11d98,Lourdes Pyrénées Golf Club,Lourdes,65100,65,43.105410,-0.084210,corrected
+f33fbc05-a5fa-4a76-abc4-9c90e28ef9d4,Golf Country Club de Bigorre,Pouzac,65200,65,43.09058200,0.15361200,verified
+30068f28-d8ab-4375-99df-a0818772bf51,Golf de Saint-Cyprien,Saint-Cyprien,66750,66,42.639650,3.017090,corrected
+cbe35e2a-38ab-45ed-99d1-87a987e68f1c,Golf Club de Strasbourg,Illkirch-Graffenstaden,67400,67,48.50615000,7.73170820,verified
+007a6c34-dd91-451d-b698-f8fe961a040a,Golf du Fort,Illkirch-Graffenstaden,67400,67,48.511923,7.724009,corrected
+121e26c3-f5ae-4487-bf85-f6d5a0857935,Golf de La Wantzenau,La Wantzenau,67610,67,48.67329580,7.80335610,verified
+1bf60049-2554-4867-96f5-840ee360f13d,Golf du Kempferhof,Plobsheim,67115,67,48.46018620,7.74487980,verified
+ea4ac4a3-0fa0-4529-904b-5e955da976b8,Golf Club Soufflenheim Baden-Baden,Soufflenheim,67620,67,48.81335380,7.94836190,verified
+58911972-f0d0-473e-b8e7-1bdbf47b8598,Golf du Rhin,Chalampé,68490,68,47.85149710,7.56151700,verified
+2ea15d2b-76a4-4560-bba8-61034c8d3ea2,Alsace Golf Links,Rouffach,68250,68,47.96880650,7.33560330,verified
+31a73d47-4527-4b8f-be6e-7221573b0268,Golf des Bouleaux,Wittelsheim,68310,68,47.77662680,7.21944770,verified
+02c84ea2-f7d7-4d90-8c49-8fd6e5bdeb76,Golf de Lyon Salvagny,La Tour-de-Salvagny,69890,69,45.82207480,4.70532410,verified
+bfd3e69b-3fc3-4a51-b303-e3a1ceef669a,Golf de Luxeuil-Bellevue,Genevrey,70240,70,47.73229380,6.31761330,verified
+feb7de83-c512-4fdf-86e8-78772e155ea8,Golf de Chalon-sur-Saône,Chalon-sur-Saône,71100,71,46.791210,4.886090,corrected
+6ef3ab81-a2a5-4397-acfc-e46226a3d796,Golf de Mâcon La Salle,La Salle,71260,71,46.40217560,4.83615800,verified
+96024086-21c7-46c5-984c-32ad3afaeaa1,Golf des 24 Heures Le Mans,Mulsanne,72230,72,47.927630,0.241640,corrected
+60fc446e-5e22-4347-a45c-aff15ca9d830,Golf de Sablé-Solesmes,Sablé-sur-Sarthe,72300,72,47.81914650,-0.35853920,verified
+1e4b4321-cdf5-4acc-8a44-a42a1656cd31,Le Mans Golf Club - Sargé,Sargé-lès-le-Mans,72190,72,48.04191560,0.24642810,verified
+1b20f486-2dde-44c5-a793-513436e8cca1,Golf Club d'Aix-les-Bains,Aix-les-Bains,73100,73,45.665286,5.907941,corrected
+e451c78a-bc1e-40c6-ad41-3aba45dd3129,Golf du Mont d'Arbois,Megève,74120,74,45.85353630,6.63219550,verified
+a6093541-2c3d-456d-ac79-dbd1b76a1625,Golf Club Esery,Reignier-Esery,74930,74,46.14258160,6.23884820,verified
+9794c2c4-8985-4f6f-a0c2-a578725babe9,Golf Club du Lac d'Annecy,Talloires,74290,74,45.850301,6.202430,corrected
+fb44abde-4645-4a0e-9585-6eb331ebdda8,Golf & Country Club de Bossey,,74160,74,46.15325920,6.16739170,verified
+acc1653d-cc09-448b-b9dd-f530c643c8fd,Golf Club Chamonix,,74400,74,45.94277710,6.88831440,verified
+984953aa-257e-4266-8d87-dafd7b5d012b,Golf de Dieppe-Pourville,Dieppe,76200,76,49.92055560,1.05306700,verified
+a202edc8-806f-40d9-bf4d-ac3d2bceb76b,Golf d'Étretat,,76790,76,49.70524660,0.19994090,verified
+d1546097-fd21-40d3-b819-ae109df08b77,Golf de Forges-les-Eaux,,76440,76,49.60960950,1.53520590,verified
+f6f8acf5-3fff-4d19-9b5f-d5c2e8d7c838,Golf de Rouen Mont-Saint-Aignan,,76130,76,49.47793570,1.08103830,verified
+a47123dc-5c28-4052-91aa-ed17e0215c24,Exclusiv Golf Château de Cély,Cély-en-Bière,77930,77,48.46656570,2.52475800,verified
+7480aef8-8766-475d-afec-abcbabe679cb,Golf de Fontainebleau,,77300,77,48.376950,2.649270,corrected
+d4d7ac26-cf9d-4a1c-863a-ba47bae23fbf,Le Golf National,Guyancourt,78114,78,48.754904,2.075486,corrected
+1222fe97-5021-49b0-99c2-79546ccd213d,Le Golf National,Guyancourt,78114,78,48.75155890,2.07841330,verified
+4876843f-55c6-4cd9-b3bf-49b9aac62141,Golf Isabella,Plaisir,78370,78,48.79660700,1.94203400,verified
+e55ca173-7e71-4bbe-a096-f0adf918b08b,Golf de Saint-Nom-la-Bretèche,Saint-Nom-la-Bretèche,78860,78,48.626944,2.020556,corrected
+fbd4984d-a55a-419d-96f3-e173d60af16a,Exclusiv Golf de Feucherolles,,78810,78,48.87376500,1.98514000,verified
+5c95c74b-8b84-49d2-860c-4b882e12bb8a,Golf de Saint-Germain,,78100,78,48.91837800,2.05621680,verified
+cdcefcb6-2141-4a7e-ba12-29c406d17afc,Golf de Saint-Nom-la-Bretèche,,78860,78,48.85211070,2.03666070,verified
+70d22f38-6cf2-4094-9109-03413c6cd864,Golf des Yvelines (Fourqueux),,78112,78,48.88630800,2.06457300,verified
+6ba49100-cdd8-4117-8e4d-6d8279771515,Golf de Bressuire,Bressuire,79300,79,46.85690920,-0.50352840,verified
+ef13fb6c-adb7-4a0a-bb7e-72e6f7aac30e,Golf du Château des Forges,Les Forges,79340,79,46.54212440,-0.03214560,verified
 c60797b5-91e9-468c-a22b-4afe2406c849,Golf Blue Green Mazières-en-Gâtine,Mazières-en-Gâtine,79310,79,46.50671070,-0.33977750,to_verify
-33b36426-ee7a-460d-bcda-ad98753db769,Golf Blue Green Niort-Romagné,Niort,79000,79,46.29868330,-0.45246610,to_verify
-3c9efffb-ab97-4bd2-9b1e-bec87091219c,Golf de Belle-Dune,Fort-Mahon-Plage,80120,80,50.33396170,1.56332990,to_verify
-06f62f23-ede6-44f1-a0b6-1b585114bbe1,Golf de Nampont Saint-Martin,Nampont-Saint-Martin,80120,80,50.34713500,1.74117700,to_verify
-605d6bf8-0a18-4e26-af9f-7ba60b3ec73e,Golf Club d'Amiens,Querrieu,80115,80,49.92437790,2.38966380,to_verify
-6798000a-7d38-45be-ada6-b281799cb5a9,Golf d'Albi Lasbordes,Albi,81000,81,43.94082300,2.11846710,to_verify
-0c46e00b-4d38-485d-9ad6-71b395595d15,Golf des Etangs de Fiac,Fiac,81500,81,43.67486580,1.93766130,to_verify
-bc5b43ff-ad4f-4fa7-bcef-01b8aee223ba,Golf de Mazamet La Barouge,Pont-de-Larn,81660,81,43.51445600,2.38823400,to_verify
-487fffd2-bb77-4ff9-9ff4-24a1dffbd121,Golf de Montauban l'Estang,Montauban,82000,82,44.04238930,1.34465540,to_verify
-3aa81543-5bbe-4f03-b9f1-abdb6b85cca4,Golf des Aiguillons,Montauban,82000,82,44.07284920,1.34590920,to_verify
-ae1e2d2b-9560-4d92-9def-25258f41c1db,Golf de Barbaroux,Brignoles,83170,83,43.40417210,6.16971580,to_verify
-0caa43bc-125e-48f4-a886-ff3227a72a19,Golf Club Saint-Tropez,Gassin,83580,83,43.25308780,6.60663790,to_verify
-26585990-094a-48e1-a941-c48421ce7f79,Golf de Beauvallon,Grimaud,83310,83,43.29147610,6.60262750,to_verify
-26beac9b-42bc-46a2-b088-7c4a6d102471,Golf de Valgarde,La Garde,83130,83,43.12865200,6.02616100,to_verify
-adf6f9a6-07cb-421a-875e-f2deca440dc8,Golf de Valcros,La Londe-les-Maures,83250,83,43.18429990,6.27897620,to_verify
-3fbb58a9-6f8d-48d6-a280-722582586805,Golf de Château de Taulane,La Martre,83840,83,43.77884380,6.63196460,to_verify
-5fcb765d-ac08-4c02-80ae-cd955b86e11a,Golf de Taulane,La Martre,83840,83,43.77872850,6.63203860,to_verify
-0a979934-c6b3-4e49-933f-26f88f311bde,Golf du Domaine de Saint-Endréol,La Motte,83920,83,43.49484630,6.58560320,to_verify
-906af810-1cd2-4aac-a7dc-2967f32c5ff5,Golf de Sainte-Baume,Nans-les-Pins,83860,83,43.38837430,5.79505530,to_verify
-0a08eae1-3453-4043-a64b-a294fc107a57,Golf de Roquebrune,Roquebrune-sur-Argens,83520,83,43.41880200,6.66903400,to_verify
-2ff3d236-8000-4831-a6db-3966278f6c58,Golf de Frégate,Saint-Cyr-sur-Mer,83270,83,43.15820500,5.72630200,to_verify
-96b7f27c-f154-476c-aded-4f061edbb57a,Golf de l'Estérel,Saint-Raphaël,83700,83,43.45298700,6.78944280,to_verify
-4c1c891b-122c-4f3e-950a-0d09e1460d91,Golf de Valescure,Saint-Raphaël,83700,83,43.45534730,6.79017020,to_verify
-0fa3daeb-65d6-4054-b1b3-689ed748305a,Golf de Valescure,Saint-Raphaël,83700,83,43.45534730,6.79017020,to_verify
-b157677b-e195-4e39-8212-ed0ac206c1de,Golf de Terre Blanche,Tourrettes,83440,83,43.59101210,6.73181700,to_verify
-7c2f8915-c5ed-4d01-97f6-f6fabf5cfea3,Golf de Terre-Blanche,Tourrettes,83440,83,43.59101210,6.73181700,to_verify
-32463ad0-1201-4e1c-b7b7-2c42c1948909,Golf de Vidauban,Vidauban,83550,83,43.39518890,6.46423280,to_verify
-2cb0b8dd-bf1b-44b2-a2bb-1eb606911c3d,Golf Bluegreen Sainte-Maxime,,83120,83,43.33553660,6.65002330,to_verify
-3395c724-d14c-481a-bc4c-a529d6dbc463,Golf de Sainte-Maxime,,83120,83,43.33653500,6.65010340,to_verify
-d1eeb617-f83f-4447-bb00-03522a11032c,Golf de Saumane,Saumane-de-Vaucluse,84800,84,43.92351800,5.09625110,to_verify
-1a6ceb33-5038-4f7c-8bb6-00210acbacdb,Golf du Grand Avignon,Vedène,84270,84,43.96036070,4.88691350,to_verify
-c7ed0d33-df84-4885-a2f1-e24d30837e0b,Golf du Pays de Saint-Gilles-Croix-de-Vie,L'Aiguillon-sur-Vie,85220,85,46.69037810,-1.79492800,to_verify
-3c5c5ec7-d106-4ccf-8ce2-13de2b0905c2,Golf des Sables d'Olonne,Les Sables-d'Olonne,85340,85,46.53117650,-1.75115380,to_verify
-f04de2ab-cd00-4d99-bfa9-19d56df74972,Golf Bluegreen La Domangère,Nesmy,85310,85,46.61281190,-1.40929610,to_verify
-185532d6-ad98-48a3-9631-0e1edb89d9a5,Golf de Saint-Jean-de-Monts,Saint-Jean-de-Monts,85160,85,46.79402000,-2.09152510,to_verify
-c11bc6c6-3018-41f4-8206-5e093eac4ab1,Golf du Haut-Poitou,Beaumont Saint-Cyr,86130,86,46.72777430,0.47591710,to_verify
-fb76975b-993f-486c-a066-19a0fb3e8214,Golf de La Roche-Posay,La Roche-Posay,86270,86,46.78108640,0.80658390,to_verify
-2e3af5de-ca99-425b-9afa-e5b5773e678b,Golf de Mignaloux-Beauvoir,Mignaloux-Beauvoir,86550,86,46.53027890,0.42590800,to_verify
-aaa8dfc8-8b9b-477e-8141-7c22e488052e,Golf de Loudun-Fontevraud,Roiffé,86120,86,47.15909700,0.04475370,to_verify
-ed75f4c2-af22-4457-8836-4de09d3fbe5c,Golf Club de Limoges Saint-Lazare,Limoges,87000,87,45.81149170,1.29015190,to_verify
-ef1175c4-0900-423e-b746-089834c989ab,Golf Club de Mortemart,Mortemart,87330,87,46.05287240,0.95211170,to_verify
-bcad99cd-a967-49a2-bbcf-487465b740a0,Golf de la Porcelaine,Panazol,87350,87,45.85809990,1.34563150,to_verify
-8a8d8c24-d31a-4111-ac3b-ad247774e365,Golf de Saint-Junien,Saint-Junien,87200,87,45.89498200,0.83652400,to_verify
-bce0f4d4-71c7-4b60-8805-cee60f26abb3,Golf Municipal d'Épinal,Épinal,88000,88,48.17788860,6.45831340,to_verify
-039533cc-6f52-4e0c-8fb8-c69cfa991795,Domaine & Golf du Roncemay,Aillant-sur-Tholon,89110,89,47.84446380,3.30067950,to_verify
-4b4e5a5e-a341-4d22-82c2-f175c2b32388,Golf de Rougemont-le-Château,Rougemont-le-Château,90110,90,47.74077300,6.98996600,to_verify
-f6c7a024-a6f1-45a6-a046-c98354f479ad,Golf de Courson-Monteloup Stade Français,Courson-Monteloup,91680,91,48.59813700,2.14371000,to_verify
-13c6561c-c282-4e31-90dc-6c82de6d6de9,Golf de Forges-les-Bains,Forges-les-Bains,91470,91,48.63280240,2.07381560,to_verify
-031704d8-cec5-4f34-aefd-581ef3fb504d,Golf du Coudray-Montceaux,Le Coudray-Montceaux,91830,91,48.56183880,2.50852360,to_verify
-bff72519-c821-4d0a-a6c7-7627df9c5aeb,Golf d'Ormesson,Ormesson-sur-Marne,94490,94,48.78685100,2.55041030,to_verify
-abda0b79-2325-4650-a38b-4ab52cbae725,Golf de Domont-Montmorency,Domont,95330,95,49.01802230,2.31460190,to_verify
-a32c62f6-b556-4bc2-9566-cec397caa272,Golf de L'Isle-Adam,L'Isle-Adam,95290,95,49.12119300,2.26190300,to_verify
-266e7112-fc42-4654-b3fc-a91143d22ced,Bourbon Golf Club,Saint-Benoît,97470,97,46.54959100,0.33998900,to_verify
-272acd16-c430-4b90-a00f-c5fb09f31438,Golf International Saint-François,Saint-François,97118,97,46.22763800,2.21374900,to_verify
-6d7ea649-443b-4ca3-87f6-e5bca6a5172a,Golf du Bassin Bleu,Saint-Gilles-les-Bains,97434,97,-21.05387490,55.22868270,to_verify
+33b36426-ee7a-460d-bcda-ad98753db769,Golf Blue Green Niort-Romagné,Niort,79000,79,46.29868330,-0.45246610,verified
+3c9efffb-ab97-4bd2-9b1e-bec87091219c,Golf de Belle-Dune,Fort-Mahon-Plage,80120,80,50.33396170,1.56332990,verified
+06f62f23-ede6-44f1-a0b6-1b585114bbe1,Golf de Nampont Saint-Martin,Nampont-Saint-Martin,80120,80,50.34713500,1.74117700,verified
+605d6bf8-0a18-4e26-af9f-7ba60b3ec73e,Golf Club d'Amiens,Querrieu,80115,80,49.92437790,2.38966380,verified
+6798000a-7d38-45be-ada6-b281799cb5a9,Golf d'Albi Lasbordes,Albi,81000,81,43.94082300,2.11846710,verified
+0c46e00b-4d38-485d-9ad6-71b395595d15,Golf des Etangs de Fiac,Fiac,81500,81,43.67486580,1.93766130,verified
+bc5b43ff-ad4f-4fa7-bcef-01b8aee223ba,Golf de Mazamet La Barouge,Pont-de-Larn,81660,81,43.51445600,2.38823400,verified
+487fffd2-bb77-4ff9-9ff4-24a1dffbd121,Golf de Montauban l'Estang,Montauban,82000,82,44.04238930,1.34465540,verified
+3aa81543-5bbe-4f03-b9f1-abdb6b85cca4,Golf des Aiguillons,Montauban,82000,82,44.07284920,1.34590920,verified
+ae1e2d2b-9560-4d92-9def-25258f41c1db,Golf de Barbaroux,Brignoles,83170,83,43.40350,6.13569,corrected
+0caa43bc-125e-48f4-a886-ff3227a72a19,Golf Club Saint-Tropez,Gassin,83580,83,43.25308780,6.60663790,verified
+26585990-094a-48e1-a941-c48421ce7f79,Golf de Beauvallon,Grimaud,83310,83,43.29147610,6.60262750,verified
+26beac9b-42bc-46a2-b088-7c4a6d102471,Golf de Valgarde,La Garde,83130,83,43.12865200,6.02616100,verified
+adf6f9a6-07cb-421a-875e-f2deca440dc8,Golf de Valcros,La Londe-les-Maures,83250,83,43.18429990,6.27897620,verified
+3fbb58a9-6f8d-48d6-a280-722582586805,Golf de Château de Taulane,La Martre,83840,83,43.77884380,6.63196460,verified
+5fcb765d-ac08-4c02-80ae-cd955b86e11a,Golf de Taulane,La Martre,83840,83,43.77872850,6.63203860,verified
+0a979934-c6b3-4e49-933f-26f88f311bde,Golf du Domaine de Saint-Endréol,La Motte,83920,83,43.49484630,6.58560320,manual_check
+906af810-1cd2-4aac-a7dc-2967f32c5ff5,Golf de Sainte-Baume,Nans-les-Pins,83860,83,43.38837430,5.79505530,manual_check
+0a08eae1-3453-4043-a64b-a294fc107a57,Golf de Roquebrune,Roquebrune-sur-Argens,83520,83,43.41880200,6.66903400,verified
+2ff3d236-8000-4831-a6db-3966278f6c58,Golf de Frégate,Saint-Cyr-sur-Mer,83270,83,43.15820500,5.72630200,manual_check
+96b7f27c-f154-476c-aded-4f061edbb57a,Golf de l'Estérel,Saint-Raphaël,83700,83,43.45298700,6.78944280,verified
+4c1c891b-122c-4f3e-950a-0d09e1460d91,Golf de Valescure,Saint-Raphaël,83700,83,43.45534730,6.79017020,manual_check
+0fa3daeb-65d6-4054-b1b3-689ed748305a,Golf de Valescure,Saint-Raphaël,83700,83,43.45534730,6.79017020,manual_check
+b157677b-e195-4e39-8212-ed0ac206c1de,Golf de Terre Blanche,Tourrettes,83440,83,43.59101210,6.73181700,verified
+7c2f8915-c5ed-4d01-97f6-f6fabf5cfea3,Golf de Terre-Blanche,Tourrettes,83440,83,43.59101210,6.73181700,verified
+32463ad0-1201-4e1c-b7b7-2c42c1948909,Golf de Vidauban,Vidauban,83550,83,43.39518890,6.46423280,verified
+2cb0b8dd-bf1b-44b2-a2bb-1eb606911c3d,Golf Bluegreen Sainte-Maxime,,83120,83,43.32217,6.64863,corrected
+3395c724-d14c-481a-bc4c-a529d6dbc463,Golf de Sainte-Maxime,,83120,83,43.32217,6.64863,corrected
+d1eeb617-f83f-4447-bb00-03522a11032c,Golf de Saumane,Saumane-de-Vaucluse,84800,84,43.92351800,5.09625110,verified
+1a6ceb33-5038-4f7c-8bb6-00210acbacdb,Golf du Grand Avignon,Vedène,84270,84,43.96036070,4.88691350,verified
+c7ed0d33-df84-4885-a2f1-e24d30837e0b,Golf du Pays de Saint-Gilles-Croix-de-Vie,L'Aiguillon-sur-Vie,85220,85,46.69037810,-1.79492800,verified
+3c5c5ec7-d106-4ccf-8ce2-13de2b0905c2,Golf des Sables d'Olonne,Les Sables-d'Olonne,85340,85,46.53117650,-1.75115380,verified
+f04de2ab-cd00-4d99-bfa9-19d56df74972,Golf Bluegreen La Domangère,Nesmy,85310,85,46.61281190,-1.40929610,verified
+185532d6-ad98-48a3-9631-0e1edb89d9a5,Golf de Saint-Jean-de-Monts,Saint-Jean-de-Monts,85160,85,46.79402000,-2.09152510,verified
+c11bc6c6-3018-41f4-8206-5e093eac4ab1,Golf du Haut-Poitou,Beaumont Saint-Cyr,86130,86,46.72777430,0.47591710,verified
+fb76975b-993f-486c-a066-19a0fb3e8214,Golf de La Roche-Posay,La Roche-Posay,86270,86,46.78108640,0.80658390,verified
+2e3af5de-ca99-425b-9afa-e5b5773e678b,Golf de Mignaloux-Beauvoir,Mignaloux-Beauvoir,86550,86,46.53027890,0.42590800,verified
+aaa8dfc8-8b9b-477e-8141-7c22e488052e,Golf de Loudun-Fontevraud,Roiffé,86120,86,47.15909700,0.04475370,verified
+ed75f4c2-af22-4457-8836-4de09d3fbe5c,Golf Club de Limoges Saint-Lazare,Limoges,87000,87,45.81149170,1.29015190,verified
+ef1175c4-0900-423e-b746-089834c989ab,Golf Club de Mortemart,Mortemart,87330,87,46.05287240,0.95211170,verified
+bcad99cd-a967-49a2-bbcf-487465b740a0,Golf de la Porcelaine,Panazol,87350,87,45.85809990,1.34563150,verified
+8a8d8c24-d31a-4111-ac3b-ad247774e365,Golf de Saint-Junien,Saint-Junien,87200,87,45.89498200,0.83652400,verified
+bce0f4d4-71c7-4b60-8805-cee60f26abb3,Golf Municipal d'Épinal,Épinal,88000,88,48.17788860,6.45831340,verified
+039533cc-6f52-4e0c-8fb8-c69cfa991795,Domaine & Golf du Roncemay,Aillant-sur-Tholon,89110,89,47.84446380,3.30067950,verified
+4b4e5a5e-a341-4d22-82c2-f175c2b32388,Golf de Rougemont-le-Château,Rougemont-le-Château,90110,90,47.74077300,6.98996600,verified
+f6c7a024-a6f1-45a6-a046-c98354f479ad,Golf de Courson-Monteloup Stade Français,Courson-Monteloup,91680,91,48.59813700,2.14371000,verified
+13c6561c-c282-4e31-90dc-6c82de6d6de9,Golf de Forges-les-Bains,Forges-les-Bains,91470,91,48.63280240,2.07381560,verified
+031704d8-cec5-4f34-aefd-581ef3fb504d,Golf du Coudray-Montceaux,Le Coudray-Montceaux,91830,91,48.56183880,2.50852360,verified
+bff72519-c821-4d0a-a6c7-7627df9c5aeb,Golf d'Ormesson,Ormesson-sur-Marne,94490,94,48.78685100,2.55041030,verified
+abda0b79-2325-4650-a38b-4ab52cbae725,Golf de Domont-Montmorency,Domont,95330,95,49.01802230,2.31460190,verified
+a32c62f6-b556-4bc2-9566-cec397caa272,Golf de L'Isle-Adam,L'Isle-Adam,95290,95,49.12119300,2.26190300,verified
+266e7112-fc42-4654-b3fc-a91143d22ced,Bourbon Golf Club,Saint-Benoît,97470,97,-21.27746,55.36135,corrected
+272acd16-c430-4b90-a00f-c5fb09f31438,Golf International Saint-François,Saint-François,97118,97,16.25554,-61.26298,corrected
+6d7ea649-443b-4ca3-87f6-e5bca6a5172a,Golf du Bassin Bleu,Saint-Gilles-les-Bains,97434,97,-21.05387490,55.22868270,verified
 670733dd-bcb6-4c76-a2f5-2ed8a0f39ed5,Golf de l'Espérance,Trois-Îlets,97229,97,46.22763800,2.21374900,to_verify

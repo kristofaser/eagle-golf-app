@@ -13,6 +13,7 @@ import { Video, ResizeMode } from 'expo-av';
 import { Colors, Spacing } from '@/constants/theme';
 import { Text } from '@/components/atoms';
 import { s3, getPublicUrl, generateVideoKey, BUCKET_NAME } from '@/utils/scaleway';
+import { supabase } from '@/utils/supabase/client';
 
 const { width, height } = Dimensions.get('window');
 
@@ -22,13 +23,15 @@ export default function VideoSkillScreen() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [proName, setProName] = useState<string>('');
 
   const skillName = Array.isArray(skill) ? skill[0] : skill;
   const proIdString = Array.isArray(proId) ? proId[0] : proId;
 
-  // Charger la vidéo depuis Supabase Storage
+  // Charger la vidéo et les infos du pro
   useEffect(() => {
     loadVideo();
+    loadProInfo();
   }, [proIdString, skillName]);
 
   const loadVideo = async () => {
@@ -71,6 +74,30 @@ export default function VideoSkillScreen() {
     }
   };
 
+  const loadProInfo = async () => {
+    try {
+      if (!proIdString) return;
+
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', proIdString)
+        .single();
+
+      if (error) {
+        console.error('Erreur chargement profil pro:', error);
+        setProName('Pro');
+        return;
+      }
+
+      const fullName = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim();
+      setProName(fullName || 'Pro');
+    } catch (err) {
+      console.error('Erreur chargement profil pro:', err);
+      setProName('Pro');
+    }
+  };
+
   const handleClose = () => {
     router.back();
   };
@@ -93,19 +120,24 @@ export default function VideoSkillScreen() {
       <StatusBar barStyle="light-content" backgroundColor="black" />
 
       <View style={styles.container}>
-        {/* Header avec bouton fermer */}
+        {/* Header avec bouton fermer et badges */}
         <View style={styles.header}>
           <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
             <Ionicons name="close" size={28} color="white" />
           </TouchableOpacity>
 
-          <View style={styles.headerInfo}>
-            <Text variant="body" color="ball" weight="semiBold">
-              {getSkillDisplayName(skillName)}
-            </Text>
-            <Text variant="caption" color="ball">
-              Démonstration technique
-            </Text>
+          <View style={styles.badgesContainer}>
+            <View style={styles.skillBadge}>
+              <Text variant="body" color="ball" weight="semiBold">
+                {getSkillDisplayName(skillName)}
+              </Text>
+            </View>
+
+            <View style={styles.proBadge}>
+              <Text variant="caption" color="ball" weight="medium">
+                {proName}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -139,8 +171,8 @@ export default function VideoSkillScreen() {
               volume={1.0}
               isMuted={false}
               resizeMode={ResizeMode.CONTAIN}
-              shouldPlay={false}
-              isLooping
+              shouldPlay={true}
+              isLooping={true}
               useNativeControls
               style={styles.video}
               onError={(error) => {
@@ -151,12 +183,6 @@ export default function VideoSkillScreen() {
           )}
         </View>
 
-        {/* Informations supplémentaires (optionnel) */}
-        <View style={styles.infoOverlay}>
-          <Text variant="caption" color="ball" style={styles.infoText}>
-            Pro ID: {proIdString}
-          </Text>
-        </View>
       </View>
     </>
   );
@@ -178,14 +204,28 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.m,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'transparent',
   },
   closeButton: {
     padding: Spacing.s,
     marginRight: Spacing.m,
   },
-  headerInfo: {
+  badgesContainer: {
     flex: 1,
+    flexDirection: 'row',
+    gap: Spacing.s,
+  },
+  skillBadge: {
+    backgroundColor: Colors.primary.accent,
+    paddingHorizontal: Spacing.m,
+    paddingVertical: Spacing.s,
+    borderRadius: 20,
+  },
+  proBadge: {
+    backgroundColor: Colors.neutral.charcoal,
+    paddingHorizontal: Spacing.m,
+    paddingVertical: Spacing.s,
+    borderRadius: 20,
   },
   videoContainer: {
     flex: 1,
