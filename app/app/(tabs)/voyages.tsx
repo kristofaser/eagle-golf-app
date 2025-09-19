@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Colors, Spacing } from '@/constants/theme';
 import { Text } from '@/components/atoms';
@@ -8,84 +8,29 @@ import { TravelNotificationToggle } from '@/components/molecules/TravelNotificat
 import { commonStyles } from '@/utils/commonStyles';
 import { useResponsiveCardSize } from '@/hooks/useResponsiveCardSize';
 import { useTravelNotifications } from '@/hooks/useTravelNotifications';
+import { useTrips } from '@/hooks/useTrips';
+import { Trip } from '@/types/trip';
 
-// Données fictives des voyages golf
-const tripData: TripData[] = [
-  {
-    id: '1',
-    title: 'Marrakech Golf Experience',
-    country: 'Maroc',
-    imageUrl: 'https://images.unsplash.com/photo-1539650116574-75c0c6cec282?w=400&h=300&fit=crop&crop=center',
-    duration: '7 jours',
-    price: '1,850€',
-    rating: 4.8,
-    golfCourses: 4,
-    description: 'Découvrez les parcours légendaires de Marrakech dans un cadre exceptionnel',
-    featured: true,
-    status: 'completed',
-    date: 'Nov 2024',
-  },
-  {
-    id: '2',
-    title: 'Dubai Golf Luxury',
-    country: 'Émirats Arabes Unis',
-    imageUrl: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&h=300&fit=crop&crop=center',
-    duration: '5 jours',
-    price: '2,400€',
-    rating: 4.9,
-    golfCourses: 3,
-    description: 'Golf de luxe dans le désert avec des parcours d\'exception',
-    featured: false,
-    status: 'full',
-    date: 'Jan 2025',
-  },
-  {
-    id: '3',
-    title: 'Singapore Golf City',
-    country: 'Singapour',
-    imageUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop&crop=center',
-    duration: '6 jours',
-    price: '2,200€',
-    rating: 4.7,
-    golfCourses: 5,
-    description: 'Golf urbain dans la ville-état la plus moderne d\'Asie',
-    featured: false,
-    status: 'completed',
-    date: 'Oct 2024',
-  },
-  {
-    id: '4',
-    title: 'St Andrews Heritage',
-    country: 'Écosse',
-    imageUrl: 'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=400&h=300&fit=crop&crop=center',
-    duration: '8 jours',
-    price: '3,200€',
-    rating: 4.9,
-    golfCourses: 6,
-    description: 'Pèlerinage sur les links légendaires du berceau du golf',
-    featured: true,
-    status: 'full',
-    date: 'Mars 2025',
-  },
-  {
-    id: '5',
-    title: 'Pebble Beach Experience',
-    country: 'États-Unis',
-    imageUrl: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&h=300&fit=crop&crop=center',
-    duration: '6 jours',
-    price: '4,500€',
-    rating: 5.0,
-    golfCourses: 4,
-    description: 'Les parcours côtiers mythiques de la côte californienne',
-    featured: false,
-    status: 'completed',
-    date: 'Sep 2024',
-  },
-];
+// Fonction pour mapper les données Trip vers TripData pour le composant
+const mapTripToTripData = (trip: Trip): TripData => ({
+  id: trip.id,
+  title: trip.title,
+  country: trip.country,
+  imageUrl: trip.image_url,
+  duration: '',
+  price: '',
+  rating: 0,
+  golfCourses: 0,
+  description: '',
+  featured: false,
+  status: trip.status as 'completed' | 'full',
+  date: '',
+});
 
 export default function VoyagesScreen() {
   const { isTablet } = useResponsiveCardSize();
   const { isEnabled, toggleNotifications } = useTravelNotifications();
+  const { completedTrips, fullTrips, isLoading, error, refresh } = useTrips();
 
   const handleTripPress = useCallback((trip: TripData) => {
     // Pas d'action pour le moment
@@ -106,27 +51,61 @@ export default function VoyagesScreen() {
   }, [toggleNotifications]);
 
   const renderTripCard = useCallback(
-    (trip: TripData) => (
-      <TripCard
-        key={trip.id}
-        data={trip}
-        onPress={handleTripPress}
-        onHover={handleTripHover}
-      />
-    ),
+    (trip: Trip) => {
+      const tripData = mapTripToTripData(trip);
+      return (
+        <TripCard
+          key={trip.id}
+          data={tripData}
+          onPress={handleTripPress}
+          onHover={handleTripHover}
+        />
+      );
+    },
     [handleTripPress, handleTripHover]
   );
 
-  // Séparer les voyages par statut
-  const completedTrips = tripData.filter(trip => trip.status === 'completed');
-  const fullTrips = tripData.filter(trip => trip.status === 'full');
+  // Afficher le loader pendant le chargement
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={Colors.primary.accent} />
+        <Text variant="body" color="course" style={{ marginTop: Spacing.m }}>
+          Chargement des voyages...
+        </Text>
+      </View>
+    );
+  }
+
+  // Afficher une erreur si nécessaire
+  if (error) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <Text variant="h3" color="charcoal" style={{ marginBottom: Spacing.m }}>
+          Erreur de chargement
+        </Text>
+        <Text variant="body" color="course">
+          {error}
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
       
       <View style={styles.contentContainer}>
-        <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={styles.scrollView}
+          refreshControl={
+            <RefreshControl
+              refreshing={isLoading}
+              onRefresh={refresh}
+              tintColor={Colors.primary.accent}
+            />
+          }>
           {/* Section Voyages récents */}
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
@@ -187,6 +166,10 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   sectionContainer: {
     marginTop: Spacing.l,

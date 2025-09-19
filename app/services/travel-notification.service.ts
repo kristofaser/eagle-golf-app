@@ -14,7 +14,7 @@ class TravelNotificationService {
   async getPreferences(userId: string) {
     try {
       const { data, error } = await supabase
-        .from('travel_notification_preferences')
+        .from('user_travel_alerts')
         .select('*')
         .eq('user_id', userId)
         .single();
@@ -22,6 +22,17 @@ class TravelNotificationService {
       if (error && error.code !== 'PGRST116') {
         console.error('Erreur récupération préférences voyage:', error);
         return { data: null, error };
+      }
+
+      // Transformer les données pour la compatibilité
+      if (data) {
+        const transformed = {
+          user_id: data.user_id,
+          enabled: data.alerts_enabled,
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        };
+        return { data: transformed, error: null };
       }
 
       return { data, error: null };
@@ -37,10 +48,10 @@ class TravelNotificationService {
   async updatePreferences(userId: string, enabled: boolean) {
     try {
       const { data, error } = await supabase
-        .from('travel_notification_preferences')
+        .from('user_travel_alerts')
         .upsert({
           user_id: userId,
-          enabled,
+          alerts_enabled: enabled,
           updated_at: new Date().toISOString(),
         }, {
           onConflict: 'user_id'
@@ -67,7 +78,7 @@ class TravelNotificationService {
   async deletePreferences(userId: string) {
     try {
       const { error } = await supabase
-        .from('travel_notification_preferences')
+        .from('user_travel_alerts')
         .delete()
         .eq('user_id', userId);
 
@@ -91,7 +102,7 @@ class TravelNotificationService {
   async getEnabledUsers() {
     try {
       const { data, error } = await supabase
-        .from('travel_notification_preferences')
+        .from('user_travel_alerts')
         .select(`
           user_id,
           profiles!inner(
@@ -101,7 +112,7 @@ class TravelNotificationService {
             last_name
           )
         `)
-        .eq('enabled', true);
+        .eq('alerts_enabled', true);
 
       if (error) {
         console.error('Erreur récupération utilisateurs alertes voyage:', error);
