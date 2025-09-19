@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { OpenLocationCode } from 'open-location-code';
 import { Button } from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import type { GolfCourse } from '@/types/golf-course';
@@ -18,6 +19,9 @@ const courseSchema = z.object({
   website: z.string().url('URL invalide').optional().or(z.literal('')),
   holes_count: z.coerce.number().int().min(1).max(54).optional(),
   description: z.string().optional(),
+  plus_code: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 type CourseFormData = z.infer<typeof courseSchema>;
@@ -31,12 +35,16 @@ interface CourseModalProps {
 
 export default function CourseModal({ isOpen, onClose, course, onSave }: CourseModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [plusCodeError, setPlusCodeError] = useState<string>('');
+  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
   const isEditing = !!course;
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<CourseFormData>({
     resolver: zodResolver(courseSchema),
@@ -50,6 +58,9 @@ export default function CourseModal({ isOpen, onClose, course, onSave }: CourseM
       website: course.website || '',
       holes_count: course.holes_count || undefined,
       description: course.description || '',
+      plus_code: '',
+      latitude: course.latitude || undefined,
+      longitude: course.longitude || undefined,
     } : {
       name: '',
       city: '',
@@ -60,13 +71,86 @@ export default function CourseModal({ isOpen, onClose, course, onSave }: CourseM
       website: '',
       holes_count: undefined,
       description: '',
+      plus_code: '',
+      latitude: undefined,
+      longitude: undefined,
     },
   });
+
+  // Conversion Plus Code vers coordonnées GPS
+  const convertPlusCodeToCoordinates = (plusCodeValue: string) => {
+    setPlusCodeError('');
+
+    if (!plusCodeValue.trim()) {
+      setValue('latitude', undefined);
+      setValue('longitude', undefined);
+      return;
+    }
+
+    try {
+      const olc = new OpenLocationCode();
+      const trimmedCode = plusCodeValue.trim();
+
+      // Extraire le code Plus de la chaîne (tout ce qui précède un espace)
+      const parts = trimmedCode.split(' ');
+      const extractedCode = parts[0];
+
+      // Vérifier si le code extrait est valide
+      if (!olc.isValid(extractedCode)) {
+        setPlusCodeError('Code Plus invalide. Format attendu: F9P8+53 ou 8FW4V75V+8Q');
+        return;
+      }
+
+      // Si le code est complet (8+ caractères avant le +), décoder directement
+      if (olc.isFull(extractedCode)) {
+        const decoded = olc.decode(extractedCode);
+        const latitude = decoded.latitudeCenter;
+        const longitude = decoded.longitudeCenter;
+
+        setValue('latitude', latitude);
+        setValue('longitude', longitude);
+      } else {
+        // Code court - utiliser l'API Google Geocoding
+        handleShortPlusCodeWithGeocoding(trimmedCode);
+      }
+
+    } catch (error) {
+      setPlusCodeError('Erreur lors de la conversion du code Plus');
+    }
+  };
+
+  // Gestion des codes Plus courts avec API Google Geocoding
+  const handleShortPlusCodeWithGeocoding = async (fullInput: string) => {
+    try {
+      // Utiliser l'API Google Geocoding pour résoudre le code Plus avec la localité
+      const response = await fetch(
+        `/api/geocode?address=${encodeURIComponent(fullInput)}`
+      );
+
+      if (!response.ok) {
+        throw new Error('Erreur API Geocoding');
+      }
+
+      const data = await response.json();
+
+      if (data.latitude && data.longitude) {
+        setValue('latitude', data.latitude);
+        setValue('longitude', data.longitude);
+      } else {
+        setPlusCodeError('Impossible de convertir ce code Plus. Vérifiez le format et la ville.');
+      }
+
+    } catch (error) {
+      setPlusCodeError('Pour les codes courts, une clé API Google est requise. Utilisez un code complet (ex: 8FW4V75V+8Q)');
+    }
+  };
 
   const onSubmit = async (data: CourseFormData) => {
     setIsSubmitting(true);
     try {
-      await onSave(data);
+      // Exclure plus_code des données envoyées (champ temporaire pour la conversion)
+      const { plus_code, ...courseData } = data;
+      await onSave(courseData);
       reset();
       onClose();
     } catch (error) {
@@ -79,6 +163,7 @@ export default function CourseModal({ isOpen, onClose, course, onSave }: CourseM
   const handleClose = () => {
     if (!isSubmitting) {
       reset();
+      setPlusCodeError('');
       onClose();
     }
   };
@@ -168,6 +253,79 @@ export default function CourseModal({ isOpen, onClose, course, onSave }: CourseM
             {errors.holes_count && (
               <p className="mt-1 text-sm text-red-600">{errors.holes_count.message}</p>
             )}
+          </div>
+
+          {/* Section Localisation GPS */}
+          <div className="border-t border-gray-200 pt-6">
+            <h4 className="text-lg font-medium text-gray-900 mb-4">Localisation GPS</h4>
+
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="plus_code" className="block text-sm font-medium text-gray-700 mb-2">
+                  Code Plus (Google Maps)
+                </label>
+                <input
+                  {...register('plus_code')}
+                  type="text"
+                  id="plus_code"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="F9P8+53 Aix-en-Provence ou 8FW4V75V+8Q"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Debounce pour éviter trop d'appels
+                    if (debounceTimeout) {
+                      clearTimeout(debounceTimeout);
+                    }
+                    const newTimeout = setTimeout(() => {
+                      convertPlusCodeToCoordinates(value);
+                    }, 500);
+                    setDebounceTimeout(newTimeout);
+                  }}
+                />
+                {plusCodeError && (
+                  <p className="mt-1 text-sm text-red-600">{plusCodeError}</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  Copiez le code Plus depuis Google Maps (ex: F9P8+53 Aix-en-Provence ou 8FW4V75V+8Q).
+                  Clic droit sur un lieu → copier les coordonnées.
+                  <br />
+                  <strong>Codes complets</strong> (8+ caractères) fonctionnent sans API.
+                  <strong>Codes courts</strong> nécessitent une clé API Google configurée.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="latitude" className="block text-sm font-medium text-gray-700 mb-2">
+                    Latitude
+                  </label>
+                  <input
+                    {...register('latitude', { valueAsNumber: true })}
+                    type="number"
+                    step="any"
+                    id="latitude"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-gray-50"
+                    placeholder="48.8566"
+                    readOnly
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="longitude" className="block text-sm font-medium text-gray-700 mb-2">
+                    Longitude
+                  </label>
+                  <input
+                    {...register('longitude', { valueAsNumber: true })}
+                    type="number"
+                    step="any"
+                    id="longitude"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-gray-50"
+                    placeholder="2.3522"
+                    readOnly
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

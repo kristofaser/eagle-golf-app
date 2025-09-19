@@ -21,7 +21,7 @@ export function useNotificationBadge() {
   });
 
   // Fonction pour envoyer l'email d'une demande pro
-  const sendProRequestEmail = useCallback(async (notification: any) => {
+  const sendProRequestEmail = useCallback(async (notification: { id: string; data: { demandeur_data?: unknown; request_id?: string } }) => {
     try {
       const { demandeur_data, request_id } = notification.data;
 

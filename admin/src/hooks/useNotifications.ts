@@ -10,7 +10,7 @@ interface NotificationData {
   type: string;
   title: string;
   message: string;
-  data: any;
+  data: Record<string, unknown>;
   read_at: string | null;
   created_at: string;
   updated_at: string;

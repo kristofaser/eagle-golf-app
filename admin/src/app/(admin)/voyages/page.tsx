@@ -118,7 +118,7 @@ export default function VoyagesPage() {
 
       setUsersWithAlerts(formattedUsers);
     } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
+      console.error('❌ Erreur lors du chargement des données:', error);
     } finally {
       setLoading(false);
     }

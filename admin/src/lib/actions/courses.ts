@@ -14,6 +14,8 @@ const courseSchema = z.object({
   website: z.string().url('URL invalide').optional().or(z.literal('')),
   holes_count: z.coerce.number().int().min(1).max(54).optional(),
   description: z.string().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 type CourseFormData = z.infer<typeof courseSchema>;
