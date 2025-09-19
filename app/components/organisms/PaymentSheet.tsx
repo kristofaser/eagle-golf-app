@@ -58,7 +58,8 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
         applePay: {
           merchantCountryCode: 'FR',
         },
-        allowsDelayedPaymentMethods: false,
+        // ❌ DÉSACTIVATION COMPLÈTE DE LINK
+        allowsDelayedPaymentMethods: false, // Désactive Link et autres méthodes différées
         // Configuration française
         defaultBillingDetails: {},
         appearance: {
@@ -70,10 +71,8 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
         },
         // Localisation française
         locale: 'fr',
-        // Méthodes de paiement autorisées (Link exclu)
-        paymentMethodOrder: ['card', 'apple_pay', 'google_pay'],
-        // Désactiver explicitement Link
-        allowsDelayedPaymentMethods: false,
+        // 🎯 ORDRE PRIORITAIRE SANS LINK
+        paymentMethodOrder: ['apple_pay', 'google_pay', 'card'], // Apple Pay en premier
       });
 
       if (error) {

@@ -46,16 +46,15 @@ serve(async (req) => {
       throw new Error('Montant invalide (minimum 0.50€)');
     }
 
-    // Créer le Payment Intent avec Stripe
+    // Créer le Payment Intent avec Stripe - Configuration automatique
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(amount), // Montant en centimes
       currency: currency.toLowerCase(),
-      // Remplacer automatic_payment_methods par des méthodes spécifiques
-      payment_method_types: ['card'],
-      // Désactiver explicitement toutes les méthodes automatiques
+      // ✅ Configuration automatique pour accepter toutes les méthodes de paiement
       automatic_payment_methods: {
-        enabled: false,
+        enabled: true, // Laisse Stripe gérer automatiquement les méthodes
       },
+      // payment_method_types supprimé - incompatible avec automatic_payment_methods
       metadata: {
         ...metadata,
         amateur_id: user.id,

@@ -83,7 +83,7 @@ export default function BookProScreen() {
   const { proId, proName, players: initialPlayers, courseId, courseName } = useLocalSearchParams();
   const router = useRouter();
   const { user } = useAuth();
-  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  const { initPaymentSheet, presentPaymentSheet, retrievePaymentIntent } = useStripe();
   const insets = useSafeAreaInsets();
 
   // ✅ HOOKS REFACTORISÉS - Gestion d'état centralisée
@@ -530,12 +530,13 @@ export default function BookProScreen() {
         throw new Error(response.error);
       }
 
-      // Initialiser le Payment Sheet
+      // Initialiser le Payment Sheet - STANDARD FLOW pour confirmation automatique
       const { error } = await initPaymentSheet({
         merchantDisplayName: 'Eagle Golf',
         paymentIntentClientSecret: response.client_secret,
         returnURL: 'eagle://payment-complete',
-        customFlow: true, // Contrôle total sur les méthodes de paiement
+        // ✅ STANDARD FLOW: customFlow supprimé pour confirmation automatique
+        // customFlow: true, // SUPPRIMÉ - causait le blocage du paiement
         style: 'alwaysDark',
         googlePay: {
           merchantCountryCode: 'FR',
@@ -544,22 +545,17 @@ export default function BookProScreen() {
         applePay: {
           merchantCountryCode: 'FR',
         },
-        allowsDelayedPaymentMethods: false,
-        // Configuration française
+        allowsDelayedPaymentMethods: false, // Désactive Link
         defaultBillingDetails: {},
         appearance: {
           primaryButton: {
             colors: {
-              background: '#4F46E5', // Couleur du bouton principal
+              background: '#4F46E5',
             },
           },
         },
-        // Localisation française
         locale: 'fr',
-        // Désactiver Link
-        paymentMethodOrder: ['card', 'apple_pay', 'google_pay'],
-        // Désactiver explicitement toutes les méthodes différées
-        allowsDelayedPaymentMethods: false,
+        // Note: paymentMethodOrder supprimé - valide uniquement avec customFlow
       });
 
       if (error) {
@@ -572,7 +568,7 @@ export default function BookProScreen() {
 
       if (paymentError) {
         if (paymentError.code === 'Canceled') {
-          console.log('⚠️ Paiement annulé par l\'utilisateur');
+          console.log('⚠️ Paiement annulé explicitement par l\'utilisateur');
           return; // Annulé par l'utilisateur, ne pas montrer d'erreur
         } else {
           console.error('❌ Erreur Payment Sheet:', paymentError.message);
@@ -580,13 +576,59 @@ export default function BookProScreen() {
         }
       }
 
-      // Paiement réussi - appeler directement handlePaymentSuccess
-      console.log('✅ Payment Sheet validé avec succès');
-      console.log('🔄 Payment Intent ID:', response.payment_intent_id);
+      // ✅ SÉCURISATION CRITIQUE: Vérifier le statut réel avec retry logic
+      console.log('🔍 Payment Sheet fermé - vérification sécurisée du statut...');
 
-      // Appeler directement handlePaymentSuccess sans passer par le return
-      await handlePaymentSuccess(response.payment_intent_id);
-      console.log('✅ handlePaymentSuccess terminé avec succès');
+      const maxRetries = 5;
+      const retryDelay = 2000; // 2 secondes entre chaque tentative
+      let paymentConfirmed = false;
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        console.log(`🔄 Tentative ${attempt}/${maxRetries} - vérification du statut...`);
+
+        const { paymentIntent, error: retrieveError } = await retrievePaymentIntent(response.client_secret);
+
+        if (retrieveError) {
+          console.error('❌ Erreur lors de la récupération:', retrieveError.message);
+          // Continuer les tentatives même en cas d'erreur
+          if (attempt === maxRetries) {
+            throw new Error('Impossible de vérifier le statut du paiement après plusieurs tentatives');
+          }
+        } else {
+          console.log(`📊 Tentative ${attempt} - Statut:`, paymentIntent?.status);
+
+          if (paymentIntent?.status === 'Succeeded' || paymentIntent?.status === 'succeeded') {
+            console.log('✅ Paiement confirmé - statut succeeded détecté');
+            paymentConfirmed = true;
+            break;
+          } else if (paymentIntent?.status === 'Processing' || paymentIntent?.status === 'processing') {
+            console.log('⏳ Paiement en cours de traitement...');
+            // Continuer à attendre
+          } else if (paymentIntent?.status === 'RequiresPaymentMethod' || paymentIntent?.status === 'requires_payment_method') {
+            if (attempt >= 3) {
+              // Après 3 tentatives (6 secondes), considérer comme annulation
+              console.log('⚠️ Aucun paiement détecté après 6 secondes - annulation confirmée');
+              return;
+            }
+          }
+        }
+
+        // Attendre avant la prochaine tentative (sauf pour la dernière)
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+        }
+      }
+
+      if (paymentConfirmed) {
+        console.log('✅ Paiement sécurisé validé - création de la réservation');
+        console.log('🔄 Payment Intent ID validé:', response.payment_intent_id);
+
+        await handlePaymentSuccess(response.payment_intent_id);
+        console.log('✅ handlePaymentSuccess terminé avec succès');
+      } else {
+        console.log('⚠️ Aucun paiement confirmé après toutes les tentatives - annulation détectée');
+        return; // Traiter comme annulation silencieuse
+      }
       
     } catch (error: any) {
       console.error('❌ Erreur pendant le paiement:', error);
