@@ -6,6 +6,7 @@ import {
   profileAggregatedService,
   AggregatedProProfile,
 } from '@/services/profile-aggregated.service';
+import { useAppStore } from '@/stores/useAppStore';
 
 interface ProProfileData {
   profile: FullProfile;
@@ -167,54 +168,14 @@ export function usePrefetchProfiles() {
   return { prefetchProfiles };
 }
 
-// Hook pour gérer les favoris avec optimistic updates
+// Hook pour gérer les favoris des pros - connecté au store Zustand
 export function useProFavorite(profileId: string) {
-  const queryClient = useQueryClient();
-
-  const mutation = useMutation({
-    mutationFn: async (isFavorite: boolean) => {
-      // TODO: Implémenter l'appel API pour sauvegarder le favori
-      // Pour l'instant, on simule un délai
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      return isFavorite;
-    },
-    onMutate: async (isFavorite) => {
-      // Annuler les requêtes en cours
-      await queryClient.cancelQueries({ queryKey: ['proFavorite', profileId] });
-
-      // Sauvegarder l'état précédent
-      const previousFavorite = queryClient.getQueryData(['proFavorite', profileId]);
-
-      // Mise à jour optimiste
-      queryClient.setQueryData(['proFavorite', profileId], isFavorite);
-
-      return { previousFavorite };
-    },
-    onError: (err, isFavorite, context) => {
-      // En cas d'erreur, restaurer l'état précédent
-      if (context?.previousFavorite !== undefined) {
-        queryClient.setQueryData(['proFavorite', profileId], context.previousFavorite);
-      }
-    },
-    onSettled: () => {
-      // Invalider pour s'assurer qu'on a les bonnes données
-      queryClient.invalidateQueries({ queryKey: ['proFavorite', profileId] });
-    },
-  });
-
-  const favoriteQuery = useQuery({
-    queryKey: ['proFavorite', profileId],
-    queryFn: async () => {
-      // TODO: Récupérer l'état du favori depuis l'API
-      return false;
-    },
-    staleTime: Infinity, // Les favoris ne deviennent jamais stale automatiquement
-  });
+  const { favoritePros, toggleFavoritePro } = useAppStore();
 
   return {
-    isFavorite: favoriteQuery.data ?? false,
-    toggleFavorite: () => mutation.mutate(!favoriteQuery.data),
-    isToggling: mutation.isPending,
+    isFavorite: favoritePros.includes(profileId),
+    toggleFavorite: () => toggleFavoritePro(profileId),
+    isToggling: false, // Plus besoin d'état de loading avec Zustand
   };
 }
 

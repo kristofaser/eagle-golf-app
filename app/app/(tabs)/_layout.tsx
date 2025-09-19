@@ -7,7 +7,8 @@ import { HugeiconsIcon } from '@hugeicons/react-native';
 import { TouchableOpacity, View } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useUser } from '@/hooks/useUser';
-import { Avatar } from '@/components/atoms';
+import { Avatar, FavoriteBadge } from '@/components/atoms';
+import { useTotalFavorites } from '@/hooks/useFavorites';
 import {
   GolfBallIcon,
   GolfHoleIcon,
@@ -16,6 +17,7 @@ import {
   Search01Icon,
   UserIcon,
   Home01Icon,
+  FavouriteIcon,
 } from '@hugeicons/core-free-icons';
 
 export default function TabLayout() {
@@ -24,9 +26,14 @@ export default function TabLayout() {
   const { isOverlayOpen } = useOverlay();
   const { user, isAuthenticated } = useAuth();
   const { profile } = useUser();
+  const totalFavorites = useTotalFavorites();
 
   const handleSearchPress = () => {
     router.push('/search');
+  };
+
+  const handleFavoritesPress = () => {
+    router.push('/favorites');
   };
 
   const handleProfilePress = () => {
@@ -93,9 +100,25 @@ export default function TabLayout() {
             </TouchableOpacity>
           ),
           headerRight: () => (
-            <TouchableOpacity onPress={handleSearchPress} style={{ marginRight: 16 }}>
-              <HugeiconsIcon icon={Search01Icon} size={24} color={Colors.primary.accent} />
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}>
+              {/* Bouton Favoris avec badge */}
+              <TouchableOpacity
+                onPress={handleFavoritesPress}
+                style={{ marginRight: 12, position: 'relative' }}
+              >
+                <HugeiconsIcon
+                  icon={FavouriteIcon}
+                  size={24}
+                  color={totalFavorites > 0 ? '#ef4444' : Colors.primary.accent}
+                />
+                <FavoriteBadge count={totalFavorites} size="small" />
+              </TouchableOpacity>
+
+              {/* Bouton Search */}
+              <TouchableOpacity onPress={handleSearchPress}>
+                <HugeiconsIcon icon={Search01Icon} size={24} color={Colors.primary.accent} />
+              </TouchableOpacity>
+            </View>
           ),
           tabBarActiveTintColor: Colors.primary.accent,
           tabBarInactiveTintColor: Colors.neutral.course,

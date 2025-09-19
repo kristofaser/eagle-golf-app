@@ -10,3 +10,4 @@ export { EagleLogo } from './EagleLogo';
 export { LoadingScreen } from './LoadingScreen';
 export { ErrorScreen } from './ErrorScreen';
 export { SkillTag } from './SkillTag';
+export { FavoriteBadge } from './FavoriteBadge';
