@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
 import { Colors, Spacing } from '@/constants/theme';
 import { Text } from '@/components/atoms';
-import { supabase } from '@/utils/supabase/client';
+import { s3, getPublicUrl, generateVideoKey, BUCKET_NAME } from '@/utils/scaleway';
 
 const { width, height } = Dimensions.get('window');
 
@@ -40,32 +40,31 @@ export default function VideoSkillScreen() {
         throw new Error('Paramètres manquants');
       }
 
-      // Construire le chemin du fichier
-      const filePath = `${proIdString}/${skillName}.mp4`;
+      // Générer la clé d'objet
+      const objectKey = generateVideoKey(proIdString, skillName);
 
-      // Vérifier si le fichier existe
-      const { data: files, error: listError } = await supabase.storage
-        .from('video-skills')
-        .list(proIdString, {
-          search: `${skillName}.mp4`
-        });
+      // Vérifier si le fichier existe sur Scaleway
+      const headParams = {
+        Bucket: BUCKET_NAME,
+        Key: objectKey,
+      };
 
-      if (listError) {
-        throw listError;
+      try {
+        await s3.headObject(headParams).promise();
+
+        // Le fichier existe, générer l'URL publique
+        const publicUrl = getPublicUrl(objectKey);
+        console.log('URL vidéo Scaleway:', publicUrl);
+
+        setVideoUrl(publicUrl);
+      } catch (headError: any) {
+        if (headError.code === 'NotFound') {
+          throw new Error('Vidéo non disponible');
+        }
+        throw headError;
       }
-
-      if (!files || files.length === 0) {
-        throw new Error('Vidéo non disponible');
-      }
-
-      // Obtenir l'URL publique
-      const { data: { publicUrl } } = supabase.storage
-        .from('video-skills')
-        .getPublicUrl(filePath);
-
-      setVideoUrl(publicUrl);
     } catch (err) {
-      console.error('Erreur chargement vidéo:', err);
+      console.error('Erreur chargement vidéo Scaleway:', err);
       setError(err instanceof Error ? err.message : 'Erreur de chargement');
     } finally {
       setIsLoading(false);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -19,9 +19,12 @@ import { Video02Icon } from '@hugeicons/core-free-icons';
 import { useAuth } from '@/hooks/useAuth';
 import { profileService, FullProfile } from '@/services/profile.service';
 import { Text, Button, Input, LoadingScreen } from '@/components/atoms';
+import { SingleVideoUploadManager } from '@/components/organisms/SingleVideoUploadManager';
 import { Colors, Spacing, Typography, BorderRadius } from '@/constants/theme';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUserContext } from '@/contexts/UserContext';
+import { supabase } from '@/utils/supabase/client';
+import { s3, getPublicUrl, generateVideoKey, BUCKET_NAME } from '@/utils/scaleway';
 
 // Liste des divisions professionnelles officielles
 const PRO_DIVISIONS = [
@@ -451,6 +454,7 @@ export default function ProSettingsScreen() {
   // État pour le modal d'upload vidéo
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState<string>('');
+  const [currentVideoUrl, setCurrentVideoUrl] = useState<string | null>(null);
 
   // États pour les données modifiables
   const [division, setDivision] = useState('');
@@ -565,9 +569,74 @@ export default function ProSettingsScreen() {
     setExperiences((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleCameraPress = (skillKey: string) => {
+  const handleCameraPress = async (skillKey: string) => {
     setSelectedSkill(skillKey);
+    await loadCurrentVideo(skillKey);
     setShowVideoModal(true);
+  };
+
+  const loadCurrentVideo = async (skillKey: string) => {
+    try {
+      if (!user?.id) return;
+
+      // Générer la clé d'objet Scaleway
+      const objectKey = generateVideoKey(user.id, skillKey);
+
+      // Vérifier si le fichier existe sur Scaleway
+      const headParams = {
+        Bucket: BUCKET_NAME,
+        Key: objectKey,
+      };
+
+      try {
+        await s3.headObject(headParams).promise();
+
+        // Le fichier existe, générer l'URL publique
+        const publicUrl = getPublicUrl(objectKey);
+        console.log('Vidéo existante trouvée:', publicUrl);
+
+        setCurrentVideoUrl(publicUrl);
+      } catch (headError: any) {
+        if (headError.code === 'NotFound') {
+          // Pas de vidéo pour cette compétence
+          setCurrentVideoUrl(null);
+        } else {
+          console.error('Erreur lors de la vérification du fichier:', headError);
+          setCurrentVideoUrl(null);
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement de la vidéo:', error);
+      setCurrentVideoUrl(null);
+    }
+  };
+
+  const getSkillLabel = (skillKey: string) => {
+    const skillLabels: { [key: string]: string } = {
+      driving: 'Driving',
+      irons: 'Jeu de fer',
+      wedging: 'Wedging',
+      chipping: 'Chipping',
+      putting: 'Putting',
+      mental: 'Mental',
+    };
+    return skillLabels[skillKey] || skillKey;
+  };
+
+  const handleVideoUploaded = (skillKey: string, videoUrl: string) => {
+    console.log(`✅ Vidéo uploadée pour ${skillKey}: ${videoUrl}`);
+    // Mettre à jour l'URL courante avec la nouvelle vidéo
+    setCurrentVideoUrl(videoUrl);
+    // Fermer le modal après upload réussi
+    setShowVideoModal(false);
+  };
+
+  const handleVideoDeleted = (skillKey: string) => {
+    console.log(`🗑️ Vidéo supprimée pour ${skillKey}`);
+    // Réinitialiser l'URL courante
+    setCurrentVideoUrl(null);
+    // Fermer le modal après suppression
+    setShowVideoModal(false);
   };
 
   if (loading) {
@@ -645,42 +714,54 @@ export default function ProSettingsScreen() {
                   label="Driving"
                   value={skillDriving}
                   onValueChange={setSkillDriving}
-                  onCameraPress={() => handleCameraPress('driving')}
+                  onCameraPress={() => {
+                    handleCameraPress('driving').catch(console.error);
+                  }}
                 />
 
                 <SkillSlider
                   label="Fers"
                   value={skillIrons}
                   onValueChange={setSkillIrons}
-                  onCameraPress={() => handleCameraPress('irons')}
+                  onCameraPress={() => {
+                    handleCameraPress('irons').catch(console.error);
+                  }}
                 />
 
                 <SkillSlider
                   label="Wedging"
                   value={skillWedging}
                   onValueChange={setSkillWedging}
-                  onCameraPress={() => handleCameraPress('wedging')}
+                  onCameraPress={() => {
+                    handleCameraPress('wedging').catch(console.error);
+                  }}
                 />
 
                 <SkillSlider
                   label="Chipping"
                   value={skillChipping}
                   onValueChange={setSkillChipping}
-                  onCameraPress={() => handleCameraPress('chipping')}
+                  onCameraPress={() => {
+                    handleCameraPress('chipping').catch(console.error);
+                  }}
                 />
 
                 <SkillSlider
                   label="Putting"
                   value={skillPutting}
                   onValueChange={setSkillPutting}
-                  onCameraPress={() => handleCameraPress('putting')}
+                  onCameraPress={() => {
+                    handleCameraPress('putting').catch(console.error);
+                  }}
                 />
 
                 <SkillSlider
                   label="Mental"
                   value={skillMental}
                   onValueChange={setSkillMental}
-                  onCameraPress={() => handleCameraPress('mental')}
+                  onCameraPress={() => {
+                    handleCameraPress('mental').catch(console.error);
+                  }}
                 />
               </View>
             </View>
@@ -766,7 +847,9 @@ export default function ProSettingsScreen() {
         visible={showVideoModal}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setShowVideoModal(false)}
+        onRequestClose={() => {
+          setShowVideoModal(false);
+        }}
       >
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
@@ -781,15 +864,13 @@ export default function ProSettingsScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.modalContent}>
-            <Text variant="body" color="charcoal" style={{ marginBottom: Spacing.m }}>
-              Fonctionnalité d'upload vidéo à implémenter...
-            </Text>
-            <Button
-              title="Fermer"
-              onPress={() => setShowVideoModal(false)}
-            />
-          </View>
+          <SingleVideoUploadManager
+            skillKey={selectedSkill}
+            skillLabel={getSkillLabel(selectedSkill)}
+            currentVideoUrl={currentVideoUrl}
+            onVideoUploaded={handleVideoUploaded}
+            onVideoDeleted={handleVideoDeleted}
+          />
         </SafeAreaView>
       </Modal>
     </>
