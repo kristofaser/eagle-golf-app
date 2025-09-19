@@ -239,16 +239,53 @@ export default function SelectDatesScreen() {
   };
 
   const performDelete = async () => {
-    if (!user?.id || !params.courseId) return;
-    
+    if (!user?.id || !params.courseId) {
+      console.log('❌ [performDelete] Paramètres manquants:', { userId: user?.id, courseId: params.courseId });
+      return;
+    }
+
+    console.log('🗑️ [performDelete] Début suppression disponibilités:', {
+      userId: user.id,
+      courseId: params.courseId
+    });
+
     setSaving(true);
     try {
+      // Vérifier s'il y a des réservations existantes
+      console.log('🔍 [performDelete] Vérification des réservations existantes...');
+      const { hasBookings, bookingsCount } = await proAvailabilityService.checkExistingBookingsForCourse(
+        user.id,
+        params.courseId
+      );
+
+      console.log('📋 [performDelete] Résultat vérification:', { hasBookings, bookingsCount });
+
+      if (hasBookings) {
+        console.log('🚫 [performDelete] Suppression bloquée - réservations existantes');
+        Alert.alert(
+          'Impossible de supprimer',
+          `Vous avez ${bookingsCount} réservation${bookingsCount > 1 ? 's' : ''} validée${bookingsCount > 1 ? 's' : ''} ou en attente sur ce parcours.\n\nVous ne pouvez pas supprimer vos disponibilités tant que des réservations sont actives.`,
+          [
+            {
+              text: 'Compris',
+              style: 'default'
+            }
+          ]
+        );
+        return;
+      }
+
+      // Aucune réservation, on peut supprimer
+      console.log('✅ [performDelete] Aucune réservation - procéder à la suppression');
       const success = await proAvailabilityService.deleteProAvailabilitiesByCourse(
         user.id,
         params.courseId
       );
 
+      console.log('📊 [performDelete] Résultat suppression:', { success });
+
       if (success) {
+        console.log('✅ [performDelete] Suppression réussie');
         Alert.alert(
           'Succès',
           'Disponibilités supprimées avec succès',
@@ -260,6 +297,7 @@ export default function SelectDatesScreen() {
           ]
         );
       } else {
+        console.log('❌ [performDelete] Échec suppression');
         Alert.alert('Erreur', 'Impossible de supprimer les disponibilités');
       }
     } catch (error) {

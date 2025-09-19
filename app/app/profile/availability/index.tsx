@@ -45,7 +45,16 @@ export default function AvailabilityScreen() {
   };
 
   const handleDeleteGroup = async (courseId: string, courseName: string) => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      console.log('❌ [handleDeleteGroup] User ID manquant');
+      return;
+    }
+
+    console.log('🗑️ [handleDeleteGroup] Début suppression parcours:', {
+      userId: user.id,
+      courseId,
+      courseName
+    });
 
     Alert.alert(
       'Supprimer les disponibilités',
@@ -56,14 +65,51 @@ export default function AvailabilityScreen() {
           text: 'Supprimer',
           style: 'destructive',
           onPress: async () => {
-            const success = await proAvailabilityService.deleteProAvailabilitiesByCourse(
-              user.id,
-              courseId
-            );
-            if (success) {
-              loadAvailabilities();
-            } else {
-              Alert.alert('Erreur', 'Impossible de supprimer les disponibilités');
+            try {
+              console.log('🔍 [handleDeleteGroup] Vérification des réservations existantes...');
+
+              // Vérifier s'il y a des réservations existantes
+              const { hasBookings, bookingsCount } = await proAvailabilityService.checkExistingBookingsForCourse(
+                user.id,
+                courseId
+              );
+
+              console.log('📋 [handleDeleteGroup] Résultat vérification:', { hasBookings, bookingsCount });
+
+              if (hasBookings) {
+                console.log('🚫 [handleDeleteGroup] Suppression bloquée - réservations existantes');
+                Alert.alert(
+                  'Impossible de supprimer',
+                  `Vous avez ${bookingsCount} réservation${bookingsCount > 1 ? 's' : ''} validée${bookingsCount > 1 ? 's' : ''} ou en attente sur ce parcours.\n\nVous ne pouvez pas supprimer vos disponibilités tant que des réservations sont actives.`,
+                  [
+                    {
+                      text: 'Compris',
+                      style: 'default'
+                    }
+                  ]
+                );
+                return;
+              }
+
+              // Aucune réservation, on peut supprimer
+              console.log('✅ [handleDeleteGroup] Aucune réservation - procéder à la suppression');
+              const success = await proAvailabilityService.deleteProAvailabilitiesByCourse(
+                user.id,
+                courseId
+              );
+
+              console.log('📊 [handleDeleteGroup] Résultat suppression:', { success });
+
+              if (success) {
+                console.log('✅ [handleDeleteGroup] Suppression réussie - rechargement des données');
+                loadAvailabilities();
+              } else {
+                console.log('❌ [handleDeleteGroup] Échec suppression');
+                Alert.alert('Erreur', 'Impossible de supprimer les disponibilités');
+              }
+            } catch (error) {
+              console.error('💥 [handleDeleteGroup] Erreur lors de la suppression:', error);
+              Alert.alert('Erreur', 'Une erreur est survenue lors de la suppression');
             }
           },
         },

@@ -33,10 +33,12 @@ export const proAvailabilityService = {
     try {
       const { data, error } = await supabase
         .from('pro_availabilities')
-        .select(`
+        .select(
+          `
           *,
           golf_parcours:golf_parcours(*)
-        `)
+        `
+        )
         .eq('pro_id', proId)
         .gte('date', new Date().toISOString().split('T')[0]) // Dates futures uniquement
         .order('date', { ascending: true });
@@ -100,7 +102,7 @@ export const proAvailabilityService = {
         return [];
       }
 
-      return data?.map(item => item.date) || [];
+      return data?.map((item) => item.date) || [];
     } catch (error) {
       console.error('Erreur récupération dates conflits:', error);
       return [];
@@ -117,19 +119,17 @@ export const proAvailabilityService = {
   ): Promise<boolean> {
     try {
       // Préparer les données à insérer
-      const availabilities = dates.map(date => ({
+      const availabilities = dates.map((date) => ({
         pro_id: proId,
         golf_course_id: golfCourseId,
         date,
         start_time: '09:00', // Créneau par défaut
-        end_time: '17:00',   // Créneau par défaut
-        max_players: 4,      // Par défaut
+        end_time: '17:00', // Créneau par défaut
+        max_players: 4, // Par défaut
         current_bookings: 0,
       }));
 
-      const { error } = await supabase
-        .from('pro_availabilities')
-        .insert(availabilities);
+      const { error } = await supabase.from('pro_availabilities').insert(availabilities);
 
       if (error) {
         console.error('Erreur création disponibilités:', error);
@@ -146,10 +146,7 @@ export const proAvailabilityService = {
   /**
    * Supprime toutes les disponibilités d'un pro sur un parcours
    */
-  async deleteProAvailabilitiesByCourse(
-    proId: string,
-    golfCourseId: string
-  ): Promise<boolean> {
+  async deleteProAvailabilitiesByCourse(proId: string, golfCourseId: string): Promise<boolean> {
     try {
       const { error } = await supabase
         .from('pro_availabilities')
@@ -166,6 +163,66 @@ export const proAvailabilityService = {
     } catch (error) {
       console.error('Erreur suppression disponibilités:', error);
       return false;
+    }
+  },
+
+  /**
+   * Vérifie s'il existe des réservations actives pour un pro sur un parcours
+   */
+  async checkExistingBookingsForCourse(
+    proId: string,
+    golfCourseId: string
+  ): Promise<{ hasBookings: boolean; bookingsCount: number }> {
+    try {
+      console.log('🔍 [checkExistingBookingsForCourse] Début vérification:', { proId, golfCourseId });
+
+      // Récupérer toutes les disponibilités du pro sur ce parcours
+      const { data: availabilities, error: availError } = await supabase
+        .from('pro_availabilities')
+        .select('id')
+        .eq('pro_id', proId)
+        .eq('golf_course_id', golfCourseId);
+
+      if (availError) {
+        console.error('❌ [checkExistingBookingsForCourse] Erreur récupération disponibilités:', availError);
+        return { hasBookings: false, bookingsCount: 0 };
+      }
+
+      console.log('📋 [checkExistingBookingsForCourse] Disponibilités trouvées:', availabilities?.length || 0);
+
+      if (!availabilities || availabilities.length === 0) {
+        console.log('⚠️ [checkExistingBookingsForCourse] Aucune disponibilité → autoriser suppression');
+        return { hasBookings: false, bookingsCount: 0 };
+      }
+
+      // Vérifier s'il y a des réservations actives pour ces disponibilités
+      const availabilityIds = availabilities.map((a) => a.id);
+      console.log('🎯 [checkExistingBookingsForCourse] Availability IDs à vérifier:', availabilityIds);
+
+      const { count, error: bookingError } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .in('availability_id', availabilityIds)
+        .in('status', ['pending', 'confirmed']);
+
+      if (bookingError) {
+        console.error('❌ [checkExistingBookingsForCourse] Erreur vérification réservations:', bookingError);
+        return { hasBookings: false, bookingsCount: 0 };
+      }
+
+      const bookingsCount = count || 0;
+      console.log('📊 [checkExistingBookingsForCourse] Réservations actives trouvées:', bookingsCount);
+
+      const result = {
+        hasBookings: bookingsCount > 0,
+        bookingsCount,
+      };
+
+      console.log('✅ [checkExistingBookingsForCourse] Résultat final:', result);
+      return result;
+    } catch (error) {
+      console.error('💥 [checkExistingBookingsForCourse] Erreur vérification réservations existantes:', error);
+      return { hasBookings: false, bookingsCount: 0 };
     }
   },
 
