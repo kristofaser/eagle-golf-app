@@ -228,25 +228,22 @@ export default function BookingsClient({ initialBookings, stats }: BookingsClien
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Golfeur
+                  Client
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Professionnel
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Parcours
+                  Réservation du
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date & Heure
+                  Date partie
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Tarif
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Statut
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
                 </th>
               </tr>
             </thead>
@@ -267,9 +264,18 @@ export default function BookingsClient({ initialBookings, stats }: BookingsClien
                     {booking.pro}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center text-sm text-gray-900">
-                      <MapPin className="h-4 w-4 text-gray-400 mr-1" />
-                      {booking.course}
+                    <div className="text-sm text-gray-900">
+                      {new Date(booking.createdAt).toLocaleDateString('fr-FR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      })}
+                      <div className="text-xs text-gray-500 mt-1">
+                        {new Date(booking.createdAt).toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -291,23 +297,6 @@ export default function BookingsClient({ initialBookings, stats }: BookingsClien
                     <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(booking.status)}`}>
                       {getStatusLabel(booking.status)}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenSidebar(booking);
-                      }}
-                      className={`inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        booking.status === 'pending'
-                          ? 'bg-orange-100 text-orange-800 hover:bg-orange-200'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                      title={booking.status === 'pending' ? 'Valider la réservation' : 'Voir les détails'}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      {booking.status === 'pending' ? 'Valider' : 'Voir'}
-                    </button>
                   </td>
                 </tr>
               ))}
