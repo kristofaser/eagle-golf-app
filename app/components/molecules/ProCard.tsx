@@ -268,23 +268,10 @@ const ProCardComponent: React.FC<ProCardProps> = ({
             <Text
               variant="body"
               color="charcoal"
-              weight="semiBold"
               numberOfLines={1}
               style={styles.name}
             >
               {data.title}
-            </Text>
-          </View>
-          <View style={styles.locationRow}>
-            <Icon
-              name="location-on"
-              size={12}
-              color={Colors.neutral.course}
-              family="MaterialIcons"
-            />
-            <Text variant="caption" color="course" numberOfLines={1} style={styles.locationText}>
-              {data.region}
-              {data.distance !== undefined && ` • ${formatDistance(data.distance)}`}
             </Text>
           </View>
         </View>
