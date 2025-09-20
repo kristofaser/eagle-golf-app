@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Colors } from '@/constants/theme';
 import { pricingService, ProPricing } from '@/services/pricing.service';
+import { logger } from '@/utils/logger';
 
 interface ProPricingManagerProps {
   proId: string;
@@ -58,7 +59,7 @@ export function ProPricingManager({
         onPricesChange(newPrices);
       }
     } catch (error) {
-      console.error('Erreur chargement tarifs:', error);
+      logger.error('Erreur chargement tarifs', error);
     } finally {
       setLoading(false);
     }
@@ -111,7 +112,7 @@ export function ProPricingManager({
         Alert.alert('Erreur', 'Impossible de mettre à jour les tarifs');
       }
     } catch (error) {
-      console.error('Erreur sauvegarde tarifs:', error);
+      logger.error('Erreur sauvegarde tarifs', error);
       Alert.alert('Erreur', 'Une erreur est survenue');
     } finally {
       setSaving(false);
@@ -129,13 +130,11 @@ export function ProPricingManager({
   return (
     <>
       <View style={styles.container}>
-        <Text style={styles.title}>Vos Tarifs</Text>
-        <Text style={styles.subtitle}>Définissez vos prix pour chaque format</Text>
-        <Text style={styles.hint}>Prix en euros, green fee non inclus</Text>
+        <Text style={styles.title}>Vos tarifs par personne</Text>
 
         {/* 9 Trous */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>9 Trous</Text>
+          <Text style={styles.sectionTitle}>Parcours 9 trous</Text>
 
           <View style={styles.priceRow}>
             <View style={styles.priceLabel}>
@@ -150,7 +149,7 @@ export function ProPricingManager({
                 placeholder="150"
                 editable={isEditable}
               />
-              <Text style={styles.currency}>€</Text>
+              <Text style={styles.currency}>€<Text style={styles.perPerson}>/Pers.</Text></Text>
             </View>
           </View>
 
@@ -167,7 +166,7 @@ export function ProPricingManager({
                 placeholder="130"
                 editable={isEditable}
               />
-              <Text style={styles.currency}>€</Text>
+              <Text style={styles.currency}>€<Text style={styles.perPerson}>/Pers.</Text></Text>
             </View>
           </View>
 
@@ -184,14 +183,14 @@ export function ProPricingManager({
                 placeholder="110"
                 editable={isEditable}
               />
-              <Text style={styles.currency}>€</Text>
+              <Text style={styles.currency}>€<Text style={styles.perPerson}>/Pers.</Text></Text>
             </View>
           </View>
         </View>
 
         {/* 18 Trous */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>18 Trous</Text>
+          <Text style={styles.sectionTitle}>Parcours 18 trous</Text>
 
           <View style={styles.priceRow}>
             <View style={styles.priceLabel}>
@@ -206,7 +205,7 @@ export function ProPricingManager({
                 placeholder="280"
                 editable={isEditable}
               />
-              <Text style={styles.currency}>€</Text>
+              <Text style={styles.currency}>€<Text style={styles.perPerson}>/Pers.</Text></Text>
             </View>
           </View>
 
@@ -223,7 +222,7 @@ export function ProPricingManager({
                 placeholder="240"
                 editable={isEditable}
               />
-              <Text style={styles.currency}>€</Text>
+              <Text style={styles.currency}>€<Text style={styles.perPerson}>/Pers.</Text></Text>
             </View>
           </View>
 
@@ -240,15 +239,11 @@ export function ProPricingManager({
                 placeholder="200"
                 editable={isEditable}
               />
-              <Text style={styles.currency}>€</Text>
+              <Text style={styles.currency}>€<Text style={styles.perPerson}>/Pers.</Text></Text>
             </View>
           </View>
         </View>
 
-        <Text style={styles.info}>
-          Eagle prélève une commission sur chaque réservation. Les clients verront le prix final
-          incluant cette commission.
-        </Text>
       </View>
 
       {isEditable && !hideButton && (
@@ -291,7 +286,15 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   section: {
-    marginBottom: 32,
+    backgroundColor: Colors.neutral.white,
+    borderRadius: 12,
+    marginBottom: 16,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   sectionTitle: {
     fontSize: 20,
@@ -303,10 +306,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
-    backgroundColor: Colors.ui.lightBackground,
-    padding: 12,
-    borderRadius: 8,
+    marginBottom: 8,
+    padding: 8,
   },
   priceLabel: {
     flexDirection: 'row',
@@ -347,6 +348,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.neutral.charcoal,
     marginLeft: 4,
+  },
+  perPerson: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: Colors.neutral.charcoal,
   },
   info: {
     fontSize: 14,
