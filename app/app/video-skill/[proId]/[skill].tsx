@@ -122,6 +122,32 @@ export default function VideoSkillScreen() {
     return skillNames[skill] || skill;
   };
 
+  // Si la compétence est Mental, on bloque l'accès
+  if (skillName === 'mental') {
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <StatusBar barStyle="light-content" backgroundColor="black" />
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.closeButton}>
+              <Ionicons name="close" size={28} color="white" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.errorContainer}>
+            <Ionicons name="warning-outline" size={60} color="white" />
+            <Text variant="h3" color="ball" style={styles.errorText}>
+              Compétence non disponible
+            </Text>
+            <Text variant="body" color="ball" style={styles.errorSubText}>
+              Les vidéos pour la compétence Mental ne sont plus disponibles
+            </Text>
+          </View>
+        </View>
+      </>
+    );
+  }
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />

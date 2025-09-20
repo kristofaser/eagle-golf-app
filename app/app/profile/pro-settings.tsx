@@ -53,6 +53,9 @@ const SkillSlider: React.FC<SkillSliderProps> = ({ label, value, onValueChange, 
     onValueChange(newValue);
   };
 
+  // Pas de bouton caméra pour la compétence Mental
+  const shouldShowCamera = onCameraPress && label !== 'Mental';
+
   return (
     <View style={styles.skillContainer}>
       <View style={styles.skillHeader}>
@@ -60,7 +63,7 @@ const SkillSlider: React.FC<SkillSliderProps> = ({ label, value, onValueChange, 
           <Text variant="body" color="charcoal" weight="medium" style={styles.skillLabel}>
             {label}
           </Text>
-          {onCameraPress && (
+          {shouldShowCamera && (
             <TouchableOpacity
               style={styles.cameraButton}
               onPress={onCameraPress}

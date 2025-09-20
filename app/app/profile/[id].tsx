@@ -393,6 +393,9 @@ export default function ProfileScreen() {
       }
     };
 
+    // Pas d'icône vidéo pour la compétence Mental
+    const shouldShowVideo = skillKey && skillKey !== 'mental';
+
     return (
       <View style={styles.skillRow} key={label}>
         <View style={styles.skillLabelContainer}>
@@ -409,8 +412,8 @@ export default function ProfileScreen() {
             )}
             <Text style={styles.skillLabel}>{label}</Text>
 
-            {/* Icône vidéo juste à côté du nom */}
-            {skillKey && (
+            {/* Icône vidéo juste à côté du nom - sauf pour Mental */}
+            {shouldShowVideo && (
               <TouchableOpacity
                 style={styles.videoIconButton}
                 onPress={handleVideoPress}
