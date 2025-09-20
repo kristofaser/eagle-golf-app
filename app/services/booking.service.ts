@@ -1,6 +1,7 @@
 import { BaseService, ServiceResponse, PaginationParams, SortParams } from './base.service';
 import { Tables, TablesInsert } from '@/utils/supabase/types';
 import { WithDetails, FilterParams } from '@/types/utils';
+import { logger } from '@/utils/logger';
 
 export type Booking = Tables<'bookings'>;
 export type ProAvailability = Tables<'pro_availabilities'>;
@@ -104,7 +105,7 @@ class BookingService extends BaseService {
         data: data || [],
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -130,7 +131,7 @@ class BookingService extends BaseService {
         data: booking,
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -181,7 +182,7 @@ class BookingService extends BaseService {
         data: booking,
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -225,17 +226,17 @@ class BookingService extends BaseService {
       // Combiner les données
       const result = {
         ...booking,
-        golf_parcours: golfData
+        golf_parcours: golfData,
       } as BookingWithDetails;
 
       return {
         data: result,
-        error: null
+        error: null,
       };
     } catch (error: any) {
       return {
         data: null,
-        error: this.handleError(error)
+        error: this.handleError(error),
       };
     }
   }
@@ -305,10 +306,10 @@ class BookingService extends BaseService {
       if (error) throw error;
 
       // Récupérer les IDs de golf uniques
-      const golfIds = [...new Set(bookings?.map(b => b.golf_course_id).filter(Boolean))];
-      
+      const golfIds = [...new Set(bookings?.map((b) => b.golf_course_id).filter(Boolean))];
+
       // Récupérer les données de golf en une seule requête
-      let golfData: Record<string, any> = {};
+      const golfData: Record<string, Tables<'golf_parcours'>> = {};
       if (golfIds.length > 0) {
         const { data: golfs } = await this.supabase
           .from('golf_parcours')
@@ -316,17 +317,17 @@ class BookingService extends BaseService {
           .in('id', golfIds);
 
         if (golfs) {
-          golfs.forEach(golf => {
+          golfs.forEach((golf) => {
             golfData[golf.id] = golf;
           });
         }
       }
 
       // Récupérer les IDs d'amateurs uniques
-      const amateurIds = [...new Set(bookings?.map(b => b.amateur_id).filter(Boolean))];
-      
+      const amateurIds = [...new Set(bookings?.map((b) => b.amateur_id).filter(Boolean))];
+
       // Récupérer les données des amateurs en une seule requête
-      let amateurData: Record<string, any> = {};
+      const amateurData: Record<string, Tables<'profiles'>> = {};
       if (amateurIds.length > 0) {
         const { data: amateurs } = await this.supabase
           .from('profiles')
@@ -334,28 +335,28 @@ class BookingService extends BaseService {
           .in('id', amateurIds);
 
         if (amateurs) {
-          amateurs.forEach(amateur => {
+          amateurs.forEach((amateur) => {
             amateurData[amateur.id] = amateur;
           });
         }
       }
 
       // Combiner les données
-      const result = bookings?.map(booking => ({
+      const result = bookings?.map((booking) => ({
         ...booking,
         golf_parcours: golfData[booking.golf_course_id] || null,
-        amateur_profile: amateurData[booking.amateur_id] || null
+        amateur_profile: amateurData[booking.amateur_id] || null,
       })) as BookingWithDetails[];
 
       return {
         data: result || [],
         error: null,
-        count
+        count,
       };
     } catch (error: any) {
       return {
         data: null,
-        error: this.handleError(error)
+        error: this.handleError(error),
       };
     }
   }
@@ -369,7 +370,7 @@ class BookingService extends BaseService {
     reason?: string
   ): Promise<ServiceResponse<Booking>> {
     try {
-      const updateData: any = { status };
+      const updateData: Partial<Tables<'bookings'>> = { status };
       const now = new Date().toISOString();
 
       switch (status) {
@@ -401,14 +402,14 @@ class BookingService extends BaseService {
           p_num_players: booking.number_of_players,
         });
 
-        if (availError) console.error('Error updating availability:', availError);
+        if (availError) logger.error('Error updating availability:', availError);
       }
 
       return {
         data: booking,
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -471,10 +472,10 @@ class BookingService extends BaseService {
       if (error) throw error;
 
       // Récupérer les IDs de golf uniques
-      const golfIds = [...new Set(availabilities?.map(a => a.golf_course_id).filter(Boolean))];
-      
+      const golfIds = [...new Set(availabilities?.map((a) => a.golf_course_id).filter(Boolean))];
+
       // Récupérer les données de golf en une seule requête
-      let golfData: Record<string, any> = {};
+      const golfData: Record<string, Tables<'golf_parcours'>> = {};
       if (golfIds.length > 0) {
         const { data: golfs } = await this.supabase
           .from('golf_parcours')
@@ -482,16 +483,16 @@ class BookingService extends BaseService {
           .in('id', golfIds);
 
         if (golfs) {
-          golfs.forEach(golf => {
+          golfs.forEach((golf) => {
             golfData[golf.id] = golf;
           });
         }
       }
 
       // Combiner les données
-      let result = availabilities?.map(availability => ({
+      let result = availabilities?.map((availability) => ({
         ...availability,
-        golf_parcours: golfData[availability.golf_course_id] || null
+        golf_parcours: golfData[availability.golf_course_id] || null,
       })) as AvailabilityWithDetails[];
 
       // Filtrer côté client si hasSlots est défini
@@ -502,12 +503,12 @@ class BookingService extends BaseService {
       return {
         data: result || [],
         error: null,
-        count
+        count,
       };
     } catch (error: any) {
       return {
         data: null,
-        error: this.handleError(error)
+        error: this.handleError(error),
       };
     }
   }
@@ -568,7 +569,7 @@ class BookingService extends BaseService {
         data: undefined,
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -578,18 +579,17 @@ class BookingService extends BaseService {
 
   /**
    * Calcule le prix total d'une réservation
+   * @param basePriceInCents - Prix de base en centimes depuis pro_pricing
    */
   calculateBookingPrice(
-    proHourlyRate: number,
-    numberOfPlayers: number,
-    duration: number = 240 // 4 heures par défaut
+    basePriceInCents: number
   ): {
     proFee: number;
     platformFee: number;
     totalAmount: number;
   } {
-    const hours = duration / 60;
-    const proFee = Math.round(proHourlyRate * hours);
+    // Le prix de base est déjà le prix total de la partie
+    const proFee = basePriceInCents;
     const platformFee = Math.round(proFee * 0.2); // 20% de commission
     const totalAmount = proFee + platformFee;
 

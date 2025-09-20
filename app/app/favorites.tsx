@@ -69,9 +69,9 @@ export default function FavoritesScreen() {
             circuits: profile.pro_profiles?.division || 'Alps Tour',
             meilleurResultat: 'Victoire professionnelle',
             victoires: 1,
-            tarif: profile.pro_profiles?.hourly_rate ? `${Math.round(profile.pro_profiles.hourly_rate / 100)}€/h` : '',
+            tarif: '', // Sera r\u00e9cup\u00e9r\u00e9 depuis pro_pricing
             rating: profile.pro_profiles?.rating || null,
-            isPremium: profile.pro_profiles?.hourly_rate > 10000,
+            isPremium: false, // \u00c0 d\u00e9terminer selon les prix dans pro_pricing
             isAvailable: profile.pro_profiles?.is_globally_available || false,
             division: profile.pro_profiles?.division || 'Alps Tour',
             worldRanking: profile.pro_profiles?.world_ranking || null,

@@ -20,6 +20,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useUser } from '@/hooks/useUser';
 import { Avatar } from '@/components/atoms';
 import { supabase } from '@/utils/supabase/client';
+import { pricingService } from '@/services/pricing.service';
 
 export default function BookingScreen() {
   const { availabilityId } = useLocalSearchParams();
@@ -67,11 +68,40 @@ export default function BookingScreen() {
 
   // Calculer le prix quand le nombre de joueurs change
   useEffect(() => {
-    if (availability?.pro_profiles) {
-      const hourlyRate = availability.pro_profiles.hourly_rate;
-      const calculatedPricing = bookingService.calculateBookingPrice(hourlyRate, numberOfPlayers);
-      setPricing(calculatedPricing);
-    }
+    const calculatePrice = async () => {
+      if (!availability) return;
+
+      // Récupérer le prix depuis pro_pricing (18 trous par défaut pour une partie)
+      const price = await pricingService.getSpecificPrice(
+        availability.pro_id,
+        18, // Par défaut 18 trous pour une partie
+        numberOfPlayers as 1 | 2 | 3
+      );
+
+      if (price) {
+        // price est déjà en euros, le convertir en centimes pour les calculs
+        const priceInCents = Math.round(price * 100);
+        const platformFeeInCents = Math.round(priceInCents * 0.2); // 20% de commission
+        const totalInCents = priceInCents + platformFeeInCents;
+
+        setPricing({
+          proFee: priceInCents,
+          platformFee: platformFeeInCents,
+          totalAmount: totalInCents
+        });
+      } else {
+        // Prix par défaut si aucun prix trouvé
+        const defaultPriceInCents = 12000; // 120€ par défaut
+        const platformFeeInCents = Math.round(defaultPriceInCents * 0.2);
+        setPricing({
+          proFee: defaultPriceInCents,
+          platformFee: platformFeeInCents,
+          totalAmount: defaultPriceInCents + platformFeeInCents
+        });
+      }
+    };
+
+    calculatePrice();
   }, [numberOfPlayers, availability]);
 
   const loadAvailability = async () => {

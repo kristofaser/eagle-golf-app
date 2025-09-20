@@ -145,9 +145,9 @@ function ProsScreen() {
           circuits: proProfile.professional_status || 'Professionnel',
           meilleurResultat: proProfile.certifications?.join(', ') || 'Certifié PGA',
           victoires: Math.floor(Math.random() * 10) + 1,
-          tarif: `${Math.round((proProfile.hourly_rate / 100) * 2)}€`,
+          tarif: '120€', // Prix par d\u00e9faut, sera remplac\u00e9 par les vrais prix depuis pro_pricing
           rating: 4.5 + Math.random() * 0.5,
-          isPremium: proProfile.hourly_rate > 10000,
+          isPremium: false, // \u00c0 d\u00e9terminer selon les prix dans pro_pricing
           isAvailable: pro.availabilitySettings?.is_globally_available ?? false,
           division: proProfile.division || 'Circuit Français',
           worldRanking: proProfile.world_ranking,

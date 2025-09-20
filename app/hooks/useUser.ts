@@ -51,12 +51,11 @@ export function useUser() {
     return null;
   }, [user, isAmateur, isPro]);
 
+  // Note: hourlyRate n'existe plus, les prix sont maintenant dans la table pro_pricing
   const hourlyRate = useMemo(() => {
-    if (isPro && user?.proProfile) {
-      return user.proProfile.hourly_rate;
-    }
+    // Retourner null car les prix sont maintenant par partie et non par heure
     return null;
-  }, [user, isPro]);
+  }, []);
 
   const specialties = useMemo(() => {
     if (isPro && user?.proProfile) {
