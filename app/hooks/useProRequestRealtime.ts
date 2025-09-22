@@ -12,6 +12,7 @@ import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/utils/supabase/client';
 import { useUserContext } from '@/contexts/UserContext';
 import { Alert } from 'react-native';
+import { logger } from '@/utils/logger';
 
 interface ProRequestRealtimeOptions {
   /**
@@ -56,7 +57,7 @@ export function useProRequestRealtime(
     const oldStatus = payload.old?.status;
     
     if (debug) {
-      console.log('🔄 Realtime Pro Request:', {
+      logger.dev('🔄 Realtime Pro Request:', {
         userId,
         oldStatus,
         newStatus,
@@ -80,11 +81,11 @@ export function useProRequestRealtime(
           // Recharger le profil utilisateur pour mettre à jour le user_type
           if (userId) {
             try {
-              console.log('🔄 Rechargement du profil après approbation...');
+              logger.dev('🔄 Rechargement du profil après approbation...');
               await loadUserProfile(userId);
-              console.log('✅ Profil rechargé avec succès');
+              logger.dev('✅ Profil rechargé avec succès');
             } catch (error) {
-              console.error('❌ Erreur rechargement profil:', error);
+              logger.error('❌ Erreur rechargement profil', error);
             }
           }
           break;
@@ -114,13 +115,13 @@ export function useProRequestRealtime(
     // Ne pas s'abonner si pas d'utilisateur
     if (!userId) {
       if (debug) {
-        console.log('⏭️ Realtime Pro Request: Pas d\'userId, skip subscription');
+        logger.dev('⏭️ Realtime Pro Request: Pas d\'userId, skip subscription');
       }
       return;
     }
     
     if (debug) {
-      console.log('🔗 Realtime Pro Request: Connexion pour userId:', userId);
+      logger.dev('🔗 Realtime Pro Request: Connexion pour userId:', userId);
     }
     
     // Créer le channel Supabase Realtime
@@ -139,7 +140,7 @@ export function useProRequestRealtime(
       )
       .subscribe((status) => {
         if (debug) {
-          console.log('🔗 Realtime Pro Request: Statut subscription:', status);
+          logger.dev('🔗 Realtime Pro Request: Statut subscription:', status);
         }
       });
     
@@ -148,7 +149,7 @@ export function useProRequestRealtime(
     // Nettoyage à la destruction du composant
     return () => {
       if (debug) {
-        console.log('🔌 Realtime Pro Request: Déconnexion channel');
+        logger.dev('🔌 Realtime Pro Request: Déconnexion channel');
       }
       
       if (channelRef.current) {
@@ -183,7 +184,7 @@ export function useProRequestRealtime(
       channelRef.current = channel;
       
       if (debug) {
-        console.log('🔄 Realtime Pro Request: Reconnexion forcée');
+        logger.dev('🔄 Realtime Pro Request: Reconnexion forcée');
       }
     }
   }, [userId, handleStatusChange, debug]);

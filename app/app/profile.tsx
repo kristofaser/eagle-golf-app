@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,8 +14,12 @@ import { FullProfile } from '@/services/profile.service';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { isPro, profile, amateurProfile, proProfile, loading: userLoading } = useUser();
+
+  // Récupérer le paramètre pour ouvrir une section spécifique
+  const openSection = params.openSection as string;
 
   // Si non connecté, retourner à l'accueil
   if (!isAuthenticated) {
@@ -70,7 +74,16 @@ export default function ProfileScreen() {
             fontWeight: '600',
           },
           headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
+            <TouchableOpacity
+              onPress={() => {
+                if (router.canGoBack()) {
+                  router.back();
+                } else {
+                  router.replace('/(tabs)/');
+                }
+              }}
+              style={styles.headerButton}
+            >
               <Ionicons name="arrow-back" size={24} color={Colors.neutral.charcoal} />
             </TouchableOpacity>
           ),
@@ -87,9 +100,9 @@ export default function ProfileScreen() {
 
       <SafeAreaView style={styles.container} edges={['bottom']}>
         {isPro ? (
-          <ProProfile profile={fullProfile} onRefresh={handleRefresh} />
+          <ProProfile profile={fullProfile} onRefresh={handleRefresh} openSection={openSection} />
         ) : (
-          <AmateurProfile profile={fullProfile} onRefresh={handleRefresh} />
+          <AmateurProfile profile={fullProfile} onRefresh={handleRefresh} openSection={openSection} />
         )}
       </SafeAreaView>
     </>

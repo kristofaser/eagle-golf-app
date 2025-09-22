@@ -7,12 +7,12 @@
  * ❌ import { useExpoImagePicker } from '@/hooks/useExpoImagePicker';
  *
  * ✅ APRÈS : 1 seul import, configuration flexible
- * ✅ import { useUnifiedImagePicker } from '@/hooks/useUnifiedImagePicker';
+ * ✅ import { useImageUpload } from '@/hooks/useImageUpload';
  */
 
 import React from 'react';
 import { View, TouchableOpacity, Image, Text, StyleSheet } from 'react-native';
-import { useUnifiedImagePicker } from '@/hooks/useUnifiedImagePicker';
+import { useImageUpload as useUnifiedImagePicker } from '@/hooks/useImageUpload';
 
 // Exemple 1 : Usage basique (remplace useSimpleImagePicker)
 export function BasicImagePicker() {

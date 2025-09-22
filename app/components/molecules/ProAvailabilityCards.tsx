@@ -44,43 +44,47 @@ const ProAvailabilityCardsComponent: React.FC<ProAvailabilityCardsProps> = ({
     );
   }
 
+
   return (
     <View style={styles.container}>
       {availabilities.map((course) => {
         const isSelected = selectedCourseId === course.golf_course_id;
-        
+
         return (
           <TouchableOpacity
             key={course.golf_course_id}
             style={[
-              styles.card,
-              isSelected && styles.cardSelected,
+              styles.listItem,
+              isSelected && styles.listItemSelected,
             ]}
             onPress={() => onCourseSelect(course.golf_course_id, course.golf_course_name)}
             activeOpacity={0.7}
           >
-            {isSelected && (
-              <View style={styles.checkIcon}>
-                <Ionicons name="checkmark-circle" size={24} color={Colors.semantic.success} />
-              </View>
-            )}
+            <View style={styles.leftContent}>
+              <Ionicons
+                name={isSelected ? "checkmark-circle" : "ellipse-outline"}
+                size={20}
+                color={isSelected ? Colors.semantic.success : Colors.neutral.iron}
+              />
+              <Text
+                variant="body"
+                weight={isSelected ? 'semiBold' : 'medium'}
+                color={isSelected ? 'charcoal' : 'charcoal'}
+                numberOfLines={1}
+                style={styles.cityName}
+              >
+                {course.city}
+              </Text>
+            </View>
             <Text
               variant="body"
               weight={isSelected ? 'semiBold' : 'medium'}
-              color="charcoal"
-              numberOfLines={2}
-              style={styles.courseName}
-            >
-              {course.golf_course_name}
-            </Text>
-            <Text
-              variant="caption"
               color="iron"
               style={styles.distance}
             >
-              {course.distance_km !== undefined 
-                ? `${course.distance_km} km` 
-                : course.city}
+              {course.distance_km !== undefined
+                ? `${course.distance_km} km`
+                : ''}
             </Text>
           </TouchableOpacity>
         );
@@ -95,34 +99,34 @@ const styles = StyleSheet.create({
   container: {
     paddingVertical: Spacing.xs,
   },
-  card: {
+  listItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.m,
+    paddingVertical: Spacing.s,
+    marginBottom: Spacing.xs,
+    borderRadius: BorderRadius.large,
     backgroundColor: Colors.neutral.white,
-    borderRadius: BorderRadius.medium,
     borderWidth: 1,
     borderColor: Colors.neutral.mist,
-    paddingHorizontal: Spacing.m,
-    paddingVertical: Spacing.m,
-    marginBottom: Spacing.s,
-    position: 'relative',
-    ...Elevation.small,
   },
-  cardSelected: {
-    borderColor: Colors.semantic.success,
-    borderWidth: 2,
+  listItemSelected: {
     backgroundColor: Colors.neutral.ball,
-    ...Elevation.medium,
+    borderColor: Colors.semantic.success,
+    borderWidth: 1.5,
   },
-  checkIcon: {
-    position: 'absolute',
-    top: Spacing.s,
-    right: Spacing.s,
-    zIndex: 1,
+  leftContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
-  courseName: {
-    marginBottom: Spacing.xs,
+  cityName: {
+    marginLeft: Spacing.s,
+    flex: 1,
   },
   distance: {
-    marginTop: 'auto',
+    marginLeft: Spacing.s,
   },
   loadingContainer: {
     padding: Spacing.l,

@@ -4,6 +4,7 @@ import { WithDetails, FilterParams } from '@/types/utils';
 import { PostGISPoint } from '@/types/location';
 import { clusteringService } from './clustering.service';
 import { MapData, ClusteringOptions, DepartmentCluster } from '@/types/clustering';
+import { logger } from '@/utils/logger';
 
 export type GolfParcours = Tables<'golf_parcours'> & {
   // Convertir latitude/longitude en location PostGIS pour compatibilité
@@ -53,9 +54,11 @@ class GolfParcoursService extends BaseService {
     // Priorité 1: Utiliser la colonne location PostGIS si disponible
     if (rawData.location) {
       // Si location est déjà un objet PostGIS
-      if (typeof rawData.location === 'object' && 
-          'type' in rawData.location && 
-          'coordinates' in rawData.location) {
+      if (
+        typeof rawData.location === 'object' &&
+        'type' in rawData.location &&
+        'coordinates' in rawData.location
+      ) {
         location = rawData.location as PostGISPoint;
       }
       // Si location est une string JSON (format Supabase parfois)
@@ -63,16 +66,16 @@ class GolfParcoursService extends BaseService {
         try {
           location = JSON.parse(rawData.location) as PostGISPoint;
         } catch (e) {
-          console.warn(`Erreur parsing location PostGIS pour ${rawData.name}:`, e);
+          logger.warn(`Erreur parsing location PostGIS pour ${rawData.name}:`, e);
         }
       }
     }
-    
+
     // Priorité 2: Fallback vers latitude/longitude si PostGIS non disponible
     if (!location && rawData.latitude && rawData.longitude) {
       location = {
         type: 'Point',
-        coordinates: [rawData.longitude, rawData.latitude]
+        coordinates: [rawData.longitude, rawData.latitude],
       };
     }
 
@@ -115,7 +118,7 @@ class GolfParcoursService extends BaseService {
         data: this.transformGolfParcours(data),
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -132,9 +135,7 @@ class GolfParcoursService extends BaseService {
     sort?: SortParams
   ): Promise<ServiceResponse<GolfParcours[]>> {
     try {
-      let query = this.supabase
-        .from('golf_parcours')
-        .select('*');
+      let query = this.supabase.from('golf_parcours').select('*');
 
       // Appliquer les filtres
       if (filters) {
@@ -178,7 +179,7 @@ class GolfParcoursService extends BaseService {
             const distance = this.calculateDistance(
               filters.nearLocation!.lat,
               filters.nearLocation!.lng,
-              course.location as any
+              course.location!
             );
             return { ...course, distance };
           })
@@ -186,9 +187,9 @@ class GolfParcoursService extends BaseService {
           .sort((a, b) => a.distance - b.distance);
       }
 
-      console.log('🏌️ Golf parcours récupérés:', parcours.length);
+      logger.dev('🏌️ Golf parcours récupérés:', parcours.length);
       if (parcours.length > 0) {
-        console.log('🏌️ Premier parcours:', {
+        logger.dev('🏌️ Premier parcours:', {
           id: parcours[0].id,
           name: parcours[0].name,
           location: parcours[0].location,
@@ -200,7 +201,7 @@ class GolfParcoursService extends BaseService {
         data: parcours,
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -256,7 +257,7 @@ class GolfParcoursService extends BaseService {
         data: coursesWithAvailability,
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -269,7 +270,7 @@ class GolfParcoursService extends BaseService {
    */
   async listGolfCoursesWithLocation(): Promise<ServiceResponse<GolfParcours[]>> {
     try {
-      console.log('🔍 Récupération des parcours golf_parcours avec localisation');
+      logger.dev('🔍 Récupération des parcours golf_parcours avec localisation');
 
       const { data, error } = await this.supabase
         .from('golf_parcours')
@@ -279,11 +280,11 @@ class GolfParcoursService extends BaseService {
         .order('name');
 
       if (error) {
-        console.error('❌ Erreur récupération golf_parcours:', error);
+        logger.error('❌ Erreur récupération golf_parcours:', error);
         throw error;
       }
 
-      console.log('✅ Golf parcours récupérés:', {
+      logger.dev('✅ Golf parcours récupérés:', {
         count: data?.length || 0,
         firstCourse: data?.[0],
       });
@@ -291,7 +292,7 @@ class GolfParcoursService extends BaseService {
       // Transformer les données
       const transformedData = (data || []).map(this.transformGolfParcours.bind(this));
 
-      console.log('📍 Données transformées golf_parcours:', {
+      logger.dev('📍 Données transformées golf_parcours:', {
         count: transformedData.length,
         firstTransformed: transformedData[0],
         firstLocation: transformedData[0]?.location,
@@ -299,7 +300,7 @@ class GolfParcoursService extends BaseService {
 
       return { data: transformedData, error: null };
     } catch (error) {
-      console.error('❌ Erreur listGolfCoursesWithLocation (golf_parcours):', error);
+      logger.error('❌ Erreur listGolfCoursesWithLocation (golf_parcours):', error);
       return { data: null, error: error as Error };
     }
   }
@@ -315,26 +316,28 @@ class GolfParcoursService extends BaseService {
     limit: number = 10
   ): Promise<ServiceResponse<GolfParcours[]>> {
     try {
-      console.log(`🔍 Recherche parcours proches de [${lat}, ${lng}] dans ${radiusKm}km`);
+      logger.dev(`🔍 Recherche parcours proches de [${lat}, ${lng}] dans ${radiusKm}km`);
 
       // Tentative d'utilisation de la fonction PostGIS optimisée
       try {
-        const { data: nearbyParcours, error: rpcError } = await this.supabase
-          .rpc('get_nearby_golf_parcours_simple', {
+        const { data: nearbyParcours, error: rpcError } = await this.supabase.rpc(
+          'get_nearby_golf_parcours_simple',
+          {
             user_lat: lat,
             user_lng: lng,
-            radius_km: radiusKm
-          });
+            radius_km: radiusKm,
+          }
+        );
 
         if (!rpcError && nearbyParcours) {
-          console.log(`✅ Trouvé ${nearbyParcours.length} parcours via PostGIS`);
-          
+          logger.dev(`✅ Trouvé ${nearbyParcours.length} parcours via PostGIS`);
+
           // Transformer les résultats PostGIS vers notre format
-          const transformedData = nearbyParcours.map(row => ({
+          const transformedData = nearbyParcours.map((row) => ({
             ...row,
             location: {
               type: 'Point' as const,
-              coordinates: [row.longitude, row.latitude]
+              coordinates: [row.longitude, row.latitude],
             },
             hole_count: undefined, // Pas d'info sur les trous dans cette requête
             holes_count: undefined,
@@ -345,7 +348,7 @@ class GolfParcoursService extends BaseService {
             green_fee_weekend: undefined,
             booking_required: true,
             active: true,
-            distance: row.distance_km // Distance déjà calculée par PostGIS
+            distance: row.distance_km, // Distance déjà calculée par PostGIS
           }));
 
           return {
@@ -354,13 +357,13 @@ class GolfParcoursService extends BaseService {
           };
         }
       } catch (postgisError) {
-        console.warn('⚠️ Fonction PostGIS non disponible, fallback sur calcul client');
+        logger.warn('⚠️ Fonction PostGIS non disponible, fallback sur calcul client');
       }
 
       // Fallback: Récupération simple et filtrage côté client
-      console.log('🔄 Fallback vers calcul de distance côté client');
+      logger.dev('🔄 Fallback vers calcul de distance côté client');
       const { data: allCourses, error } = await this.listGolfCourses();
-      
+
       if (error || !allCourses) {
         throw error || new Error('Erreur récupération des parcours');
       }
@@ -369,20 +372,20 @@ class GolfParcoursService extends BaseService {
       const nearbyCourses = allCourses
         .filter((course) => course.location)
         .map((course) => {
-          const distance = this.calculateDistance(lat, lng, course.location as any);
+          const distance = this.calculateDistance(lat, lng, course.location!);
           return { ...course, distance };
         })
         .filter((course) => course.distance <= radiusKm)
         .sort((a, b) => a.distance - b.distance)
         .slice(0, limit);
 
-      console.log(`✅ Trouvé ${nearbyCourses.length} parcours via calcul client`);
+      logger.dev(`✅ Trouvé ${nearbyCourses.length} parcours via calcul client`);
 
       return {
         data: nearbyCourses,
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -393,7 +396,14 @@ class GolfParcoursService extends BaseService {
   /**
    * Récupère les statistiques d'un parcours
    */
-  async getCourseStats(courseId: string): Promise<ServiceResponse<any>> {
+  async getCourseStats(courseId: string): Promise<
+    ServiceResponse<{
+      totalBookings: number;
+      activePros: number;
+      averageRating: number;
+      totalReviews: number;
+    }>
+  > {
     try {
       // Nombre total de réservations
       const { count: totalBookings } = await this.supabase
@@ -422,7 +432,7 @@ class GolfParcoursService extends BaseService {
         .eq('golf_course_id', courseId)
         .eq('status', 'completed');
 
-      const ratings = reviews?.flatMap((b) => b.reviews.map((r: any) => r.rating)) || [];
+      const ratings = reviews?.flatMap((b) => b.reviews.map((r) => r.rating)) || [];
       const avgRating = ratings.length
         ? ratings.reduce((acc, r) => acc + r, 0) / ratings.length
         : 0;
@@ -436,7 +446,7 @@ class GolfParcoursService extends BaseService {
         },
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -504,45 +514,46 @@ class GolfParcoursService extends BaseService {
    */
   async getMapData(options: ClusteringOptions = {}): Promise<ServiceResponse<MapData>> {
     try {
-      console.log('🗺️ Génération des données de carte avec clustering');
+      logger.dev('🗺️ Génération des données de carte avec clustering');
 
       // Tentative d'utilisation des statistiques PostGIS pour le clustering
       try {
-        const { data: departmentStats, error: statsError } = await this.supabase
-          .rpc('get_golf_parcours_department_stats');
+        const { data: departmentStats, error: statsError } = await this.supabase.rpc(
+          'get_golf_parcours_department_stats'
+        );
 
         if (!statsError && departmentStats?.length) {
-          console.log(`📊 Clustering via PostGIS: ${departmentStats.length} départements`);
-          
+          logger.dev(`📊 Clustering via PostGIS: ${departmentStats.length} départements`);
+
           // Si on a les stats PostGIS, on peut générer des clusters plus efficaces
           // Mais on garde le système existant pour la compatibilité
         }
       } catch (postgisError) {
-        console.log('📊 Stats PostGIS non disponibles, utilisation du clustering existant');
+        logger.dev('📊 Stats PostGIS non disponibles, utilisation du clustering existant');
       }
 
       // Récupérer tous les golfs avec leurs coordonnées
       const { data: golfs, error: golfsError } = await this.listGolfCoursesWithLocation();
-      
+
       if (golfsError || !golfs) {
         throw golfsError || new Error('Erreur lors de la récupération des golfs');
       }
 
-      console.log(`📊 ${golfs.length} golfs récupérés pour clustering`);
+      logger.dev(`📊 ${golfs.length} golfs récupérés pour clustering`);
 
       // Générer les données de clustering
       const mapData = clusteringService.generateMapData(golfs, options);
 
-      console.log(`🎯 Mode affiché: ${mapData.mode}`);
-      console.log(`📍 Clusters: ${mapData.clusters?.length || 0}`);
-      console.log(`🏌️ Golfs individuels: ${mapData.individualGolfs?.length || 0}`);
+      logger.dev(`🎯 Mode affiché: ${mapData.mode}`);
+      logger.dev(`📍 Clusters: ${mapData.clusters?.length || 0}`);
+      logger.dev(`🏌️ Golfs individuels: ${mapData.individualGolfs?.length || 0}`);
 
       return {
         data: mapData,
         error: null,
       };
     } catch (error: any) {
-      console.error('❌ Erreur getMapData:', error);
+      logger.error('❌ Erreur getMapData:', error);
       return {
         data: null,
         error: this.handleError(error),
@@ -555,7 +566,7 @@ class GolfParcoursService extends BaseService {
    */
   async getGolfsByDepartment(department: string): Promise<ServiceResponse<GolfParcours[]>> {
     try {
-      console.log(`🏛️ Récupération des golfs du département ${department}`);
+      logger.dev(`🏛️ Récupération des golfs du département ${department}`);
 
       const { data, error } = await this.supabase
         .from('golf_parcours')
@@ -568,14 +579,14 @@ class GolfParcoursService extends BaseService {
       if (error) throw error;
 
       const transformedGolfs = (data || []).map(this.transformGolfParcours.bind(this));
-      
-      console.log(`✅ ${transformedGolfs.length} golfs trouvés dans le département ${department}`);
+
+      logger.dev(`✅ ${transformedGolfs.length} golfs trouvés dans le département ${department}`);
 
       return {
         data: transformedGolfs,
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -589,14 +600,14 @@ class GolfParcoursService extends BaseService {
   async getDepartmentBounds(department: string) {
     try {
       const { data: golfs, error } = await this.getGolfsByDepartment(department);
-      
+
       if (error || !golfs) {
         throw error || new Error('Département non trouvé');
       }
 
       return clusteringService.calculateDepartmentBounds(golfs);
-    } catch (error: any) {
-      console.error(`❌ Erreur calcul bounds département ${department}:`, error);
+    } catch (error) {
+      logger.error(`❌ Erreur calcul bounds département ${department}:`, error);
       return null;
     }
   }

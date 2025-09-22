@@ -12,6 +12,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/utils/supabase/client';
 import { Alert } from 'react-native';
+import { logger } from '@/utils/logger';
 
 interface UserDeletionRealtimeOptions {
   /**
@@ -84,7 +85,7 @@ export function useUserDeletionRealtime(
   
   const handleUserDeletion = useCallback(async (payload: any) => {
     if (debug) {
-      console.log('🚨 Realtime User Deletion: Utilisateur supprimé détecté', {
+      logger.dev('🚨 Realtime User Deletion: Utilisateur supprimé détecté', {
         userId,
         deletedId: payload.old?.id,
         payload: payload.old
@@ -95,7 +96,7 @@ export function useUserDeletionRealtime(
       // Vérifier que c'est bien notre utilisateur qui a été supprimé
       if (payload.old?.id !== userId) {
         if (debug) {
-          console.log('⏭️ Realtime User Deletion: Utilisateur différent ignoré', {
+          logger.dev('⏭️ Realtime User Deletion: Utilisateur différent ignoré', {
             deletedId: payload.old?.id,
             currentUserId: userId
           });
@@ -113,7 +114,7 @@ export function useUserDeletionRealtime(
             style: 'default',
             onPress: () => {
               if (debug) {
-                console.log('✅ Realtime User Deletion: Utilisateur a confirmé l\'alerte');
+                logger.dev('✅ Realtime User Deletion: Utilisateur a confirmé l\'alerte');
               }
             }
           }]
@@ -123,17 +124,17 @@ export function useUserDeletionRealtime(
       // Callback personnalisé (déconnexion, navigation, etc.)
       if (onUserDeleted) {
         if (debug) {
-          console.log('🔄 Realtime User Deletion: Exécution callback onUserDeleted');
+          logger.dev('🔄 Realtime User Deletion: Exécution callback onUserDeleted');
         }
         await onUserDeleted();
       }
       
       if (debug) {
-        console.log('✅ Realtime User Deletion: Traitement terminé avec succès');
+        logger.dev('✅ Realtime User Deletion: Traitement terminé avec succès');
       }
       
     } catch (error) {
-      console.error('❌ Realtime User Deletion: Erreur lors du traitement:', error);
+      logger.error('❌ Realtime User Deletion: Erreur lors du traitement', error);
       
       // En cas d'erreur, essayer quand même d'exécuter le callback
       try {
@@ -141,7 +142,7 @@ export function useUserDeletionRealtime(
           await onUserDeleted();
         }
       } catch (callbackError) {
-        console.error('❌ Realtime User Deletion: Erreur callback fallback:', callbackError);
+        logger.error('❌ Realtime User Deletion: Erreur callback fallback', callbackError);
       }
     }
   }, [userId, onUserDeleted, deletionMessage, showAlert, debug]);
@@ -150,13 +151,13 @@ export function useUserDeletionRealtime(
     // Ne pas s'abonner si pas d'utilisateur
     if (!userId) {
       if (debug) {
-        console.log('⏭️ Realtime User Deletion: Pas d\'userId, skip subscription');
+        logger.dev('⏭️ Realtime User Deletion: Pas d\'userId, skip subscription');
       }
       
       // Nettoyer une éventuelle subscription précédente
       if (channelRef.current) {
         if (debug) {
-          console.log('🔌 Realtime User Deletion: Nettoyage subscription précédente');
+          logger.dev('🔌 Realtime User Deletion: Nettoyage subscription précédente');
         }
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
@@ -173,7 +174,7 @@ export function useUserDeletionRealtime(
     
     if (currentChannelName?.startsWith(expectedChannelPrefix) && isSubscribedRef.current) {
       if (debug) {
-        console.log('⏭️ Realtime User Deletion: Subscription déjà active pour cet userId');
+        logger.dev('⏭️ Realtime User Deletion: Subscription déjà active pour cet userId');
       }
       return;
     }
@@ -181,7 +182,7 @@ export function useUserDeletionRealtime(
     // Nettoyer l'ancienne subscription si elle existe (changement d'userId)
     if (channelRef.current) {
       if (debug) {
-        console.log('🔌 Realtime User Deletion: Nettoyage subscription précédente (changement userId)');
+        logger.dev('🔌 Realtime User Deletion: Nettoyage subscription précédente (changement userId)');
       }
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
@@ -189,7 +190,7 @@ export function useUserDeletionRealtime(
     }
     
     if (debug) {
-      console.log('🔗 Realtime User Deletion: Connexion pour userId:', userId);
+      logger.dev('🔗 Realtime User Deletion: Connexion pour userId:', userId);
     }
     
     // Créer le channel Supabase Realtime avec un nom unique
@@ -210,16 +211,16 @@ export function useUserDeletionRealtime(
         isSubscribedRef.current = status === 'SUBSCRIBED';
         
         if (debug) {
-          console.log('🔗 Realtime User Deletion: Statut subscription:', status);
+          logger.dev('🔗 Realtime User Deletion: Statut subscription:', status);
         }
         
         if (status === 'CHANNEL_ERROR') {
-          console.error('❌ Realtime User Deletion: Erreur de channel');
+          logger.error('❌ Realtime User Deletion: Erreur de channel');
           isSubscribedRef.current = false;
         }
         
         if (status === 'TIMED_OUT') {
-          console.warn('⏰ Realtime User Deletion: Timeout de connexion');
+          logger.warn('⏰ Realtime User Deletion: Timeout de connexion');
           isSubscribedRef.current = false;
         }
       });
@@ -229,7 +230,7 @@ export function useUserDeletionRealtime(
     // Nettoyage à la destruction du composant
     return () => {
       if (debug) {
-        console.log('🔌 Realtime User Deletion: Déconnexion channel pour userId:', userId);
+        logger.dev('🔌 Realtime User Deletion: Déconnexion channel pour userId:', userId);
       }
       
       if (channelRef.current) {
@@ -244,7 +245,7 @@ export function useUserDeletionRealtime(
   // Fonction utilitaire pour forcer une reconnexion (troubleshooting)
   const reconnect = useCallback(() => {
     if (debug) {
-      console.log('🔄 Realtime User Deletion: Reconnexion forcée demandée');
+      logger.dev('🔄 Realtime User Deletion: Reconnexion forcée demandée');
     }
     
     // Nettoyer la connexion actuelle

@@ -19,7 +19,7 @@ describe('Button Component', () => {
 
       expect(button.props.style).toMatchObject(
         expect.objectContaining({
-          backgroundColor: Colors.primary.green,
+          backgroundColor: Colors.primary.electric,
         })
       );
     });
@@ -34,15 +34,17 @@ describe('Button Component', () => {
 
       expect(button.props.style).toMatchObject(
         expect.objectContaining({
-          backgroundColor: Colors.neutral.birdie,
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderColor: Colors.primary.navy,
         })
       );
     });
 
-    it('devrait appliquer la variante outline', () => {
+    it('devrait appliquer la variante ghost', () => {
       const { getByTestId } = render(
-        <Button variant="outline" testID="button">
-          Outline Button
+        <Button variant="ghost" testID="button">
+          Ghost Button
         </Button>
       );
       const button = getByTestId('button');
@@ -50,7 +52,6 @@ describe('Button Component', () => {
       expect(button.props.style).toMatchObject(
         expect.objectContaining({
           backgroundColor: 'transparent',
-          borderWidth: 1,
         })
       );
     });
@@ -59,7 +60,7 @@ describe('Button Component', () => {
   describe('Tailles', () => {
     it('devrait appliquer la taille small', () => {
       const { getByTestId } = render(
-        <Button size="small" testID="button">
+        <Button size="sm" testID="button">
           Small Button
         </Button>
       );
@@ -87,7 +88,7 @@ describe('Button Component', () => {
 
     it('devrait appliquer la taille large', () => {
       const { getByTestId } = render(
-        <Button size="large" testID="button">
+        <Button size="lg" testID="button">
           Large Button
         </Button>
       );
@@ -150,9 +151,9 @@ describe('Button Component', () => {
       // Le texte ne devrait pas être visible
       expect(queryByText('Loading Button')).toBeNull();
 
-      // Un ActivityIndicator devrait être présent
+      // Le bouton devrait être désactivé en état loading
       const button = getByTestId('button');
-      expect(button.props.accessibilityState?.busy).toBe(true);
+      expect(button.props.accessibilityState?.disabled).toBe(true);
     });
 
     it('ne devrait pas répondre aux clics en état loading', () => {

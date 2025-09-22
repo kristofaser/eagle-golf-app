@@ -22,12 +22,12 @@ describe('usePriceCalculation', () => {
       });
 
       // Base price: 15€/player/9holes * 2 players = 30€ → MIN 50€
-      // Platform fee: 50€ * 10% = 5€
-      // Total: 50€ + 5€ = 55€
+      // Platform fee: 50€ * 20% = 10€
+      // Total: 50€ + 10€ = 60€
       expect(prices.proFee).toBe(50);
-      expect(prices.platformFee).toBe(5);
-      expect(prices.calculatedPrice).toBe(55);
-      expect(prices.totalAmount).toBe(55);
+      expect(prices.platformFee).toBe(10);
+      expect(prices.calculatedPrice).toBe(60);
+      expect(prices.totalAmount).toBe(60);
     });
 
     it('should calculate prices correctly for 18 holes', () => {
@@ -39,12 +39,12 @@ describe('usePriceCalculation', () => {
       });
 
       // Base price: 25€/player/18holes * 3 players = 75€
-      // Platform fee: 75€ * 10% = 7.5€
-      // Total: 75€ + 7.5€ = 82.5€
+      // Platform fee: 75€ * 20% = 15€
+      // Total: 75€ + 15€ = 90€
       expect(prices.proFee).toBe(75);
-      expect(prices.platformFee).toBe(7.5);
-      expect(prices.calculatedPrice).toBe(82.5);
-      expect(prices.totalAmount).toBe(82.5);
+      expect(prices.platformFee).toBe(15);
+      expect(prices.calculatedPrice).toBe(90);
+      expect(prices.totalAmount).toBe(90);
     });
 
     it('should use custom base price when provided', () => {
@@ -57,12 +57,12 @@ describe('usePriceCalculation', () => {
       });
 
       // Custom price: 20€/player * 2 players = 40€ → MIN 50€
-      // Platform fee: 50€ * 10% = 5€  
-      // Total: 50€ + 5€ = 55€
+      // Platform fee: 50€ * 20% = 10€
+      // Total: 50€ + 10€ = 60€
       expect(prices.proFee).toBe(50);
-      expect(prices.platformFee).toBe(5);
-      expect(prices.calculatedPrice).toBe(55);
-      expect(prices.totalAmount).toBe(55);
+      expect(prices.platformFee).toBe(10);
+      expect(prices.calculatedPrice).toBe(60);
+      expect(prices.totalAmount).toBe(60);
     });
 
     it('should enforce minimum pro fee', () => {
@@ -75,12 +75,12 @@ describe('usePriceCalculation', () => {
       });
 
       // Pro fee should be minimum 50€
-      // Platform fee: 50€ * 10% = 5€
-      // Total: 50€ + 5€ = 55€
+      // Platform fee: 50€ * 20% = 10€
+      // Total: 50€ + 10€ = 60€
       expect(prices.proFee).toBe(50);
-      expect(prices.platformFee).toBe(5);
-      expect(prices.calculatedPrice).toBe(55);
-      expect(prices.totalAmount).toBe(55);
+      expect(prices.platformFee).toBe(10);
+      expect(prices.calculatedPrice).toBe(60);
+      expect(prices.totalAmount).toBe(60);
     });
   });
 
@@ -163,12 +163,12 @@ describe('calculateBookingPrice utility', () => {
     });
 
     // Base price: 25€/player/18holes * 2 players = 50€
-    // Platform fee: 50€ * 10% = 5€
-    // Total: 50€ + 5€ = 55€
+    // Platform fee: 50€ * 20% = 10€
+    // Total: 50€ + 10€ = 60€
     expect(prices.proFee).toBe(50);
-    expect(prices.platformFee).toBe(5);
-    expect(prices.calculatedPrice).toBe(55);
-    expect(prices.totalAmount).toBe(55);
+    expect(prices.platformFee).toBe(10);
+    expect(prices.calculatedPrice).toBe(60);
+    expect(prices.totalAmount).toBe(60);
   });
 
   it('should handle custom base price in utility', () => {
@@ -179,11 +179,11 @@ describe('calculateBookingPrice utility', () => {
     });
 
     // Custom price: 30€/player * 3 players = 90€
-    // Platform fee: 90€ * 10% = 9€
-    // Total: 90€ + 9€ = 99€
+    // Platform fee: 90€ * 20% = 18€
+    // Total: 90€ + 18€ = 108€
     expect(prices.proFee).toBe(90);
-    expect(prices.platformFee).toBe(9);
-    expect(prices.calculatedPrice).toBe(99);
-    expect(prices.totalAmount).toBe(99);
+    expect(prices.platformFee).toBe(18);
+    expect(prices.calculatedPrice).toBe(108);
+    expect(prices.totalAmount).toBe(108);
   });
 });

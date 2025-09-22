@@ -1,6 +1,6 @@
-import React, { useRef, useCallback, memo, useState } from 'react';
+import React, { useRef, useCallback, memo, useState, useMemo } from 'react';
 import { View, StyleSheet, Pressable, TouchableOpacity } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, BorderRadius, Spacing } from '@/constants/theme';
 import { Text, Icon } from '@/components/atoms';
@@ -37,16 +37,12 @@ const getDivisionShortName = (division: string): string => {
 
 // Fonction pour obtenir le style du badge selon la division
 const getDivisionBadgeStyle = (division: string) => {
-  const divisionColors: { [key: string]: any } = {
-    'DP World Tour': { backgroundColor: '#1E3A8A' }, // Bleu foncé prestigieux
-    'HotelPlanner Tour': { backgroundColor: '#7C3AED' }, // Violet
-    'Ladies European Tour': { backgroundColor: '#EC4899' }, // Rose
-    'Circuit Français': { backgroundColor: '#0891B2' }, // Cyan
-    'Challenge Tour': { backgroundColor: '#F59E0B' }, // Orange
-    'Elite Tour': { backgroundColor: '#10B981' }, // Vert
-    'Alps Tour': { backgroundColor: '#6366F1' }, // Indigo
+  const divisionConfig = Colors.division[division as keyof typeof Colors.division] || Colors.division.default;
+  return {
+    backgroundColor: divisionConfig.background,
+    borderColor: divisionConfig.border,
+    borderWidth: 1,
   };
-  return divisionColors[division] || { backgroundColor: '#64748B' };
 };
 
 const ProCardComponent: React.FC<ProCardProps> = ({
@@ -94,10 +90,16 @@ const ProCardComponent: React.FC<ProCardProps> = ({
     [toggleFavorite, isToggling]
   );
 
-  const cardStyle = {
+  // Mémoriser les styles calculés pour éviter les re-calculs
+  const divisionBadgeStyle = useMemo(
+    () => getDivisionBadgeStyle(data.division),
+    [data.division]
+  );
+
+  const cardStyle = useMemo(() => ({
     width: cardWidth,
     opacity: isHidden ? 0 : 1,
-  };
+  }), [cardWidth, isHidden]);
 
   if (isHorizontal) {
     return (
@@ -105,14 +107,13 @@ const ProCardComponent: React.FC<ProCardProps> = ({
         <View style={[styles.horizontalContainer, { opacity: isHidden ? 0 : 1 }]} ref={viewRef}>
           {/* Image à gauche - propre sans overlays */}
           <View style={styles.horizontalImageContainer}>
-            <Animated.Image
+            <Image
               source={{ uri: data.imageUrl }}
               style={styles.horizontalImage}
-              sharedTransitionTag={`image-${data.id}`}
-              cachePolicy={IMAGE_CONFIG.CACHE_POLICY}
-              transition={IMAGE_CONFIG.TRANSITION_DURATION}
-              contentFit={IMAGE_CONFIG.CONTENT_FIT}
-              placeholder={IMAGE_CONFIG.PLACEHOLDER}
+              cachePolicy="memory-disk"
+              transition={200}
+              contentFit="cover"
+              placeholder={{ blurhash: 'L6PZfSjE00yI_3R*00Dg~qM{R*WB' }}
               onError={(error) => {
                 console.warn('Image failed to load:', data.imageUrl, error);
               }}
@@ -136,7 +137,7 @@ const ProCardComponent: React.FC<ProCardProps> = ({
 
             {/* Division */}
             {data.division && (
-              <View style={[styles.horizontalDivisionBadge, getDivisionBadgeStyle(data.division)]}>
+              <View style={[styles.horizontalDivisionBadge, divisionBadgeStyle]}>
                 <Text variant="caption" color="ball" weight="semiBold" style={styles.horizontalDivisionText}>
                   {getDivisionShortName(data.division)}
                 </Text>
@@ -173,6 +174,10 @@ const ProCardComponent: React.FC<ProCardProps> = ({
             style={styles.horizontalFavoriteButton}
             onPress={handleFavoritePress}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={showDeleteButton ? "Supprimer" : (isFavorite ? "Retirer des favoris" : "Ajouter aux favoris")}
+            accessibilityHint={showDeleteButton ? `Supprimer ${data.title}` : `${isFavorite ? "Retirer" : "Ajouter"} ${data.title} de votre liste de favoris`}
+            accessibilityState={{ selected: !showDeleteButton && isFavorite }}
           >
             {showDeleteButton ? (
               <Ionicons
@@ -206,14 +211,13 @@ const ProCardComponent: React.FC<ProCardProps> = ({
       <View style={[cardStyle]} ref={viewRef}>
         {/* Image avec coeur favori */}
         <View style={[styles.imageContainer, { height: cardHeight }]}>
-          <Animated.Image
+          <Image
             source={{ uri: data.imageUrl }}
             style={styles.image}
-            sharedTransitionTag={`image-${data.id}`}
-            cachePolicy={IMAGE_CONFIG.CACHE_POLICY}
-            transition={IMAGE_CONFIG.TRANSITION_DURATION}
-            contentFit={IMAGE_CONFIG.CONTENT_FIT}
-            placeholder={IMAGE_CONFIG.PLACEHOLDER}
+            cachePolicy="memory-disk"
+            transition={200}
+            contentFit="cover"
+            placeholder={{ blurhash: 'L6PZfSjE00yI_3R*00Dg~qM{R*WB' }}
             onError={(error) => {
               console.warn('Image failed to load:', data.imageUrl, error);
             }}
@@ -224,6 +228,10 @@ const ProCardComponent: React.FC<ProCardProps> = ({
             style={styles.favoriteButton}
             onPress={handleFavoritePress}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
+            accessibilityHint={`${isFavorite ? "Retirer" : "Ajouter"} ${data.title} de votre liste de favoris`}
+            accessibilityState={{ selected: isFavorite }}
           >
             <View style={[styles.heartContainer, isToggling && styles.heartAnimating]}>
               <Ionicons
@@ -234,7 +242,7 @@ const ProCardComponent: React.FC<ProCardProps> = ({
               <Ionicons
                 name="heart-outline"
                 size={22}
-                color={Colors.neutral.ball}
+                color={Colors.neutral.white}
                 style={styles.heartOutline}
               />
             </View>
@@ -242,8 +250,15 @@ const ProCardComponent: React.FC<ProCardProps> = ({
 
           {/* Badge de division */}
           {showDivisionBadge && data.division && (
-            <View style={[styles.divisionBadge, getDivisionBadgeStyle(data.division)]}>
-              <Text variant="caption" color="ball" weight="semiBold" style={styles.divisionText}>
+            <View style={[styles.divisionBadge, divisionBadgeStyle]}>
+              <Text
+                variant="caption"
+                weight="semiBold"
+                style={[
+                  styles.divisionText,
+                  { color: Colors.division[data.division as keyof typeof Colors.division]?.text || Colors.division.default.text }
+                ]}
+              >
                 {getDivisionShortName(data.division)}
               </Text>
             </View>
@@ -252,7 +267,7 @@ const ProCardComponent: React.FC<ProCardProps> = ({
           {/* Note en bas à gauche */}
           {data.rating && (
             <View style={styles.ratingContainer}>
-              <Icon name="star" size={12} color={Colors.neutral.ball} family="FontAwesome" />
+              <Icon name="star" size={12} color={Colors.neutral.white} family="FontAwesome" />
               <Text variant="caption" color="ball" weight="medium" style={styles.ratingText}>
                 {data.rating.toFixed(1)}
               </Text>
@@ -280,7 +295,22 @@ const ProCardComponent: React.FC<ProCardProps> = ({
   );
 };
 
-export const ProCard = memo(ProCardComponent);
+export const ProCard = memo(ProCardComponent, (prevProps, nextProps) => {
+  // Custom comparison pour éviter les re-renders inutiles
+  return (
+    prevProps.data.id === nextProps.data.id &&
+    prevProps.data.title === nextProps.data.title &&
+    prevProps.data.imageUrl === nextProps.data.imageUrl &&
+    prevProps.data.isAvailable === nextProps.data.isAvailable &&
+    prevProps.data.rating === nextProps.data.rating &&
+    prevProps.data.distance === nextProps.data.distance &&
+    prevProps.data.division === nextProps.data.division &&
+    prevProps.isHidden === nextProps.isHidden &&
+    prevProps.showDivisionBadge === nextProps.showDivisionBadge &&
+    prevProps.isHorizontal === nextProps.isHorizontal &&
+    prevProps.showDeleteButton === nextProps.showDeleteButton
+  );
+});
 
 const styles = StyleSheet.create({
   pressable: {
@@ -301,10 +331,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: Spacing.s,
     right: Spacing.s,
-    width: 28,
-    height: 28,
+    width: 44,
+    height: 44,
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 22,
   },
   heartContainer: {
     position: 'relative',
@@ -363,16 +394,19 @@ const styles = StyleSheet.create({
   },
   divisionBadge: {
     position: 'absolute',
-    top: Spacing.s,
+    top: Spacing.s + 11, // Centrer avec le bouton favori (44px de haut / 2 - 22px de badge / 2)
     left: Spacing.s,
     paddingHorizontal: Spacing.xs,
-    paddingVertical: 2,
+    paddingVertical: 4,
     borderRadius: BorderRadius.small,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
+    height: 22, // Hauteur fixe pour aligner avec le cœur
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   divisionText: {
     fontSize: 8,
@@ -384,7 +418,7 @@ const styles = StyleSheet.create({
   },
   horizontalContainer: {
     flexDirection: 'row',
-    backgroundColor: Colors.neutral.ball,
+    backgroundColor: Colors.neutral.white,
     borderRadius: BorderRadius.large,
     borderWidth: 0,
     borderColor: 'transparent',
@@ -451,9 +485,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: Spacing.m,
     right: Spacing.m,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',

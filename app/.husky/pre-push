@@ -1,0 +1,36 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Aller dans le répertoire app
+cd app
+
+echo "🧪 Exécution des tests avant push..."
+
+# Exécuter les tests
+npm test -- --bail --findRelatedTests --passWithNoTests
+
+# Capturer le code de sortie
+TEST_RESULT=$?
+
+# Si les tests échouent
+if [ $TEST_RESULT -ne 0 ]; then
+  echo "❌ Les tests ont échoué. Push annulé."
+  echo "💡 Corrigez les tests avant de pusher."
+  exit 1
+fi
+
+echo "✅ Tests passés avec succès!"
+
+# Vérifier le linting
+echo "🔍 Vérification du linting..."
+npm run lint --quiet
+
+LINT_RESULT=$?
+
+if [ $LINT_RESULT -ne 0 ]; then
+  echo "⚠️  Avertissement: Le linting a détecté des problèmes."
+  echo "💡 Exécutez 'npm run lint --fix' pour corriger automatiquement."
+  # On ne bloque pas le push pour le linting pour le moment
+fi
+
+echo "✅ Pre-push checks terminés!"

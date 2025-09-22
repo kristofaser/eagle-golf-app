@@ -33,6 +33,10 @@ export const SearchBar = ({ isCardSelected = false, onSearchPress }: SearchBarPr
           onPress={handleSearchPress}
           style={styles.pressableOverlay}
           disabled={isCardSelected}
+          accessibilityRole="search"
+          accessibilityLabel="Barre de recherche"
+          accessibilityHint="Ouvre la page de recherche pour chercher un parcours ou un joueur"
+          accessibilityState={{ disabled: isCardSelected }}
         >
           <View style={styles.contentWrapper}>
             <Icon name="search" size={20} color={Colors.neutral.course} family="FontAwesome" />

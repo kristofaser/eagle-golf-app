@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs, useRouter } from 'expo-router';
-import { Colors, Typography } from '@/constants/theme';
+import { Colors, Typography, TouchTarget } from '@/constants/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useOverlay } from '@/contexts/OverlayContext';
 import { HugeiconsIcon } from '@hugeicons/react-native';
@@ -75,7 +75,10 @@ export default function TabLayout() {
                       ? 'Premium'
                       : '',
           headerLeft: () => (
-            <TouchableOpacity onPress={handleProfilePress} style={{ marginLeft: 16 }}>
+            <TouchableOpacity
+              onPress={handleProfilePress}
+              style={[TouchTarget.minimum, { marginLeft: 16 }]}
+            >
               <Avatar
                 imageUrl={profile?.avatar_url}
                 name={profile ? `${profile.first_name} ${profile.last_name}` : ''}
@@ -104,7 +107,7 @@ export default function TabLayout() {
               {/* Bouton Favoris avec badge */}
               <TouchableOpacity
                 onPress={handleFavoritesPress}
-                style={{ marginRight: 12, position: 'relative' }}
+                style={[TouchTarget.minimum, { marginRight: 8, position: 'relative' }]}
               >
                 <HugeiconsIcon
                   icon={FavouriteIcon}
@@ -115,7 +118,10 @@ export default function TabLayout() {
               </TouchableOpacity>
 
               {/* Bouton Search */}
-              <TouchableOpacity onPress={handleSearchPress}>
+              <TouchableOpacity
+                onPress={handleSearchPress}
+                style={TouchTarget.minimum}
+              >
                 <HugeiconsIcon icon={Search01Icon} size={24} color={Colors.primary.accent} />
               </TouchableOpacity>
             </View>

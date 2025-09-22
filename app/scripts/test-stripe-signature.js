@@ -1,8 +1,8 @@
 const crypto = require('crypto');
 
 // Configuration
-const webhookSecret = 'whsec_z3gkYCotMbiFlUI5gHZZ3aJ9fCRCUxYc';
-const webhookUrl = 'https://vrpsulmidpgxmkybgtwn.supabase.co/functions/v1/stripe-webhook-public';
+const webhookSecret = 'whsec_PvhwGEs6g4BVdtmXUyjViuveShF4eajM'; // Secret depuis .env.local
+const webhookUrl = 'https://vrpsulmidpgxmkybgtwn.supabase.co/functions/v1/stripe-webhook';
 
 // Payload de test
 const event = {

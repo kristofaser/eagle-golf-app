@@ -9,15 +9,15 @@ export const commonStyles = StyleSheet.create({
   // Containers
   container: {
     flex: 1,
-    backgroundColor: Colors.neutral.background,
+    backgroundColor: Colors.neutral.cloud,
   },
   containerWhite: {
     flex: 1,
-    backgroundColor: Colors.neutral.ball,
+    backgroundColor: Colors.neutral.white,
   },
   safeContainer: {
     flex: 1,
-    backgroundColor: Colors.neutral.background,
+    backgroundColor: Colors.neutral.cloud,
   },
 
   // Centering
@@ -37,14 +37,14 @@ export const commonStyles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.neutral.background,
+    backgroundColor: Colors.neutral.cloud,
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: Spacing.xl,
-    backgroundColor: Colors.neutral.background,
+    backgroundColor: Colors.neutral.cloud,
   },
   emptyStateContainer: {
     flex: 1,
@@ -56,7 +56,7 @@ export const commonStyles = StyleSheet.create({
   // Text styles
   errorText: {
     textAlign: 'center',
-    color: Colors.semantic.error,
+    color: Colors.semantic.error.default,
     marginBottom: Spacing.m,
   },
   loadingText: {

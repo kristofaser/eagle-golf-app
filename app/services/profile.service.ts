@@ -1,6 +1,7 @@
 import { BaseService, ServiceResponse, PaginationParams, SortParams } from './base.service';
 import { Tables, TablesInsert, TablesUpdate } from '@/utils/supabase/types';
 import { WithDetails, FilterParams } from '@/types/utils';
+import { logger } from '@/utils/logger';
 
 export type Profile = Tables<'profiles'>;
 export type ProProfile = Tables<'pro_profiles'>;
@@ -20,7 +21,6 @@ export type FullProfile = Profile & {
 
 // Type pour les filtres de recherche de professionnels
 export type ProSearchFilters = FilterParams<{
-  canTravel?: boolean;
   city?: string;
 }>;
 
@@ -94,7 +94,7 @@ class ProfileService extends BaseService {
         data: fullProfile,
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -161,9 +161,6 @@ class ProfileService extends BaseService {
 
     // Appliquer les filtres
     if (filters) {
-      if (filters.canTravel !== undefined) {
-        query = query.eq('pro_profiles.can_travel', filters.canTravel);
-      }
       if (filters.city) {
         query = query.ilike('city', `%${filters.city}%`);
       }
@@ -191,12 +188,12 @@ class ProfileService extends BaseService {
    */
   async updateProfile(userId: string, data: UpdateProfileData): Promise<ServiceResponse<Profile>> {
     try {
-      console.log('[ProfileService] updateProfile appelé pour user:', userId);
-      console.log('[ProfileService] Données reçues:', JSON.stringify(data, null, 2));
+      logger.dev('[ProfileService] updateProfile appelé pour user:', userId);
+      logger.dev('[ProfileService] Données reçues:', JSON.stringify(data, null, 2));
 
       // Mettre à jour le profil principal
       if (data.profile) {
-        console.log('[ProfileService] Mise à jour du profil principal...');
+        logger.dev('[ProfileService] Mise à jour du profil principal...');
         const { error: profileError } = await this.supabase
           .from('profiles')
           .update({
@@ -206,49 +203,49 @@ class ProfileService extends BaseService {
           .eq('id', userId);
 
         if (profileError) {
-          console.error('[ProfileService] Erreur mise à jour profil:', profileError);
+          logger.error('[ProfileService] Erreur mise à jour profil:', profileError);
           throw profileError;
         }
-        console.log('[ProfileService] Profil principal mis à jour avec succès');
+        logger.dev('[ProfileService] Profil principal mis à jour avec succès');
       }
 
       // Mettre à jour le profil pro
       if (data.proProfile) {
-        console.log('[ProfileService] Mise à jour du profil pro...');
+        logger.dev('[ProfileService] Mise à jour du profil pro...');
         const { error: proError } = await this.supabase
           .from('pro_profiles')
           .update(data.proProfile)
           .eq('user_id', userId);
 
         if (proError) {
-          console.error('[ProfileService] Erreur mise à jour profil pro:', proError);
+          logger.error('[ProfileService] Erreur mise à jour profil pro:', proError);
           throw proError;
         }
-        console.log('[ProfileService] Profil pro mis à jour avec succès');
+        logger.dev('[ProfileService] Profil pro mis à jour avec succès');
       }
 
       // Mettre à jour le profil amateur
       if (data.amateurProfile) {
-        console.log('[ProfileService] Mise à jour du profil amateur...');
+        logger.dev('[ProfileService] Mise à jour du profil amateur...');
         const { error: amateurError } = await this.supabase
           .from('amateur_profiles')
           .update(data.amateurProfile)
           .eq('user_id', userId);
 
         if (amateurError) {
-          console.error('[ProfileService] Erreur mise à jour profil amateur:', amateurError);
+          logger.error('[ProfileService] Erreur mise à jour profil amateur:', amateurError);
           throw amateurError;
         }
-        console.log('[ProfileService] Profil amateur mis à jour avec succès');
+        logger.dev('[ProfileService] Profil amateur mis à jour avec succès');
       }
 
-      console.log('[ProfileService] Récupération du profil mis à jour...');
+      logger.dev('[ProfileService] Récupération du profil mis à jour...');
       // Retourner le profil mis à jour
       const result = await this.getProfile(userId);
-      console.log('[ProfileService] Résultat getProfile:', result.error ? 'Erreur' : 'Succès');
+      logger.dev('[ProfileService] Résultat getProfile:', result.error ? 'Erreur' : 'Succès');
       return result;
-    } catch (error: any) {
-      console.error('[ProfileService] Erreur dans updateProfile:', error);
+    } catch (error) {
+      logger.error('[ProfileService] Erreur dans updateProfile:', error);
       return {
         data: null,
         error: this.handleError(error),
@@ -269,7 +266,7 @@ class ProfileService extends BaseService {
     try {
       // D'abord, récupérer les IDs des pros qui ont des disponibilités sur ce parcours
       const today = new Date().toISOString().split('T')[0];
-      
+
       let availabilityQuery = this.supabase
         .from('pro_availabilities')
         .select('pro_id')
@@ -284,7 +281,7 @@ class ProfileService extends BaseService {
       const { data: availabilities, error: availError } = await availabilityQuery;
 
       if (availError) {
-        console.error('[ProfileService] Erreur récupération disponibilités:', availError);
+        logger.error('[ProfileService] Erreur récupération disponibilités:', availError);
         throw availError;
       }
 
@@ -296,8 +293,8 @@ class ProfileService extends BaseService {
       }
 
       // Récupérer les IDs uniques des pros
-      const proIds = [...new Set(availabilities.map(a => a.pro_id))];
-      
+      const proIds = [...new Set(availabilities.map((a) => a.pro_id))];
+
       // Maintenant récupérer les profils complets de ces pros
       const { data: profiles, error: profilesError } = await this.supabase
         .from('profiles')
@@ -312,7 +309,7 @@ class ProfileService extends BaseService {
         .limit(options?.limit || 20);
 
       if (profilesError) {
-        console.error('[ProfileService] Erreur récupération profils:', profilesError);
+        logger.error('[ProfileService] Erreur récupération profils:', profilesError);
         throw profilesError;
       }
 
@@ -320,7 +317,7 @@ class ProfileService extends BaseService {
         data: profiles || [],
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -394,7 +391,7 @@ class ProfileService extends BaseService {
           price_18_holes_2_players: proData.price_18_holes_2_players || null,
           price_18_holes_3_players: proData.price_18_holes_3_players || null,
           status: 'pending',
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
         })
         .select('id')
         .single();
@@ -405,7 +402,7 @@ class ProfileService extends BaseService {
         data: { request_id: request.id },
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -416,13 +413,15 @@ class ProfileService extends BaseService {
   /**
    * Vérifier le statut de la demande de validation pro
    */
-  async getProRequestStatus(userId: string): Promise<ServiceResponse<{
-    status: 'none' | 'pending' | 'approved' | 'rejected';
-    request_id?: string;
-    admin_notes?: string;
-    created_at?: string;
-    validated_at?: string;
-  }>> {
+  async getProRequestStatus(userId: string): Promise<
+    ServiceResponse<{
+      status: 'none' | 'pending' | 'approved' | 'rejected';
+      request_id?: string;
+      admin_notes?: string;
+      created_at?: string;
+      validated_at?: string;
+    }>
+  > {
     try {
       const { data: request, error } = await this.supabase
         .from('pro_validation_requests')
@@ -451,7 +450,7 @@ class ProfileService extends BaseService {
         },
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -468,51 +467,83 @@ class ProfileService extends BaseService {
     fileName: string
   ): Promise<ServiceResponse<string>> {
     try {
-      console.log('[ProfileService] Upload avatar avec FormData pour user:', userId);
+      logger.dev('[ProfileService] Upload avatar avec FormData pour user:', userId);
 
-      const filePath = `avatars/${userId}-${Date.now()}.jpg`;
-      console.log('[ProfileService] Upload vers:', filePath);
+      const filePath = `avatars/${userId}-${Date.now()}.jpg`; // Sous-dossier avatars dans le bucket profiles
+      logger.dev('[ProfileService] Upload vers:', filePath);
 
-      // Récupérer le fichier depuis FormData
+      // Récupérer le fichier depuis FormData (React Native format)
       const file = formData.get('file') as any;
 
-      // Pour React Native, utiliser une approche différente avec arrayBuffer
+      if (!file || !file.uri) {
+        throw new Error('Fichier invalide dans FormData');
+      }
+
+      logger.dev('[ProfileService] File URI:', file.uri);
+
+      // En React Native, on ne peut pas utiliser blob.arrayBuffer()
+      // On doit utiliser une approche différente avec FileReader
       const response = await fetch(file.uri);
-      const arrayBuffer = await response.arrayBuffer();
+      const blob = await response.blob();
 
-      console.log('[ProfileService] ArrayBuffer size:', arrayBuffer.byteLength);
+      logger.dev('[ProfileService] Blob size:', blob.size, 'Type:', blob.type);
 
-      // Convertir ArrayBuffer en Uint8Array pour Supabase
-      const uint8Array = new Uint8Array(arrayBuffer);
+      // Utiliser FileReader pour convertir le blob en base64
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          // Extraire seulement le base64 sans le préfixe data:image/jpeg;base64,
+          const base64String = result.split(',')[1];
+          resolve(base64String);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
 
-      // Upload vers Supabase Storage avec le buffer
+      logger.dev('[ProfileService] Base64 length:', base64.length);
+
+      // Décoder le base64 en bytes pour l'upload
+      const decode = (base64: string) => {
+        const binaryString = atob(base64);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        return bytes;
+      };
+
+      const bytes = decode(base64);
+      logger.dev('[ProfileService] Bytes length:', bytes.length);
+
+      // Upload avec Uint8Array
       const { data, error: uploadError } = await this.supabase.storage
         .from('profiles')
-        .upload(filePath, uint8Array, {
-          contentType: 'image/jpeg',
+        .upload(filePath, bytes, {
+          contentType: file.type || 'image/jpeg',
           upsert: true,
         });
 
       if (uploadError) {
-        console.error('[ProfileService] Erreur upload storage:', uploadError);
+        logger.error('[ProfileService] Erreur upload storage:', uploadError);
         throw uploadError;
       }
 
-      console.log('[ProfileService] Upload réussi, data:', data);
+      logger.dev('[ProfileService] Upload réussi, data:', data);
 
       // Obtenir l'URL publique
       const {
         data: { publicUrl },
       } = this.supabase.storage.from('profiles').getPublicUrl(filePath);
 
-      console.log('[ProfileService] URL publique générée:', publicUrl);
+      logger.dev('[ProfileService] URL publique générée:', publicUrl);
 
       return {
         data: publicUrl,
         error: null,
       };
-    } catch (error: any) {
-      console.error('[ProfileService] Erreur uploadAvatarWithFormData:', error);
+    } catch (error) {
+      logger.error('[ProfileService] Erreur uploadAvatarWithFormData:', error);
       return {
         data: null,
         error: this.handleError(error),
@@ -525,13 +556,13 @@ class ProfileService extends BaseService {
    */
   async uploadAvatar(userId: string, file: File | Blob): Promise<ServiceResponse<string>> {
     try {
-      console.log('[ProfileService] Début upload avatar pour user:', userId);
+      logger.dev('[ProfileService] Début upload avatar pour user:', userId);
 
       const fileExt = file instanceof File ? file.name.split('.').pop() : 'jpg';
       const fileName = `${userId}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const filePath = `avatars/${fileName}`; // Sous-dossier avatars dans le bucket profiles
 
-      console.log('[ProfileService] Upload vers:', filePath);
+      logger.dev('[ProfileService] Upload vers:', filePath);
 
       // Upload vers Supabase Storage
       const { error: uploadError } = await this.supabase.storage
@@ -542,7 +573,7 @@ class ProfileService extends BaseService {
         });
 
       if (uploadError) {
-        console.error('[ProfileService] Erreur upload storage:', uploadError);
+        logger.error('[ProfileService] Erreur upload storage:', uploadError);
         throw uploadError;
       }
 
@@ -551,7 +582,7 @@ class ProfileService extends BaseService {
         data: { publicUrl },
       } = this.supabase.storage.from('profiles').getPublicUrl(filePath);
 
-      console.log('[ProfileService] URL publique générée:', publicUrl);
+      logger.dev('[ProfileService] URL publique générée:', publicUrl);
 
       // Ne plus mettre à jour automatiquement le profil ici
       // La mise à jour sera faite dans updateProfile avec les autres données
@@ -560,8 +591,8 @@ class ProfileService extends BaseService {
         data: publicUrl,
         error: null,
       };
-    } catch (error: any) {
-      console.error('[ProfileService] Erreur uploadAvatar:', error);
+    } catch (error) {
+      logger.error('[ProfileService] Erreur uploadAvatar:', error);
       return {
         data: null,
         error: this.handleError(error),
@@ -572,7 +603,15 @@ class ProfileService extends BaseService {
   /**
    * Récupère les statistiques d'un pro
    */
-  async getProStats(proId: string): Promise<ServiceResponse<any>> {
+  async getProStats(proId: string): Promise<
+    ServiceResponse<{
+      totalBookings: number;
+      completedBookings: number;
+      averageRating: number;
+      totalReviews: number;
+      upcomingBookings: number;
+    }>
+  > {
     try {
       // Nombre total de parties
       const { count: totalBookings } = await this.supabase
@@ -609,7 +648,7 @@ class ProfileService extends BaseService {
         },
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),

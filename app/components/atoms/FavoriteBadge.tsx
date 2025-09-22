@@ -74,8 +74,8 @@ const styles = StyleSheet.create({
     minWidth: 20,
     paddingHorizontal: 6,
     position: 'absolute',
-    top: -6,
-    right: -6,
+    top: 2,
+    right: 2,
     zIndex: 10,
   },
 
@@ -101,21 +101,21 @@ const styles = StyleSheet.create({
 
   // Couleurs
   red: {
-    backgroundColor: '#ef4444',
+    backgroundColor: Colors.semantic.error.default,
   },
   blue: {
     backgroundColor: Colors.primary.accent,
   },
   green: {
-    backgroundColor: '#22c55e',
+    backgroundColor: Colors.semantic.success.default,
   },
   orange: {
-    backgroundColor: '#f59e0b',
+    backgroundColor: Colors.semantic.warning.default,
   },
 
   // Texte de base
   text: {
-    color: '#FFFFFF',
+    color: Colors.neutral.white,
     fontFamily: Typography.fontFamily.primary,
     fontWeight: Typography.fontWeight.bold,
     textAlign: 'center',

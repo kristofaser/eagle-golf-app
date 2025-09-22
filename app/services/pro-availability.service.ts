@@ -167,6 +167,80 @@ export const proAvailabilityService = {
   },
 
   /**
+   * Récupère tous les pros ayant des disponibilités sur un parcours donné
+   */
+  async getProsAvailableOnCourse(golfCourseId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('pro_availabilities')
+        .select(`
+          pro_id,
+          pro_profiles!pro_availabilities_pro_id_fkey(
+            user_id,
+            skill_driving,
+            skill_putting,
+            skill_irons,
+            skill_wedging,
+            skill_chipping,
+            skill_mental,
+            division,
+            world_ranking,
+            profiles!pro_profiles_user_id_fkey(
+              id,
+              first_name,
+              last_name,
+              avatar_url,
+              city
+            )
+          )
+        `)
+        .eq('golf_course_id', golfCourseId)
+        .gte('date', new Date().toISOString().split('T')[0]) // Dates futures uniquement
+        .gt('max_players', 0); // Créneaux disponibles uniquement
+
+      if (error) {
+        console.error('Erreur récupération pros disponibles sur parcours:', error);
+        return { data: null, error };
+      }
+
+      // Déduplication des pros (un pro peut avoir plusieurs créneaux)
+      const uniquePros = data?.reduce((acc: any[], current: any) => {
+        const proProfile = current.pro_profiles;
+        const profile = proProfile?.profiles;
+
+        if (!profile) return acc;
+
+        const existingPro = acc.find(pro => pro.id === profile.id);
+        if (!existingPro) {
+          acc.push({
+            id: profile.id,
+            first_name: profile.first_name,
+            last_name: profile.last_name,
+            avatar_url: profile.avatar_url,
+            city: profile.city,
+            pro_profiles: {
+              skill_driving: proProfile.skill_driving,
+              skill_putting: proProfile.skill_putting,
+              skill_irons: proProfile.skill_irons,
+              skill_wedging: proProfile.skill_wedging,
+              skill_chipping: proProfile.skill_chipping,
+              skill_mental: proProfile.skill_mental,
+              division: proProfile.division,
+              world_ranking: proProfile.world_ranking,
+            }
+          });
+        }
+        return acc;
+      }, []);
+
+      return { data: uniquePros || [], error: null };
+    } catch (error) {
+      console.error('Erreur récupération pros disponibles sur parcours:', error);
+      return { data: null, error };
+    }
+  },
+
+  /**
    * Vérifie s'il existe des réservations actives pour un pro sur un parcours
    */
   async checkExistingBookingsForCourse(

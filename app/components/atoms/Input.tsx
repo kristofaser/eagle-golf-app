@@ -32,6 +32,14 @@ export const Input: React.FC<InputProps> = ({
         placeholderTextColor={Colors.neutral.course}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
+        accessibilityRole="text"
+        accessibilityLabel={label}
+        accessibilityHint={helper || undefined}
+        accessibilityState={{
+          disabled: props.editable === false,
+          invalid: !!error
+        }}
+        accessibilityValue={props.value ? { text: props.value } : undefined}
         {...props}
       />
       {error && (

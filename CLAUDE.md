@@ -18,7 +18,7 @@ cd app
 npm install
 npm start                    # Start Expo development server
 npm run android             # Run on Android device/emulator
-npm run ios                 # Run on iOS device/simulator  
+npm run ios                 # Run on iOS device/simulator
 npm run web                 # Run web version
 npm test                    # Run Jest tests
 npm run test:watch          # Run tests in watch mode
@@ -55,7 +55,7 @@ npm run lint               # Run Next.js linting
 app/
 ├── app/                    # Expo Router file-based routing
 │   ├── (tabs)/            # Tab navigation (index, parcours, profile)
-│   ├── (auth)/            # Auth screens (login, register, forgot-password)  
+│   ├── (auth)/            # Auth screens (login, register, forgot-password)
 │   ├── booking/           # Booking flow screens
 │   ├── parcours/          # Golf course screens
 │   └── _layout.tsx        # Root layout with Stack navigation
@@ -66,6 +66,7 @@ app/
 ├── contexts/             # React contexts (AuthProvider)
 ├── hooks/                # Custom React hooks
 ├── utils/                # Utility functions
+│   └── logger.ts        # Centralized logging system
 ├── types/                # TypeScript type definitions
 └── __tests__/            # Test files organized by type
 ```
@@ -74,14 +75,14 @@ app/
 Uses Supabase Auth with comprehensive React hooks:
 - `useAuth()` - Login, signup, logout
 - `useUser()` - User data and profile
-- `useSession()` - Session management and tokens  
+- `useSession()` - Session management and tokens
 - `usePermissions()` - Permission checking
 - `useProtectedRoute()` - Route protection
 
 ### Testing Structure
 Jest configuration with comprehensive test organization:
 - `__tests__/unit/` - Unit tests
-- `__tests__/integration/` - Integration tests  
+- `__tests__/integration/` - Integration tests
 - `__tests__/e2e/` - End-to-end tests
 - `__tests__/contexts/` - Context provider tests
 - Coverage thresholds: 60% for branches, functions, lines, statements
@@ -98,7 +99,7 @@ Jest configuration with comprehensive test organization:
 
 ## Admin Panel Architecture (admin/)
 
-### Tech Stack  
+### Tech Stack
 - **Framework**: Next.js 15 with App Router and Turbopack
 - **Styling**: Tailwind CSS v4 (zero-config)
 - **Backend**: Supabase with SSR support
@@ -114,7 +115,7 @@ admin/src/
 │   ├── (auth)/           # Auth pages (login)
 │   ├── (admin)/          # Protected admin pages
 │   │   ├── dashboard/    # Main dashboard
-│   │   ├── users/        # User management  
+│   │   ├── users/        # User management
 │   │   ├── bookings/     # Booking management
 │   │   ├── courses/      # Course management
 │   │   ├── payments/     # Payment management
@@ -125,7 +126,7 @@ admin/src/
 ├── components/
 │   ├── ui/              # Reusable UI components
 │   ├── layout/          # Layout components (Sidebar, Header)
-│   └── features/        # Business-specific components  
+│   └── features/        # Business-specific components
 ├── lib/
 │   └── supabase/        # Supabase client configurations
 └── types/               # TypeScript definitions
@@ -146,12 +147,88 @@ admin/src/
   - CSS variables maintained for compatibility
   - Plugins: `@tailwindcss/forms` and `@tailwindcss/typography`
 
-### Environment Variables
-Required in both applications:
+## Supabase Edge Functions
+
+Located in `app/supabase/functions/`:
+
+### Deployed Functions
+- `stripe-webhook` - Handles Stripe payment webhooks (no JWT verification)
+- `create-payment-intent` - Creates Stripe payment intents
+- `check-payment-status` - Verifies payment status
+- `create-booking-validation` - Creates booking validation entries
+- `delete-user-account` - Handles account deletion
+- `create-availability` - Creates pro availability slots
+- `test-create-availability` - Test function for availability
+
+### Function Deployment
+```bash
+# Deploy single function
+npx supabase functions deploy <function-name> --project-ref vrpsulmidpgxmkybgtwn
+
+# Deploy without JWT verification (for webhooks)
+npx supabase functions deploy stripe-webhook --no-verify-jwt --project-ref vrpsulmidpgxmkybgtwn
 ```
+
+## Stripe Integration
+
+### Account Configuration
+- **Account**: EAGLE GOLF (acct_1S14QO9rmqqgNzm9)
+- **Mode**: Test mode for development
+- **Keys**: Stored in `.env.local` (never commit!)
+
+### Payment Flow
+1. Client creates payment intent via Edge Function
+2. Payment processed through Stripe Payment Element
+3. Webhook receives payment confirmation
+4. Booking status updated in database
+5. Admin manually validates booking after contacting golf course
+
+### Webhook Configuration
+- **URL**: `https://vrpsulmidpgxmkybgtwn.supabase.co/functions/v1/stripe-webhook`
+- **Events**: `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.dispute.created`
+- **Secret**: Stored in Supabase Edge Function secrets
+
+### Test Scripts
+Located in `app/scripts/`:
+- `test-stripe-complete.js` - Complete Stripe configuration test
+- `test-stripe-signature.js` - Webhook signature validation test
+- `test-stripe-webhook.js` - Basic webhook test
+- `update-stripe-secrets.sh` - Script to update secrets in Supabase
+
+## Business Process
+
+### Booking Flow
+1. **Amateur books a lesson** - Selects pro, date, time
+2. **Payment processing** - Stripe handles payment
+3. **Automatic payment confirmation** - Webhook updates payment status
+4. **Manual validation** - Eagle admin:
+   - Calls golf course to confirm availability
+   - Validates booking in admin panel
+   - Updates status to confirmed
+5. **Notification** - Users receive confirmation
+
+### User Roles
+- **Amateur** - Can book lessons, make payments
+- **Pro** - Golf professionals offering lessons
+- **Admin** - Eagle staff managing bookings and validations
+
+## Environment Variables
+
+### Mobile App (`app/.env.local`)
+```env
+EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+```
+
+### Admin Panel (`admin/.env.local`)
+```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key  
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key (admin only)
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
 ## Development Workflow
@@ -168,10 +245,46 @@ Both applications enforce:
 - ESLint with TypeScript rules
 - Prettier formatting (2 spaces, single quotes, 100 character line width)
 - No explicit `any` types allowed
+- Centralized logging with `utils/logger.ts` (auto-disabled in production)
 
 ### Testing Strategy
 - Mobile app: Comprehensive Jest setup with unit, integration, and e2e test organization
 - Admin: Next.js built-in testing support
 - Coverage thresholds enforced in mobile app
 
-Always run linting and type checking before committing changes to maintain code quality standards.
+### Git Workflow
+- Feature branches from `main`
+- Pull requests required for merging
+- Run tests and linting before committing
+- Keep commits focused and well-described
+
+## Security Considerations
+
+### API Security
+- All Edge Functions use JWT verification (except webhooks)
+- Stripe webhook signature validation required
+- Row Level Security (RLS) enabled on all Supabase tables
+- Service role keys only used server-side
+
+### Data Protection
+- Sensitive data never logged
+- Environment variables never committed
+- Payment information handled only by Stripe
+- User data protected by Supabase RLS
+
+## Documentation Files
+
+Key documentation in the repository:
+- `NOTIFICATIONS_IMPLEMENTATION.md` - Notification system details
+- `STRIPE_WEBHOOK_CONFIG.md` - Webhook configuration guide
+- `SECURITY_WEBHOOK_FIX.md` - Security vulnerability fix documentation
+- `STRIPE_DASHBOARD_WEBHOOK_SETUP.md` - Dashboard webhook setup guide
+- `SUPABASE_SECRETS_UPDATE.md` - Guide for updating Supabase secrets
+
+## Important Notes
+
+- Always run linting and type checking before committing changes
+- Test payment flows in Stripe test mode before production
+- Manual booking validation is required - this is by design
+- Keep both applications' dependencies in sync where applicable
+- Use the centralized logger instead of console.log statements

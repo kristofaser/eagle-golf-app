@@ -1,8 +1,8 @@
 /**
  * Hook useAuth - Wrapper pour compatibilité avec les nouveaux contextes
  */
-import { useAuth as useAuthContext } from '@/contexts/AppProviders';
-import { useSession, useSessionUser } from '@/contexts/AppProviders';
+import { useAuth as useAuthContext } from '@/contexts/AuthContext.refactored';
+import { useSession, useSessionUser } from '@/contexts/SessionContext';
 import { useUserContext } from '@/contexts/UserContext';
 import { useSessionContext } from '@/contexts/SessionContext';
 

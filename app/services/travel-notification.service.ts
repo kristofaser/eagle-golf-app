@@ -1,4 +1,5 @@
 import { supabase } from '@/utils/supabase/client';
+import { logger } from '@/utils/logger';
 
 export interface TravelNotificationPreferences {
   user_id: string;
@@ -20,7 +21,7 @@ class TravelNotificationService {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Erreur récupération préférences voyage:', error);
+        logger.error('Erreur récupération préférences voyage:', error);
         return { data: null, error };
       }
 
@@ -37,7 +38,7 @@ class TravelNotificationService {
 
       return { data, error: null };
     } catch (err) {
-      console.error('Erreur service préférences voyage:', err);
+      logger.error('Erreur service préférences voyage:', err);
       return { data: null, error: err };
     }
   }
@@ -60,14 +61,14 @@ class TravelNotificationService {
         .single();
 
       if (error) {
-        console.error('Erreur mise à jour préférences voyage:', error);
+        logger.error('Erreur mise à jour préférences voyage:', error);
         return { data: null, error };
       }
 
-      console.log('✅ Préférences voyage mises à jour en base:', { userId, enabled });
+      logger.dev('✅ Préférences voyage mises à jour en base:', { userId, enabled });
       return { data, error: null };
     } catch (err) {
-      console.error('Erreur service mise à jour préférences voyage:', err);
+      logger.error('Erreur service mise à jour préférences voyage:', err);
       return { data: null, error: err };
     }
   }
@@ -83,14 +84,14 @@ class TravelNotificationService {
         .eq('user_id', userId);
 
       if (error) {
-        console.error('Erreur suppression préférences voyage:', error);
+        logger.error('Erreur suppression préférences voyage:', error);
         return { error };
       }
 
-      console.log('🗑️ Préférences voyage supprimées de la base:', userId);
+      logger.dev('🗑️ Préférences voyage supprimées de la base:', userId);
       return { error: null };
     } catch (err) {
-      console.error('Erreur service suppression préférences voyage:', err);
+      logger.error('Erreur service suppression préférences voyage:', err);
       return { error: err };
     }
   }
@@ -115,13 +116,13 @@ class TravelNotificationService {
         .eq('alerts_enabled', true);
 
       if (error) {
-        console.error('Erreur récupération utilisateurs alertes voyage:', error);
+        logger.error('Erreur récupération utilisateurs alertes voyage:', error);
         return { data: null, error };
       }
 
       return { data, error: null };
     } catch (err) {
-      console.error('Erreur service utilisateurs alertes voyage:', err);
+      logger.error('Erreur service utilisateurs alertes voyage:', err);
       return { data: null, error: err };
     }
   }

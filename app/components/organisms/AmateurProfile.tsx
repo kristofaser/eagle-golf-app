@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -24,14 +24,17 @@ const DEFAULT_AVATAR =
 interface AmateurProfileProps {
   profile: FullProfile;
   onRefresh: () => Promise<void>;
+  openSection?: string;
 }
 
-export function AmateurProfile({ profile, onRefresh }: AmateurProfileProps) {
+export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfileProps) {
   const router = useRouter();
+  const scrollViewRef = useRef<ScrollView>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [upcomingBookings, setUpcomingBookings] = useState<BookingWithDetails[]>([]);
   const [pastBookings, setPastBookings] = useState<BookingWithDetails[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(true);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -83,6 +86,17 @@ export function AmateurProfile({ profile, onRefresh }: AmateurProfileProps) {
   useEffect(() => {
     loadBookings();
   }, [profile.id]);
+
+  // Ouvrir automatiquement la section demandée
+  useEffect(() => {
+    if (openSection === 'mes-parties') {
+      setExpandedSection('mes-parties');
+      // Scroll vers la section des réservations après un délai pour laisser le temps au rendu
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({ y: 400, animated: true });
+      }, 500);
+    }
+  }, [openSection]);
 
   const totalGamesPlayed = pastBookings.length;
   const favoriteGolfCourse =
@@ -151,6 +165,7 @@ export function AmateurProfile({ profile, onRefresh }: AmateurProfileProps) {
       </View>
 
       <ScrollView
+        ref={scrollViewRef}
         style={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}

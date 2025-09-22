@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run lint-staged for app directory
+cd app && npx lint-staged
+
+# Run lint-staged for admin directory if changes exist
+if git diff --cached --name-only | grep -q "^admin/"; then
+  cd ../admin && npx lint-staged
+fi

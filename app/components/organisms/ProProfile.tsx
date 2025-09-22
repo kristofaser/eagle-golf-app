@@ -27,11 +27,12 @@ const DEFAULT_AVATAR =
 interface ProProfileProps {
   profile: FullProfile;
   onRefresh: () => Promise<void>;
+  openSection?: string;
 }
 
 type TabType = 'parties' | 'services';
 
-export function ProProfile({ profile, onRefresh }: ProProfileProps) {
+export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps) {
   const router = useRouter();
   const { activeTab, setActiveTab } = useProProfileTab();
   const [refreshing, setRefreshing] = useState(false);
@@ -87,6 +88,13 @@ export function ProProfile({ profile, onRefresh }: ProProfileProps) {
   useEffect(() => {
     loadBookings();
   }, [profile.id]);
+
+  // Ouvrir automatiquement l'onglet demandé
+  useEffect(() => {
+    if (openSection === 'mes-parties') {
+      setActiveTab('parties');
+    }
+  }, [openSection, setActiveTab]);
 
   const totalGamesPlayed = pastBookings.length;
   const proProfile = profile.pro_profiles;

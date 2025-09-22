@@ -288,7 +288,7 @@ export default function BookProScreen() {
       return;
     }
 
-    // Utiliser le prix minimum pour 1 joueur (prix déjà en euros depuis le service)
+    // Utiliser le prix minimum pour 1 joueur (prix stockés directement en euros)
     const minPriceInEuros = Math.min(...pricesForOnePlayer);
 
     // Appliquer la commission de 20% sur le prix minimum pour l'affichage préliminaire
@@ -426,9 +426,9 @@ export default function BookProScreen() {
         booking_date: bookingState.selectedDate,
         start_time: actualStartTime,
         number_of_players: bookingState.numberOfPlayers,
-        total_amount: priceCalculation.calculatedPrice * 100, // en centimes
-        pro_fee: priceCalculation.proFee * 100,
-        platform_fee: priceCalculation.platformFee * 100,
+        total_amount: Math.round(priceCalculation.calculatedPrice * 100), // conversion en centimes pour Stripe
+        pro_fee: Math.round(priceCalculation.proFee * 100),
+        platform_fee: Math.round(priceCalculation.platformFee * 100),
         payment_intent_id: paymentIntentId,
         payment_status: 'paid',
         status: 'pending' as const,

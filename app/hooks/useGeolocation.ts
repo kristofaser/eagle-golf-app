@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import * as Location from 'expo-location';
+import { logger } from '@/utils/logger';
 
 export interface UserLocation {
   latitude: number;
@@ -39,7 +40,7 @@ export function useGeolocation(): UseGeolocationReturn {
         longitude: locationData.coords.longitude,
       });
     } catch (err) {
-      console.error('Erreur lors de la récupération de la localisation:', err);
+      logger.error('Erreur lors de la récupération de la localisation:', err);
       setError('Impossible de récupérer votre localisation');
     } finally {
       setIsLoading(false);

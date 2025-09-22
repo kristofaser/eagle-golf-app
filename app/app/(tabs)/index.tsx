@@ -1,21 +1,28 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors, Typography } from '@/constants/theme';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Colors, Typography, Spacing } from '@/constants/theme';
 
 export default function AccueilScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Écran Accueil</Text>
-    </View>
+    <SafeAreaView style={styles.container} edges={[]}>
+      <View style={styles.content}>
+        <Text style={styles.title}>Écran Accueil</Text>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Colors.neutral.white,
+  },
+  content: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Colors.neutral.ball,
+    paddingBottom: Spacing.xl, // Espace pour éviter la tab bar
   },
   title: {
     fontFamily: Typography.fontFamily.primary,

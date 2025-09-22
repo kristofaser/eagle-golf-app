@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🚀 Pre-push validation (optimized)..."
+
+# Check only app (most frequent changes)
+echo "Checking app types & critical tests..."
+cd app && npm run type-check
+
+# Run only critical tests (payment/booking flows)
+npm test -- --testPathPattern="(payment|booking)" --passWithNoTests
+
+echo "✅ Critical validations passed! CI will run full suite."

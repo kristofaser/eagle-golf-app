@@ -76,7 +76,7 @@ const validatePhoneNumber = (phone: string): { isValid: boolean; error?: string 
 import { LoadingScreen, ErrorScreen } from '@/components/atoms';
 import { Colors, Spacing, Typography, BorderRadius, Elevation } from '@/constants/theme';
 import { Text } from '@/components/atoms';
-import { useUnifiedImagePicker, ImagePickerResult } from '@/hooks/useUnifiedImagePicker';
+import { useUnifiedImagePicker, ImageResult } from '@/hooks/useImageUpload';
 import { documentUploadService, DocumentType } from '@/services/document-upload.service';
 
 const STEPS = [
@@ -110,8 +110,8 @@ export default function BecomeProScreen() {
     phoneNumber: '',
 
     // Étape 2 - Documents
-    idCardFront: null as ImagePickerResult | null,
-    idCardBack: null as ImagePickerResult | null,
+    idCardFront: null as ImageResult | null,
+    idCardBack: null as ImageResult | null,
     idCardFrontUrl: '',
     idCardBackUrl: '',
 

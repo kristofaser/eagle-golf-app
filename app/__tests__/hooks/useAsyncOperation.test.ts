@@ -31,8 +31,12 @@ describe('useAsyncOperation', () => {
     const mockOperation = jest.fn().mockRejectedValue(mockError);
 
     await act(async () => {
-      const returnedData = await result.current.execute(mockOperation);
-      expect(returnedData).toBeNull();
+      try {
+        await result.current.execute(mockOperation);
+      } catch (error) {
+        // Error is expected to be thrown
+        expect(error).toEqual(mockError);
+      }
     });
 
     expect(result.current.data).toBeNull();
@@ -95,7 +99,12 @@ describe('useAsyncOperation', () => {
     const mockOperation = jest.fn().mockRejectedValue('String error');
 
     await act(async () => {
-      await result.current.execute(mockOperation);
+      try {
+        await result.current.execute(mockOperation);
+      } catch (error) {
+        // Error is expected to be thrown
+        expect(error).toEqual(new Error('String error'));
+      }
     });
 
     expect(result.current.error).toEqual(new Error('String error'));

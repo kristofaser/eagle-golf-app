@@ -10,6 +10,7 @@
  */
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/utils/supabase/client';
+import { logger } from '@/utils/logger';
 import { NotificationItem } from './useNotificationRealtime';
 
 export interface NotificationListOptions {
@@ -109,7 +110,7 @@ export function useNotificationList(
       }));
 
       if (debug) {
-        console.log('📋 useNotificationList: Chargement...', {
+        logger.dev('📋 useNotificationList: Chargement...', {
           userId,
           offset,
           append,
@@ -162,7 +163,7 @@ export function useNotificationList(
       }));
 
       if (debug) {
-        console.log('✅ useNotificationList: Chargé', {
+        logger.dev('✅ useNotificationList: Chargé', {
           count: notifications.length,
           totalUnread: unreadCount,
           hasMore: notifications.length === pageSize
@@ -170,7 +171,7 @@ export function useNotificationList(
       }
 
     } catch (err) {
-      console.error('❌ Erreur chargement notifications:', err);
+      logger.error('❌ Erreur chargement notifications:', err);
       setState(prev => ({
         ...prev,
         isLoading: false,
@@ -188,7 +189,7 @@ export function useNotificationList(
 
     try {
       if (debug) {
-        console.log('📖 Marquage comme lue:', notificationId);
+        logger.dev('📖 Marquage comme lue:', notificationId);
       }
 
       const { error } = await supabase.rpc('mark_notification_read', {
@@ -213,7 +214,7 @@ export function useNotificationList(
 
       return true;
     } catch (err) {
-      console.error('❌ Erreur marquage lecture:', err);
+      logger.error('❌ Erreur marquage lecture:', err);
       return false;
     }
   }, [userId, debug]);
@@ -226,7 +227,7 @@ export function useNotificationList(
 
     try {
       if (debug) {
-        console.log('📖 Marquage toutes comme lues');
+        logger.dev('📖 Marquage toutes comme lues');
       }
 
       const { error } = await supabase
@@ -251,7 +252,7 @@ export function useNotificationList(
 
       return true;
     } catch (err) {
-      console.error('❌ Erreur marquage toutes lecture:', err);
+      logger.error('❌ Erreur marquage toutes lecture:', err);
       return false;
     }
   }, [userId, debug]);

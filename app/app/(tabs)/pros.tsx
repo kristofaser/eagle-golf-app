@@ -1,4 +1,5 @@
-import { StyleSheet, View, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, ScrollView, RefreshControl, ActivityIndicator, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { JoueurData } from '@/components/molecules/ContentCard';
 import { ProCard } from '@/components/molecules/ProCard';
@@ -249,6 +250,33 @@ function ProsScreen() {
     [handleCardPress]
   );
 
+  // Render function pour FlatList
+  const renderProItem = useCallback(
+    ({ item, index }: { item: JoueurData; index: number }, showDivision: boolean = true) => (
+      <ProCard
+        data={item}
+        onPress={handleCardPress}
+        onCardPress={handleCardPress}
+        isHidden={false}
+        showDivisionBadge={showDivision}
+        onHover={(profileId) => {
+          console.log(`📦 Préchargement du profil: ${profileId}`);
+        }}
+      />
+    ),
+    [handleCardPress]
+  );
+
+  // Dimensions pour optimisation FlatList
+  const CARD_WIDTH = 280;
+  const CARD_SPACING = Spacing.m;
+
+  const getItemLayout = useCallback((data: any, index: number) => ({
+    length: CARD_WIDTH + CARD_SPACING,
+    offset: (CARD_WIDTH + CARD_SPACING) * index,
+    index,
+  }), []);
+
   if (isLoading && !isRefetching) {
     return <LoadingScreen message="Chargement des professionnels..." />;
   }
@@ -260,7 +288,7 @@ function ProsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <ScrollView
         refreshControl={
           <RefreshControl
@@ -270,6 +298,7 @@ function ProsScreen() {
           />
         }
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
         {/* Section Autour de moi */}
         <View style={styles.sectionContainer}>
@@ -279,25 +308,33 @@ function ProsScreen() {
             </Text>
             {isLoadingLocation && <ActivityIndicator size="small" color={Colors.primary.accent} />}
           </View>
-          <ScrollView
-            horizontal={true}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[
-              styles.scrollViewContent,
-              isTablet && styles.scrollViewContentTablet,
-            ]}
-            removeClippedSubviews={true}
-          >
-            {prosNearMe.length > 0 ? (
-              prosNearMe.map((item) => renderCard(item, true))
-            ) : (
-              <View style={styles.emptyState}>
-                <Text variant="body" color="course">
-                  Aucun professionnel à proximité
-                </Text>
-              </View>
-            )}
-          </ScrollView>
+          {prosNearMe.length > 0 ? (
+            <FlatList
+              data={prosNearMe}
+              renderItem={({ item }) => renderProItem({ item, index: 0 }, true)}
+              keyExtractor={(item) => item.id}
+              horizontal={true}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={[
+                styles.scrollViewContent,
+                isTablet && styles.scrollViewContentTablet,
+              ]}
+              getItemLayout={getItemLayout}
+              windowSize={5}
+              initialNumToRender={3}
+              maxToRenderPerBatch={2}
+              removeClippedSubviews={true}
+              snapToInterval={CARD_WIDTH + CARD_SPACING}
+              snapToAlignment="start"
+              decelerationRate="fast"
+            />
+          ) : (
+            <View style={styles.emptyState}>
+              <Text variant="body" color="course">
+                Aucun professionnel à proximité
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Sections par division */}
@@ -312,22 +349,30 @@ function ProsScreen() {
                   {division}
                 </Text>
               </View>
-              <ScrollView
+              <FlatList
+                data={pros}
+                renderItem={({ item }) => renderProItem({ item, index: 0 }, false)}
+                keyExtractor={(item) => item.id}
                 horizontal={true}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={[
                   styles.scrollViewContent,
                   isTablet && styles.scrollViewContentTablet,
                 ]}
+                getItemLayout={getItemLayout}
+                windowSize={5}
+                initialNumToRender={3}
+                maxToRenderPerBatch={2}
                 removeClippedSubviews={true}
-              >
-                {pros.map((item) => renderCard(item, false))}
-              </ScrollView>
+                snapToInterval={CARD_WIDTH + CARD_SPACING}
+                snapToAlignment="start"
+                decelerationRate="fast"
+              />
             </View>
           );
         })}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -335,6 +380,9 @@ export default ProsScreen;
 
 const styles = StyleSheet.create({
   container: commonStyles.container,
+  scrollContent: {
+    paddingBottom: Spacing.xl, // Espace pour éviter la tab bar
+  },
   sectionContainer: {
     marginTop: Spacing.l,
   },

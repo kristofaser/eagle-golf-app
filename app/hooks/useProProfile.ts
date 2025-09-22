@@ -7,6 +7,7 @@ import {
   AggregatedProProfile,
 } from '@/services/profile-aggregated.service';
 import { useAppStore } from '@/stores/useAppStore';
+import { logger } from '@/utils/logger';
 
 interface ProProfileData {
   profile: FullProfile;
@@ -26,13 +27,13 @@ export function useProProfile(profileId: string, enabled = true) {
     queryKey: ['proProfile', profileId],
     queryFn: async (): Promise<ProProfileData> => {
       const startTime = Date.now();
-      console.log(`🔄 Chargement du profil: ${profileId}`);
+      logger.dev(`🔄 Chargement du profil: ${profileId}`);
 
       // Utiliser le nouveau service agrégé pour une seule requête optimisée
       try {
         const aggregatedData = await profileAggregatedService.getAggregatedProProfile(profileId);
         const loadTime = Date.now() - startTime;
-        console.log(`✅ Profil chargé en ${loadTime}ms (agrégé)`);
+        logger.dev(`✅ Profil chargé en ${loadTime}ms (agrégé)`);
 
         return {
           profile: aggregatedData.profile,
@@ -59,7 +60,7 @@ export function useProProfile(profileId: string, enabled = true) {
         const pricing = pricingResult.status === 'fulfilled' ? pricingResult.value : [];
 
         const loadTime = Date.now() - startTime;
-        console.log(`⚠️ Profil chargé en ${loadTime}ms (fallback)`);
+        logger.dev(`⚠️ Profil chargé en ${loadTime}ms (fallback)`);
 
         return {
           profile,
@@ -78,11 +79,11 @@ export function useProProfile(profileId: string, enabled = true) {
     // Vérifier si déjà en cache
     const cached = queryClient.getQueryData(['proProfile', targetProfileId]);
     if (cached) {
-      console.log(`💾 Profil ${targetProfileId} déjà en cache`);
+      logger.dev(`💾 Profil ${targetProfileId} déjà en cache`);
       return;
     }
 
-    console.log(`📦 Préchargement du profil: ${targetProfileId}`);
+    logger.dev(`📦 Préchargement du profil: ${targetProfileId}`);
     await queryClient.prefetchQuery({
       queryKey: ['proProfile', targetProfileId],
       queryFn: async () => {

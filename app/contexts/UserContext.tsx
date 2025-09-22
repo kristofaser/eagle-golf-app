@@ -10,7 +10,7 @@ import { supabase } from '@/utils/supabase/client';
 import { AuthUser, Profile } from '@/utils/supabase/auth.types';
 import { useSessionContext } from './SessionContext';
 import { useAsyncOperation } from '@/hooks/useAsyncOperation';
-
+import { logger } from '@/utils/logger';
 interface UserContextValue {
   loading: boolean;
   error: Error | null;
@@ -53,7 +53,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           } = await supabase.auth.getUser();
           
           if (user && user.id === userId) {
-            console.warn('🚨 UserContext: Profil manquant détecté pour utilisateur authentifié:', userId);
+            logger.warn('🚨 UserContext: Profil manquant détecté pour utilisateur authentifié:', userId);
             
             // Vérifier si c'est un problème de création incomplète
             const { data: authUser } = await supabase.auth.getUser();
@@ -63,7 +63,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             if (isRecentlyCreated) {
               // 🚨 NOUVEAUX COMPTES : Ne pas déconnecter immédiatement
               // Laisser le temps à la création différée de profil amateur
-              console.warn('⏳ UserContext: Profil manquant pour nouveau compte, attente création différée...');
+              logger.warn('⏳ UserContext: Profil manquant pour nouveau compte, attente création différée...');
               
               // Ne pas déconnecter pour l'instant, laisser la chance à la création différée
               // Le profil sera rechargé automatiquement via l'effet dans SessionContext
@@ -72,7 +72,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               // Comptes anciens : comportement normal (vraie suppression admin)
               try {
                 await supabase.auth.signOut();
-                console.log('✅ UserContext: Déconnexion déclenchée pour profil manquant (compte ancien)');
+                logger.dev('✅ UserContext: Déconnexion déclenchée pour profil manquant (compte ancien)');
                 
                 Alert.alert(
                   'Compte supprimé',
@@ -81,7 +81,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                 );
                 
               } catch (error) {
-                console.error('❌ UserContext: Erreur lors de signOut:', error);
+                logger.error('❌ UserContext: Erreur lors de signOut:', error);
               }
               
               return null;
@@ -131,7 +131,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setUser(authUser);
         return authUser;
       } catch (error) {
-        console.error('Error loading user profile:', error);
+        logger.error('Error loading user profile:', error);
         return null;
       }
     },
@@ -162,7 +162,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } else if (user) {
       // Pas de session, nettoyer SEULEMENT si l'utilisateur existe
       // Évite la boucle infinie en vérifiant que user n'est pas déjà null
-      console.log('🧹 Nettoyage du profil utilisateur après déconnexion');
+      logger.dev('🧹 Nettoyage du profil utilisateur après déconnexion');
       setUser(null);
     }
     // RETIRER user?.id des dépendances pour casser la boucle circulaire

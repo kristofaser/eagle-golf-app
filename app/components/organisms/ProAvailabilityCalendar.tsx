@@ -339,6 +339,10 @@ export const ProAvailabilityCalendar: React.FC<ProAvailabilityCalendarProps> = (
           style={[styles.navButton, !canGoPrevious() && styles.navButtonDisabled]}
           onPress={goToPreviousMonth}
           disabled={!canGoPrevious()}
+          accessibilityRole="button"
+          accessibilityLabel="Mois précédent"
+          accessibilityHint="Navigue vers le mois précédent du calendrier"
+          accessibilityState={{ disabled: !canGoPrevious() }}
         >
           <Ionicons
             name="chevron-back"
@@ -353,6 +357,10 @@ export const ProAvailabilityCalendar: React.FC<ProAvailabilityCalendarProps> = (
           style={[styles.navButton, !canGoNext() && styles.navButtonDisabled]}
           onPress={goToNextMonth}
           disabled={!canGoNext()}
+          accessibilityRole="button"
+          accessibilityLabel="Mois suivant"
+          accessibilityHint="Navigue vers le mois suivant du calendrier"
+          accessibilityState={{ disabled: !canGoNext() }}
         >
           <Ionicons
             name="chevron-forward"
@@ -424,11 +432,11 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.l,
   },
   navButton: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 20,
+    borderRadius: 22,
     backgroundColor: Colors.ui.lightBackground,
   },
   navButtonDisabled: {

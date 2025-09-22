@@ -4,8 +4,9 @@
  */
 
 import { supabase } from '@/utils/supabase/client';
-import { ImagePickerResult } from '@/hooks/useUnifiedImagePicker';
+import { ImageResult } from '@/hooks/useImageUpload';
 import * as ImageManipulator from 'expo-image-manipulator';
+import { logger } from '@/utils/logger';
 
 export interface DocumentUploadResult {
   url: string;
@@ -37,7 +38,7 @@ class DocumentUploadService {
     // TODO: Une fois les politiques RLS configurées, revenir à 'return supabase;'
     // Pour l'instant, on utilise le client normal mais on va créer les politiques manuellement
 
-    console.log(
+    logger.dev(
       '🔒 Utilisation du client utilisateur (les politiques RLS doivent être configurées)'
     );
     return supabase;
@@ -50,13 +51,13 @@ class DocumentUploadService {
     // ✅ Bucket documents assumé existant (créé via Supabase Dashboard)
     // Les politiques RLS empêchent la création programmatique du bucket
     // mais le bucket est déjà configuré et fonctionnel
-    console.log('📦 Utilisation du bucket documents existant');
+    logger.dev('📦 Utilisation du bucket documents existant');
   }
 
   /**
    * Valide un fichier avant upload
    */
-  private validateFile(file: ImagePickerResult): { isValid: boolean; error?: string } {
+  private validateFile(file: ImageResult): { isValid: boolean; error?: string } {
     // Vérifier la taille
     if (file.fileSize && file.fileSize > this.MAX_FILE_SIZE) {
       return {
@@ -79,7 +80,7 @@ class DocumentUploadService {
 
     // Vérifier le type MIME si disponible
     if (file.type && !this.VALIDATION_TYPES.includes(file.type)) {
-      console.log('❌ Type MIME rejeté:', file.type, 'vs autorisés:', this.VALIDATION_TYPES);
+      logger.dev('❌ Type MIME rejeté:', file.type, 'vs autorisés:', this.VALIDATION_TYPES);
       return {
         isValid: false,
         error: `Format de fichier non autorisé (${file.type}). Utilisez JPG, PNG ou PDF.`,
@@ -98,7 +99,7 @@ class DocumentUploadService {
         };
       }
 
-      console.log(`🔧 SIMULATOR FIX: Type générique "image" avec extension .${extension} accepté`);
+      logger.dev(`🔧 SIMULATOR FIX: Type générique "image" avec extension .${extension} accepté`);
     }
 
     // 🔧 PATCH TEMPORAIRE pour iOS Simulator
@@ -114,8 +115,8 @@ class DocumentUploadService {
         };
       }
 
-      console.log('⚠️ SIMULATOR MODE: Validation par extension uniquement (.${extension})');
-      console.log('📱 Sur device physique, le type MIME sera probablement disponible');
+      logger.dev(`⚠️ SIMULATOR MODE: Validation par extension uniquement (.${extension})`);
+      logger.dev('📱 Sur device physique, le type MIME sera probablement disponible');
     }
 
     return { isValid: true };
@@ -136,7 +137,7 @@ class DocumentUploadService {
   /**
    * Détermine l'extension du fichier depuis l'URI ou le type MIME
    */
-  private getFileExtension(file: ImagePickerResult): string {
+  private getFileExtension(file: ImageResult): string {
     // Essayer d'extraire depuis le type MIME d'abord
     if (file.type) {
       const mimeToExt: Record<string, string> = {
@@ -147,7 +148,7 @@ class DocumentUploadService {
       };
       const extension = mimeToExt[file.type];
       if (extension) {
-        console.log(`📄 Extension depuis MIME type: ${file.type} → .${extension}`);
+        logger.dev(`📄 Extension depuis MIME type: ${file.type} → .${extension}`);
         return extension;
       }
     }
@@ -156,7 +157,7 @@ class DocumentUploadService {
     const uriParts = file.uri.split('.');
     const extension = uriParts[uriParts.length - 1]?.toLowerCase();
 
-    console.log(`📁 Extension depuis URI: ${file.uri} → .${extension}`);
+    logger.dev(`📁 Extension depuis URI: ${file.uri} → .${extension}`);
 
     // Normaliser jpeg → jpg
     if (extension === 'jpeg') return 'jpg';
@@ -177,21 +178,21 @@ class DocumentUploadService {
     };
 
     const mimeType = mimeMap[cleanExtension] || 'image/jpeg';
-    console.log(`📄 Inférence MIME: .${cleanExtension} → ${mimeType}`);
+    logger.dev(`📄 Inférence MIME: .${cleanExtension} → ${mimeType}`);
     return mimeType;
   }
 
   /**
    * Compresse une image pour optimiser la taille tout en gardant la lisibilité
    */
-  private async compressImage(file: ImagePickerResult): Promise<ImagePickerResult> {
+  private async compressImage(file: ImageResult): Promise<ImageResult> {
     try {
       // Taille cible optimale pour documents d'identité
       const MAX_WIDTH = 1500;
       const MAX_HEIGHT = 1200;
       const COMPRESSION_QUALITY = 0.8; // 80% après redimensionnement
 
-      console.log('🗜️ Compression image:', {
+      logger.dev('🗜️ Compression image:', {
         originalSize: `${file.width}x${file.height}`,
         originalFileSize: file.fileSize ? `${Math.round(file.fileSize / 1024)}KB` : 'unknown',
       });
@@ -207,7 +208,7 @@ class DocumentUploadService {
             height: Math.min(file.height, MAX_HEIGHT),
           },
         });
-        console.log('📏 Redimensionnement nécessaire');
+        logger.dev('📏 Redimensionnement nécessaire');
       }
 
       // Appliquer les transformations si nécessaires
@@ -217,7 +218,7 @@ class DocumentUploadService {
           format: ImageManipulator.SaveFormat.JPEG, // Toujours JPEG pour documents
         });
 
-        console.log('✅ Image compressée:', {
+        logger.dev('✅ Image compressée:', {
           newSize: `${result.width}x${result.height}`,
           newUri: result.uri.split('/').pop(),
         });
@@ -231,11 +232,11 @@ class DocumentUploadService {
         };
       }
 
-      console.log('ℹ️ Aucune compression nécessaire');
+      logger.dev('ℹ️ Aucune compression nécessaire');
       return file;
     } catch (error) {
-      console.error('⚠️ Erreur compression image:', error);
-      console.log('📷 Utilisation image originale en fallback');
+      logger.error('⚠️ Erreur compression image:', error);
+      logger.dev('📷 Utilisation image originale en fallback');
       return file; // Fallback vers image originale
     }
   }
@@ -245,11 +246,11 @@ class DocumentUploadService {
    */
   async uploadDocument(
     userId: string,
-    file: ImagePickerResult,
+    file: ImageResult,
     documentType: DocumentType
   ): Promise<DocumentUploadResult> {
     try {
-      console.log(`📤 Upload document ${documentType} pour user ${userId}`);
+      logger.dev(`📤 Upload document ${documentType} pour user ${userId}`);
 
       // Validation du fichier
       const validation = this.validateFile(file);
@@ -275,15 +276,15 @@ class DocumentUploadService {
         );
       }
 
-      console.log('📁 Chemin du fichier:', filePath);
-      console.log('📄 Type MIME validé:', contentType);
-      console.log('📏 Image optimisée:', {
+      logger.dev('📁 Chemin du fichier:', filePath);
+      logger.dev('📄 Type MIME validé:', contentType);
+      logger.dev('📏 Image optimisée:', {
         size: `${optimizedFile.width}x${optimizedFile.height}`,
         originalSize: file.fileSize ? `${Math.round(file.fileSize / 1024)}KB` : 'unknown',
       });
 
       // 🔧 FIX React Native: Convertir l'URI en ArrayBuffer pour Supabase
-      console.log("📤 Lecture du fichier optimisé depuis l'URI...");
+      logger.dev("📤 Lecture du fichier optimisé depuis l'URI...");
       const response = await fetch(optimizedFile.uri);
       if (!response.ok) {
         throw new Error(`Impossible de lire le fichier: ${response.statusText}`);
@@ -292,7 +293,7 @@ class DocumentUploadService {
       const arrayBuffer = await response.arrayBuffer();
       const uint8Array = new Uint8Array(arrayBuffer);
 
-      console.log('📦 ArrayBuffer créé:', {
+      logger.dev('📦 ArrayBuffer créé:', {
         byteLength: arrayBuffer.byteLength,
         sizeMB: Math.round((arrayBuffer.byteLength / 1024 / 1024) * 100) / 100,
       });
@@ -307,7 +308,7 @@ class DocumentUploadService {
         });
 
       if (error) {
-        console.error('❌ Erreur upload Supabase:', error);
+        logger.error('❌ Erreur upload Supabase:', error);
         throw new Error(`Échec de l'upload: ${error.message}`);
       }
 
@@ -321,7 +322,7 @@ class DocumentUploadService {
         .createSignedUrl(data.path, 3600); // 1 heure
 
       if (urlError) {
-        console.error('⚠️ Erreur génération URL signée:', urlError);
+        logger.error('⚠️ Erreur génération URL signée:', urlError);
         // Continuer avec l'URL publique si la signature échoue
       }
 
@@ -330,7 +331,7 @@ class DocumentUploadService {
       // 🔍 Validation post-upload : vérifier que le fichier n'est pas vide
       await this.validateUploadedFile(data.path);
 
-      console.log('✅ Document uploadé avec succès:', {
+      logger.dev('✅ Document uploadé avec succès:', {
         path: data.path,
         url: finalUrl,
         size: file.fileSize || 0,
@@ -342,7 +343,7 @@ class DocumentUploadService {
         size: arrayBuffer.byteLength,
       };
     } catch (error: unknown) {
-      console.error(`❌ Erreur upload document ${documentType}:`, error);
+      logger.error(`❌ Erreur upload document ${documentType}:`, error);
       throw error;
     }
   }
@@ -352,18 +353,18 @@ class DocumentUploadService {
    */
   async deleteDocument(filePath: string): Promise<void> {
     try {
-      console.log('🗑️ Suppression du document:', filePath);
+      logger.dev('🗑️ Suppression du document:', filePath);
 
       const { error } = await this.storageClient.storage.from(this.BUCKET_NAME).remove([filePath]);
 
       if (error) {
-        console.error('❌ Erreur suppression:', error);
+        logger.error('❌ Erreur suppression:', error);
         throw new Error(`Impossible de supprimer le document: ${error.message}`);
       }
 
-      console.log('✅ Document supprimé avec succès');
+      logger.dev('✅ Document supprimé avec succès');
     } catch (error: unknown) {
-      console.error('❌ Erreur lors de la suppression:', error);
+      logger.error('❌ Erreur lors de la suppression:', error);
       throw error;
     }
   }
@@ -380,13 +381,13 @@ class DocumentUploadService {
         });
 
       if (error) {
-        console.error('❌ Erreur vérification existence:', error);
+        logger.error('❌ Erreur vérification existence:', error);
         return false;
       }
 
       return data && data.length > 0;
     } catch (error) {
-      console.error('❌ Erreur vérification document:', error);
+      logger.error('❌ Erreur vérification document:', error);
       return false;
     }
   }
@@ -403,24 +404,24 @@ class DocumentUploadService {
         });
 
       if (error) {
-        console.warn('⚠️ Impossible de valider la taille du fichier:', error);
+        logger.warn('⚠️ Impossible de valider la taille du fichier:', error);
         return; // Ne pas bloquer si la validation échoue
       }
 
       const uploadedFile = data?.[0];
       if (uploadedFile && uploadedFile.metadata?.size === 0) {
-        console.error('🚨 FICHIER VIDE DÉTECTÉ:', filePath);
+        logger.error('🚨 FICHIER VIDE DÉTECTÉ:', filePath);
         throw new Error('Le fichier uploadé est vide (0 bytes). Veuillez réessayer.');
       }
 
       if (uploadedFile) {
-        console.log(
+        logger.dev(
           '✅ Validation taille:',
           `${Math.round((uploadedFile.metadata?.size || 0) / 1024)}KB`
         );
       }
     } catch (error) {
-      console.error('❌ Erreur validation fichier:', error);
+      logger.error('❌ Erreur validation fichier:', error);
       // Re-lancer l'erreur si c'est un fichier vide
       if (error instanceof Error && error.message.includes('vide')) {
         throw error;
@@ -440,7 +441,7 @@ class DocumentUploadService {
       });
 
       if (error) {
-        console.error('❌ Erreur liste documents:', error);
+        logger.error('❌ Erreur liste documents:', error);
         return [];
       }
 
@@ -453,7 +454,7 @@ class DocumentUploadService {
         })) || []
       );
     } catch (error) {
-      console.error('❌ Erreur listing documents:', error);
+      logger.error('❌ Erreur listing documents:', error);
       return [];
     }
   }

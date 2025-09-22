@@ -52,7 +52,7 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
               handleClose();
               // Rediriger vers la page de connexion
               router.replace('/login');
-            } catch (error: any) {
+            } catch (error) {
               Alert.alert('Erreur', 'Une erreur est survenue lors de la suppression du compte');
             } finally {
               setIsLoading(false);

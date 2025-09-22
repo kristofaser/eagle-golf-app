@@ -10,9 +10,9 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
   Pressable,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Colors, BorderRadius, Spacing, Typography } from '@/constants/theme';
 import { HugeiconsIcon } from '@hugeicons/react-native';
 import {
@@ -76,6 +76,9 @@ const defaultCourseImages = [
   'https://images.unsplash.com/photo-1540979388789-6cee28a1cdc9?w=400&h=300&fit=crop&crop=center',
 ];
 
+// Blurhash pour les images de parcours (vert/nature)
+const COURSE_BLURHASH = 'L9F5?I00~W?F00-;IURj_Nt7M{t7';
+
 export const ParcoursCard: React.FC<ParcoursCardProps> = ({
   data,
   onPress,
@@ -121,7 +124,19 @@ export const ParcoursCard: React.FC<ParcoursCardProps> = ({
     <Pressable style={cardStyles} onPress={handlePress}>
       {/* Image du parcours */}
       <View style={styles.imageContainer}>
-        <Image source={{ uri: courseImage }} style={imageStyles} resizeMode="cover" />
+        <Image
+          source={{
+            uri: courseImage,
+            cacheKey: `course-${data.id}`
+          }}
+          style={imageStyles}
+          contentFit="cover"
+          placeholder={COURSE_BLURHASH}
+          placeholderContentFit="cover"
+          transition={250}
+          cachePolicy="memory-disk"
+          priority={size === 'large' ? 'high' : 'normal'}
+        />
 
         {/* Bouton favori en overlay */}
         <TouchableOpacity

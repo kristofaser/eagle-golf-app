@@ -39,10 +39,10 @@ export const ANIMATION_CONFIG = {
   // Couleurs constantes (évite re-création de strings)
   COLORS: {
     BACKGROUND_OVERLAY: '#000000', // Legacy - remplacé par blur
-    BLUR_TINT: Colors.ui.cardBackground,
-    BLUR_TINT_LIGHT: Colors.neutral.background,
-    CARD_BACKGROUND: Colors.ui.cardBackground,
-    HEADER_BACKGROUND: Colors.ui.cardBackground,
+    BLUR_TINT: Colors.neutral.white,
+    BLUR_TINT_LIGHT: Colors.neutral.cloud,
+    CARD_BACKGROUND: Colors.neutral.white,
+    HEADER_BACKGROUND: Colors.neutral.white,
   },
 
   // Configuration du flou pour performance optimale
@@ -78,6 +78,31 @@ export const RESPONSIVE_CONFIG = {
     CARD_MARGIN: 15,
     SCROLL_PADDING: 15,
   },
+} as const;
+
+/**
+ * Configuration pour gestes et navigation
+ */
+export const GESTURE_CONFIG = {
+  // Seuils de détection des gestes
+  SWIPE_THRESHOLD: 100, // Distance minimum pour détecter un swipe
+  VELOCITY_THRESHOLD: 800, // Vélocité minimum pour détecter un swipe rapide
+  PAN_THRESHOLD: 10, // Distance minimum pour détecter un pan
+
+  // Zones de déclenchement
+  EDGE_SWIPE_WIDTH: 20, // Largeur de la zone de swipe depuis le bord
+  BACK_GESTURE_AREA: 100, // Zone active pour le geste retour
+
+  // Réponse tactile
+  HAPTIC_INTENSITY: 'light' as const, // light, medium, heavy
+  HAPTIC_ON_PRESS: true,
+  HAPTIC_ON_SWIPE: true,
+
+  // Animation de feedback
+  PRESS_SCALE: 0.95,
+  PRESS_OPACITY: 0.8,
+  RELEASE_SCALE: 1.0,
+  RELEASE_OPACITY: 1.0,
 } as const;
 
 /**

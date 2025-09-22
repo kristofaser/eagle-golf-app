@@ -1,5 +1,13 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFonts } from 'expo-font';
+import {
+  Inter_300Light,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+  Inter_800ExtraBold
+} from '@expo-google-fonts/inter';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
@@ -15,6 +23,7 @@ import { queryClient } from '@/services/query/queryClient';
 import { ProProfileProvider } from '@/contexts/ProProfileContext';
 import { StripeProviderWrapper } from '@/contexts/StripeContext';
 import '@/utils/polyfills';
+import { DURATIONS, EASING_CURVES } from '@/constants/animations';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -39,6 +48,8 @@ function RootLayoutContent() {
               <Stack
                 screenOptions={{
                   headerShown: false,
+                  animation: 'slide_from_right',
+                  animationDuration: DURATIONS.NORMAL,
                 }}
               >
                 <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -50,6 +61,7 @@ function RootLayoutContent() {
                     headerShown: false,
                     presentation: 'modal',
                     animation: 'slide_from_bottom',
+                    animationDuration: DURATIONS.MEDIUM,
                   }}
                 />
                 <Stack.Screen
@@ -58,6 +70,7 @@ function RootLayoutContent() {
                     headerShown: false,
                     presentation: 'modal',
                     animation: 'slide_from_bottom',
+                    animationDuration: DURATIONS.MEDIUM,
                   }}
                 />
                 <Stack.Screen
@@ -66,6 +79,7 @@ function RootLayoutContent() {
                     headerShown: false,
                     presentation: 'card',
                     animation: 'fade',
+                    animationDuration: DURATIONS.FAST,
                   }}
                 />
                 <Stack.Screen
@@ -74,6 +88,7 @@ function RootLayoutContent() {
                     headerShown: false,
                     presentation: 'card',
                     animation: 'fade',
+                    animationDuration: DURATIONS.NORMAL,
                   }}
                 />
                 <Stack.Screen
@@ -82,6 +97,16 @@ function RootLayoutContent() {
                     headerShown: false,
                     presentation: 'card',
                     animation: 'fade_from_bottom',
+                    animationDuration: DURATIONS.NORMAL,
+                  }}
+                />
+                <Stack.Screen
+                  name="booking-modal"
+                  options={{
+                    headerShown: false,
+                    presentation: 'modal',
+                    animation: 'slide_from_bottom',
+                    animationDuration: DURATIONS.MEDIUM,
                   }}
                 />
               </Stack>
@@ -97,6 +122,16 @@ function RootLayoutContent() {
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     ...FontAwesome.font,
+    // Police mono disponible
+    'SpaceMono': require('../assets/fonts/SpaceMono-Regular.ttf'),
+    // Polices Inter pour le design system
+    'Inter-Light': Inter_300Light,
+    'Inter': Inter_400Regular,
+    'Inter-Regular': Inter_400Regular,
+    'Inter-Medium': Inter_500Medium,
+    'Inter-SemiBold': Inter_600SemiBold,
+    'Inter-Bold': Inter_700Bold,
+    'Inter-ExtraBold': Inter_800ExtraBold,
   });
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.

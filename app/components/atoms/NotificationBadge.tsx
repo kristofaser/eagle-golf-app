@@ -6,6 +6,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { Colors } from '@/constants/theme';
 
 export interface NotificationBadgeProps {
   /**
@@ -50,7 +51,7 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
   count,
   showZero = false,
   size = 'medium',
-  color = '#ef4444',
+  color = Colors.semantic.error.default,
   position = 'top-right',
   style,
   textStyle,
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
   },
   text: {
-    color: '#ffffff',
+    color: Colors.neutral.white,
     fontWeight: '600',
     textAlign: 'center',
   },

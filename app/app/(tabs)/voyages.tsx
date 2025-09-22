@@ -1,7 +1,16 @@
 import React, { useCallback } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, RefreshControl, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  interpolate,
+  Extrapolation,
+} from 'react-native-reanimated';
 import { Colors, Spacing } from '@/constants/theme';
+import { DURATIONS, EASING_CURVES, PARALLAX_CONFIG } from '@/constants/animations';
 import { Text } from '@/components/atoms';
 import { TripCard, TripData } from '@/components/molecules/TripCard';
 import { TravelNotificationToggle } from '@/components/molecules/TravelNotificationToggle';
@@ -10,6 +19,7 @@ import { useResponsiveCardSize } from '@/hooks/useResponsiveCardSize';
 import { useTravelNotifications } from '@/hooks/useTravelNotifications';
 import { useTrips } from '@/hooks/useTrips';
 import { Trip } from '@/types/trip';
+import { logger } from '@/utils/logger';
 
 // Fonction pour mapper les données Trip vers TripData pour le composant
 const mapTripToTripData = (trip: Trip): TripData => ({
@@ -32,30 +42,78 @@ export default function VoyagesScreen() {
   const { isEnabled, toggleNotifications } = useTravelNotifications();
   const { completedTrips, fullTrips, isLoading, error, refresh } = useTrips();
 
+  // Animation values for smooth scrolling
+  const scrollY = useSharedValue(0);
+
+  // Scroll handler optimized for 60fps
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      'worklet';
+      scrollY.value = event.contentOffset.y;
+    },
+  });
+
+  // Header parallax animation
+  const headerAnimatedStyle = useAnimatedStyle(() => {
+    'worklet';
+    const opacity = interpolate(
+      scrollY.value,
+      [0, 100],
+      [1, 0.8],
+      Extrapolation.CLAMP
+    );
+
+    const translateY = interpolate(
+      scrollY.value,
+      [0, 200],
+      [0, -50],
+      Extrapolation.CLAMP
+    );
+
+    return {
+      opacity,
+      transform: [{ translateY }],
+    };
+  }, []);
+
+  // Section fade-in animation
+  const sectionAnimatedStyle = useAnimatedStyle(() => {
+    'worklet';
+    const opacity = interpolate(
+      scrollY.value,
+      [0, 50],
+      [0.7, 1],
+      Extrapolation.CLAMP
+    );
+
+    return {
+      opacity,
+    };
+  }, []);
+
   const handleTripPress = useCallback((trip: TripData) => {
     // Pas d'action pour le moment
-    console.log('Tap sur voyage:', trip.title);
+    logger.dev('Tap sur voyage:', trip.title);
   }, []);
 
   const handleTripHover = useCallback((tripId: string) => {
-    console.log(`📦 Préchargement du voyage: ${tripId}`);
+    logger.dev(`📦 Préchargement du voyage: ${tripId}`);
   }, []);
 
   const handleNotificationToggle = useCallback(async (enabled: boolean) => {
     const success = await toggleNotifications(enabled);
     if (success) {
-      console.log(`📢 Alertes voyage ${enabled ? 'activées' : 'désactivées'}`);
+      logger.dev(`📢 Alertes voyage ${enabled ? 'activées' : 'désactivées'}`);
     } else {
-      console.error('❌ Erreur lors de la mise à jour des alertes voyage');
+      logger.error('❌ Erreur lors de la mise à jour des alertes voyage');
     }
   }, [toggleNotifications]);
 
   const renderTripCard = useCallback(
-    (trip: Trip) => {
-      const tripData = mapTripToTripData(trip);
+    ({ item }: { item: Trip }) => {
+      const tripData = mapTripToTripData(item);
       return (
         <TripCard
-          key={trip.id}
           data={tripData}
           onPress={handleTripPress}
           onHover={handleTripHover}
@@ -64,6 +122,16 @@ export default function VoyagesScreen() {
     },
     [handleTripPress, handleTripHover]
   );
+
+  // Optimisation FlatList avec dimensions pré-calculées
+  const CARD_WIDTH = 280; // Largeur standard des cartes
+  const CARD_SPACING = Spacing.m;
+
+  const getItemLayout = useCallback((data: any, index: number) => ({
+    length: CARD_WIDTH + CARD_SPACING,
+    offset: (CARD_WIDTH + CARD_SPACING) * index,
+    index,
+  }), []);
 
   // Afficher le loader pendant le chargement
   if (isLoading) {
@@ -92,13 +160,16 @@ export default function VoyagesScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <StatusBar style="dark" />
       
       <View style={styles.contentContainer}>
-        <ScrollView
+        <Animated.ScrollView
+          onScroll={scrollHandler}
+          scrollEventThrottle={1}
           showsVerticalScrollIndicator={false}
           style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
           refreshControl={
             <RefreshControl
               refreshing={isLoading}
@@ -107,47 +178,63 @@ export default function VoyagesScreen() {
             />
           }>
           {/* Section Voyages récents */}
-          <View style={styles.sectionContainer}>
-            <View style={styles.sectionHeader}>
+          <Animated.View style={[styles.sectionContainer, sectionAnimatedStyle]}>
+            <Animated.View style={[styles.sectionHeader, headerAnimatedStyle]}>
               <Text variant="h3" color="charcoal" style={styles.sectionTitle}>
                 Voyages récents
               </Text>
-            </View>
-            <ScrollView
+            </Animated.View>
+            <FlatList
+              data={completedTrips}
+              renderItem={renderTripCard}
+              keyExtractor={(item) => item.id}
               horizontal={true}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={[
                 styles.scrollViewContent,
                 isTablet && styles.scrollViewContentTablet,
               ]}
+              getItemLayout={getItemLayout}
+              windowSize={5}
+              initialNumToRender={3}
+              maxToRenderPerBatch={2}
               removeClippedSubviews={true}
-            >
-              {completedTrips.map(renderTripCard)}
-            </ScrollView>
-          </View>
+              decelerationRate="fast"
+              snapToInterval={CARD_WIDTH + CARD_SPACING}
+              snapToAlignment="start"
+            />
+          </Animated.View>
 
           {/* Section Voyages complets */}
           {fullTrips.length > 0 && (
-            <View style={styles.sectionContainer}>
-              <View style={styles.sectionHeader}>
+            <Animated.View style={[styles.sectionContainer, sectionAnimatedStyle]}>
+              <Animated.View style={[styles.sectionHeader, headerAnimatedStyle]}>
                 <Text variant="h3" color="charcoal" style={styles.sectionTitle}>
                   Voyages complets
                 </Text>
-              </View>
-              <ScrollView
+              </Animated.View>
+              <FlatList
+                data={fullTrips}
+                renderItem={renderTripCard}
+                keyExtractor={(item) => item.id}
                 horizontal={true}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={[
                   styles.scrollViewContent,
                   isTablet && styles.scrollViewContentTablet,
                 ]}
+                getItemLayout={getItemLayout}
+                windowSize={5}
+                initialNumToRender={3}
+                maxToRenderPerBatch={2}
                 removeClippedSubviews={true}
-              >
-                {fullTrips.map(renderTripCard)}
-              </ScrollView>
-            </View>
+                decelerationRate="fast"
+                snapToInterval={CARD_WIDTH + CARD_SPACING}
+                snapToAlignment="start"
+              />
+            </Animated.View>
           )}
-        </ScrollView>
+        </Animated.ScrollView>
 
         {/* Toggle sticky en bas */}
         <TravelNotificationToggle
@@ -155,7 +242,7 @@ export default function VoyagesScreen() {
           onToggle={handleNotificationToggle}
         />
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -166,6 +253,9 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: Spacing.xl, // Espace pour éviter la tab bar
   },
   centerContent: {
     justifyContent: 'center',

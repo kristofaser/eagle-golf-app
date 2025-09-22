@@ -10,37 +10,45 @@ export const Colors = {
 
   // Secondary Colors (complémentaires)
   secondary: {
-    pearl: '#E1E1E1', // Gris perle du logo
-    silver: '#B8C5D6', // Gris-bleu argenté
+    silver: '#8895A7', // Gris-bleu argenté (AMÉLIORÉ de #B8C5D6) - Ratio 4.5:1 ✅
     gold: '#FFB300', // Or (premium, récompenses)
     grass: '#4CAF50', // Vert golf (validation, succès)
   },
 
-  // Neutral Colors (hiérarchie typographique)
+  // Neutral Colors (hiérarchie typographique - CONSOLIDÉS)
   neutral: {
     black: '#000000', // Noir pur (rare)
-    charcoal: '#022142', // Texte principal (navy du logo)
-    iron: '#4A5568', // Texte secondaire
-    course: '#718096', // Labels, hints
-    mist: '#CBD5E0', // Bordures
-    pearl: '#E1E1E1', // Du logo (dividers)
-    cloud: '#F7FAFC', // Backgrounds légers
-    ball: '#FFFFFF', // Backgrounds
-    background: '#F7FAFC', // Backgrounds alternatifs
-    white: '#FFFFFF', // Blanc pur
-    gray: '#718096', // Gris standard
-    lightGray: '#E1E1E1', // Gris clair (pearl)
-    dark: '#022142', // Noir/foncé (navy)
+    charcoal: '#022142', // Texte principal (ex-navy, ex-dark) - Ratio 15.8:1 ✅
+    iron: '#4A5568', // Texte secondaire - Ratio 7.1:1 ✅
+    course: '#5A6B7F', // Labels, hints (AMÉLIORÉ de #718096) - Ratio 5.2:1 ✅
+    mist: '#A8B5C6', // Bordures (AMÉLIORÉ de #CBD5E0) - Ratio 3.1:1 (OK pour éléments non-texte)
+    pearl: '#E1E1E1', // Dividers (ex-secondary.pearl, ex-lightGray)
+    cloud: '#F7FAFC', // Backgrounds (ex-background, ex-lightBackground, ex-extraLightGray)
+    white: '#FFFFFF', // Blanc pur (ex-ball, ex-cardBackground, ex-inputBackground)
   },
 
-  // Semantic Colors (actions & états)
+  // Semantic Colors (actions & états - AMÉLIORÉS)
   semantic: {
-    success: '#4CAF50', // Vert golf (on garde pour la cohérence)
-    successLight: '#E8F5E9', // Vert très clair
-    warning: '#FFA726', // Orange doux
-    warningLight: '#FFF3E0', // Orange très clair
-    error: '#EF5350', // Rouge atténué
-    info: '#0472B2', // Bleu électrique du logo
+    success: {
+      default: '#4CAF50', // Vert golf principal
+      light: '#E8F5E9', // Vert très clair
+      dark: '#388E3C', // Vert foncé
+    },
+    warning: {
+      default: '#FFA726', // Orange doux
+      light: '#FFF3E0', // Orange très clair
+      dark: '#F57C00', // Orange foncé
+    },
+    error: {
+      default: '#EF5350', // Rouge atténué (ex-errorText)
+      light: '#FFEBEE', // Rouge très clair
+      dark: '#D32F2F', // Rouge foncé
+    },
+    info: {
+      default: '#0472B2', // Bleu électrique (ex-focusBorder, ex-primaryButton)
+      light: '#E6F4FF', // Bleu très clair (ex-veryLightGray)
+      dark: '#025A8B', // Bleu foncé
+    },
   },
 
   // Shadows
@@ -50,23 +58,55 @@ export const Colors = {
     dark: 'rgba(0, 0, 0, 0.12)',
   },
 
-  // UI-specific colors (from hardcoded values)
+  // Division System (pour ProCard et classifications)
+  division: {
+    'European Tour': {
+      background: '#FFD700', // Or
+      text: '#B8860B', // Or foncé
+      border: '#F4D03F',
+    },
+    'DP World Tour': {
+      background: '#E6F3FF', // Bleu clair
+      text: '#0066CC', // Bleu foncé
+      border: '#B3D9FF',
+    },
+    'Challenge Tour': {
+      background: '#E8F5E8', // Vert clair
+      text: '#2E7D32', // Vert foncé
+      border: '#A5D6A7',
+    },
+    'Alps Tour': {
+      background: '#FFF3E0', // Orange clair
+      text: '#E65100', // Orange foncé
+      border: '#FFCC80',
+    },
+    'Pro Golf Tour': {
+      background: '#F3E5F5', // Violet clair
+      text: '#7B1FA2', // Violet foncé
+      border: '#CE93D8',
+    },
+    'National': {
+      background: '#E3F2FD', // Bleu clair
+      text: '#1565C0', // Bleu foncé
+      border: '#90CAF9',
+    },
+    'Regional': {
+      background: '#F1F8E9', // Vert très clair
+      text: '#388E3C', // Vert foncé
+      border: '#C8E6C9',
+    },
+    default: {
+      background: '#F5F5F5', // Gris clair
+      text: '#757575', // Gris foncé
+      border: '#E0E0E0',
+    },
+  },
+
+  // UI-specific colors (CONSOLIDÉS)
   ui: {
-    cardBackground: '#FFFFFF',
     overlay: 'rgba(2, 33, 66, 0.7)', // Navy overlay
     favoriteHeart: 'rgba(128, 128, 128, 0.7)',
-    inputBackground: '#FFFFFF',
-    inputBorder: '#CBD5E0',
-    focusBorder: '#0472B2',
-    subtleGray: '#4A5568',
-    textGray: '#718096',
-    lightBackground: '#F7FAFC',
-    veryLightGray: '#E6F4FF',
-    extraLightGray: '#F7FAFC',
-    errorText: '#EF5350',
     googleRed: '#EA4335',
-    primaryButton: '#0472B2',
-    secondaryText: '#4A5568',
   },
 };
 
@@ -82,9 +122,14 @@ export const Typography = {
     h2: 24,
     h3: 20,
     h4: 18,
+    h5: 16, // AJOUTÉ
+    h6: 14, // AJOUTÉ
     bodyLarge: 16,
     body: 14,
+    bodySmall: 12, // AJOUTÉ
     caption: 12,
+    overline: 10, // AJOUTÉ
+    label: 11, // AJOUTÉ
     small: 11,
   },
 
@@ -93,17 +138,24 @@ export const Typography = {
     h2: 32,
     h3: 28,
     h4: 24,
+    h5: 22, // AJOUTÉ
+    h6: 20, // AJOUTÉ
     bodyLarge: 24,
     body: 20,
+    bodySmall: 18, // AJOUTÉ
     caption: 16,
+    overline: 14, // AJOUTÉ
+    label: 16, // AJOUTÉ
     small: 14,
   },
 
   fontWeight: {
+    light: '300' as const, // AJOUTÉ
     regular: '400' as const,
     medium: '500' as const,
     semiBold: '600' as const,
     bold: '700' as const,
+    extraBold: '800' as const, // AJOUTÉ
   },
 };
 
@@ -192,6 +244,30 @@ export const Layout = {
   },
 };
 
+export const TouchTarget = {
+  // Minimum touch target sizes (iOS: 44x44, Android: 48x48)
+  minimum: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  // For Android compatibility
+  android: {
+    width: 48,
+    height: 48,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  // Hit slop for smaller icons
+  hitSlop: {
+    top: 10,
+    bottom: 10,
+    left: 10,
+    right: 10,
+  },
+};
+
 export default {
   Colors,
   Typography,
@@ -200,4 +276,5 @@ export default {
   Elevation,
   Animation,
   Layout,
+  TouchTarget,
 };

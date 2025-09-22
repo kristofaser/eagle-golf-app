@@ -39,9 +39,9 @@ serve(async (req) => {
       );
     }
 
-    // Vérifier la signature du webhook
+    // Vérifier la signature du webhook (version asynchrone pour Deno)
     const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') ?? '';
-    const event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    const event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
 
     console.log(`Webhook reçu: ${event.type}`);
 

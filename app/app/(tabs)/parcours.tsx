@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { StyleSheet, View, RefreshControl, TouchableOpacity, FlatList, Image } from 'react-native';
+import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
+import { StyleSheet, View, RefreshControl, TouchableOpacity, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { FlashList } from '@shopify/flash-list';
 import { GolfCoursesMapExpo } from '@/components/organisms/GolfCoursesMapExpo';
 import { CourseBottomSheet } from '@/components/organisms/CourseBottomSheet';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
@@ -12,6 +14,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { golfParcoursService, GolfParcours } from '@/services/golf-parcours.service';
 import { MapData, DepartmentCluster } from '@/types/clustering';
 import * as Location from 'expo-location';
+import { logger } from '@/utils/logger';
 
 const defaultCourseImages = [
   'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=400&h=300&fit=crop&crop=center',
@@ -49,7 +52,7 @@ function ParcoursScreen() {
 
   const loadCourses = async () => {
     try {
-      console.log('🔄 Chargement des données de carte...');
+      logger.dev('🔄 Chargement des données de carte...');
 
       // Obtenir la géolocalisation utilisateur
       let userCoords = null;
@@ -64,10 +67,10 @@ function ParcoursScreen() {
             userLatitude: location.coords.latitude,
             userLongitude: location.coords.longitude,
           };
-          console.log('📍 Position utilisateur obtenue:', location.coords.latitude, location.coords.longitude);
+          logger.dev('📍 Position utilisateur obtenue:', location.coords.latitude, location.coords.longitude);
         }
       } catch (locError) {
-        console.warn('⚠️ Erreur géolocalisation:', locError);
+        logger.warn('⚠️ Erreur géolocalisation', locError);
       }
 
       // Récupérer toutes les données pour le système dynamique
@@ -85,7 +88,7 @@ function ParcoursScreen() {
       setAllClusters(fullMapData.allClusters);
       setAllGolfs(fullMapData.allGolfs);
       
-      console.log('✅ Données de carte chargées (système dynamique):', {
+      logger.dev('✅ Données de carte chargées (système dynamique):', {
         totalGolfs: fullMapData.totalGolfs,
         clusters: fullMapData.allClusters.length,
         userLocation: !!userCoords,
@@ -127,7 +130,7 @@ function ParcoursScreen() {
 
       setCoursesData(coursesWithStats);
     } catch (err) {
-      console.error('❌ Erreur chargement parcours:', err);
+      logger.error('❌ Erreur chargement parcours', err);
       setFailed('Impossible de charger les parcours');
     } finally {
       if (!error) setSuccess();
@@ -190,7 +193,7 @@ function ParcoursScreen() {
   // Le clic sur cluster n'est plus nécessaire avec le système dynamique Airbnb
   // Le zoom se fait automatiquement selon le niveau de zoom de la carte
 
-  const renderCourse = ({ item, index }: { item: CourseCardData; index: number }) => (
+  const renderCourse = useCallback(({ item, index }: { item: CourseCardData; index: number }) => (
     <TouchableOpacity
       style={styles.courseCard}
       onPress={() => handleCoursePress(item)}
@@ -236,7 +239,7 @@ function ParcoursScreen() {
         )}
       </View>
     </TouchableOpacity>
-  );
+  ), [handleCoursePress]);
 
   if (loading && !refreshing) {
     return <LoadingScreen message="Chargement des parcours..." />;
@@ -247,13 +250,14 @@ function ParcoursScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={[]}>
       {viewMode === 'list' ? (
         <View style={styles.container}>
-          <FlatList
+          <FlashList
             data={coursesData}
             renderItem={renderCourse}
             keyExtractor={(item) => item.id}
+            estimatedItemSize={180}
             contentContainerStyle={styles.listContent}
             refreshControl={
               <RefreshControl
@@ -295,7 +299,7 @@ function ParcoursScreen() {
           onClose={handleBottomSheetClose}
         />
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -329,7 +333,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xl,
   },
   courseCard: {
-    backgroundColor: Colors.neutral.ball,
+    backgroundColor: Colors.neutral.white,
     borderRadius: BorderRadius.large,
     marginBottom: Spacing.m,
     ...Elevation.medium,

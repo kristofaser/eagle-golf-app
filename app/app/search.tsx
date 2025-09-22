@@ -1,258 +1,422 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
-  Image,
   SafeAreaView,
   TextInput,
+  FlatList,
+  Modal,
 } from 'react-native';
 import { useRouter, Stack } from 'expo-router';
-import { Text, Icon, Badge } from '@/components/atoms';
-import { Colors, Spacing, BorderRadius, Elevation, Typography } from '@/constants/theme';
+import { Text } from '@/components/atoms';
+import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { ProCard } from '@/components/molecules/ProCard';
-import { profileService } from '@/services/profile.service';
-import { golfCourseService, GolfCourse } from '@/services/golf-course.service';
 import { JoueurData } from '@/components/molecules/ContentCard';
 import { Ionicons } from '@expo/vector-icons';
+import { useSearch } from '@/hooks/useSearch';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { calculateDistance, formatDistance } from '@/utils/location';
+import { GolfCourse } from '@/services/golf-course.service';
+import { ProProfileWithDetails } from '@/services/profile.service';
+import { proAvailabilityService } from '@/services/pro-availability.service';
+import { CircleAvatar } from '@/components/atoms/CircleAvatar';
+import { CourseAlertToggle } from '@/components/molecules/CourseAlertToggle';
+import { DivisionBadge } from '@/components/atoms/DivisionBadge';
+import { useAppStore } from '@/stores/useAppStore';
 
-type SearchCategory = 'all' | 'pros' | 'parcours';
+type SearchCategory = 'all' | 'pros' | 'courses';
 
 interface CourseCardData extends GolfCourse {
   active_pros?: number;
 }
 
-const defaultCourseImages = [
-  'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=400&h=300&fit=crop&crop=center',
-  'https://images.unsplash.com/photo-1593111774240-d529f12cf4bb?w=400&h=300&fit=crop&crop=center',
-  'https://images.unsplash.com/photo-1540979388789-6cee28a1cdc9?w=400&h=300&fit=crop&crop=center',
-  'https://images.unsplash.com/photo-1633328761239-8d45c3b77de9?w=400&h=300&fit=crop&crop=center',
-];
+interface TransformedProData extends JoueurData {
+  original: ProProfileWithDetails;
+}
+
 
 export default function SearchScreen() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<SearchCategory>('all');
-  const [loading, setLoading] = useState(false);
-  const [prosResults, setProsResults] = useState<JoueurData[]>([]);
-  const [coursesResults, setCoursesResults] = useState<CourseCardData[]>([]);
-  const inputRef = React.useRef<TextInput>(null);
+  const inputRef = useRef<TextInput>(null);
 
-  // Focus sur le champ de recherche après le montage
-  useEffect(() => {
-    // Délai pour éviter les conflits avec l'animation de navigation
+  // Hook de recherche principal
+  const {
+    query,
+    setQuery,
+    category,
+    setCategory,
+    data: searchData,
+    isLoading,
+    prosCount,
+    coursesCount,
+    totalCount,
+  } = useSearch({
+    initialCategory: 'all',
+    debounceMs: 300,
+  });
+
+  // Hook de géolocalisation
+  const { location: userLocation } = useGeolocation();
+
+  // Hook favoris
+  const { favoritePros, toggleFavoritePro } = useAppStore();
+
+  // État pour la modal pros disponibles
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<CourseCardData | null>(null);
+  const [availablePros, setAvailablePros] = useState<any[]>([]);
+  const [loadingPros, setLoadingPros] = useState(false);
+
+  // État pour stocker les pros de chaque parcours (pour les avatars dans les cards)
+  const [coursesPros, setCoursesPros] = useState<Record<string, any[]>>({});
+
+  // Fonctions utilitaires (déplacées avant leur utilisation)
+  const calculateAge = useCallback((dateOfBirth: string): number => {
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+
+    return age;
+  }, []);
+
+  const calculateExperienceYears = useCallback((experience: any): number => {
+    if (!experience || typeof experience !== 'object') return 5;
+
+    // Si l'experience est un objet avec des années, calculer la moyenne
+    const years = Object.values(experience).filter(val => typeof val === 'number') as number[];
+    if (years.length > 0) {
+      return Math.round(years.reduce((sum, year) => sum + year, 0) / years.length);
+    }
+
+    // Estimation par défaut
+    return 5;
+  }, []);
+
+  // Transformation des données pour l'affichage
+  const { prosResults, coursesResults } = React.useMemo(() => {
+    if (!searchData) {
+      return { prosResults: [], coursesResults: [] };
+    }
+
+    // Transformer les pros en JoueurData avec vraies données
+    const transformedPros: TransformedProData[] = (searchData.pros || []).map((pro) => {
+      const proProfile = pro.pro_profiles;
+
+      // Calculer la moyenne des compétences pour un score global
+      const skills = [
+        proProfile?.skill_driving,
+        proProfile?.skill_irons,
+        proProfile?.skill_wedging,
+        proProfile?.skill_chipping,
+        proProfile?.skill_putting,
+        proProfile?.skill_mental,
+      ].filter(Boolean) as number[];
+
+      const averageSkill = skills.length > 0
+        ? skills.reduce((sum, skill) => sum + skill, 0) / skills.length
+        : 0;
+
+      // Extraire les spécialités basées sur les scores les plus élevés
+      const skillNames = ['driving', 'irons', 'wedging', 'chipping', 'putting', 'mental'];
+      const skillScores = [
+        proProfile?.skill_driving || 0,
+        proProfile?.skill_irons || 0,
+        proProfile?.skill_wedging || 0,
+        proProfile?.skill_chipping || 0,
+        proProfile?.skill_putting || 0,
+        proProfile?.skill_mental || 0,
+      ];
+
+      const topSkills = skillNames
+        .map((name, index) => ({ name, score: skillScores[index] }))
+        .filter(skill => skill.score >= 7)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 2)
+        .map(skill => skill.name);
+
+      return {
+        id: pro.id,
+        title: `${pro.first_name} ${pro.last_name}`,
+        imageUrl: pro.avatar_url || 'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=400&h=300&fit=crop&crop=center',
+        type: 'joueur' as const,
+        age: proProfile?.date_of_birth ? calculateAge(proProfile.date_of_birth) : undefined,
+        region: pro.city || 'Non spécifié',
+        handicap: proProfile?.division ? `Division ${proProfile.division}` : 'Pro',
+        scoreAverage: averageSkill > 0 ? Math.round(72 - (averageSkill - 5)) : undefined,
+        specialite: topSkills.length > 0 ? topSkills.join(', ') : 'Polyvalent',
+        styleJeu: proProfile?.experience ?
+          Object.keys(proProfile.experience).join(', ') : 'Adaptatif',
+        experience: calculateExperienceYears(proProfile?.experience),
+        circuits: proProfile?.company_status === 'auto_entrepreneur' ? 'Indépendant' :
+                 proProfile?.company_status === 'micro_entreprise' ? 'Micro-entreprise' : 'Professionnel',
+        meilleurResultat: proProfile?.world_ranking ?
+          `Classement mondial: ${proProfile.world_ranking}` : 'Professionnel certifié',
+        victoires: Math.floor(averageSkill / 2), // Estimation basée sur les compétences
+        tarif: '120€', // TODO: récupérer depuis pro_pricing
+        rating: Math.min(5, Math.max(3, averageSkill / 2)),
+        isPremium: proProfile?.world_ranking ? proProfile.world_ranking <= 1000 : false,
+        isAvailable: proProfile?.is_globally_available ?? true,
+        original: pro,
+      };
+    });
+
+    // Transformer les parcours avec vraies données
+    const transformedCourses: CourseCardData[] = (searchData.golfCourses || []).map((course) => ({
+      ...course,
+      // Utiliser les vraies données de la base
+      holes_count: course.holes_count || 18,
+      par: course.par || 72,
+      active_pros: 0, // TODO: implémenter un comptage réel via une query
+    }));
+
+    return {
+      prosResults: transformedPros,
+      coursesResults: transformedCourses,
+    };
+  }, [searchData, calculateAge, calculateExperienceYears]);
+
+  // Focus automatique sur le champ de recherche
+  React.useEffect(() => {
     const timer = setTimeout(() => {
       inputRef.current?.focus();
     }, 300);
     return () => clearTimeout(timer);
   }, []);
 
-  // Gestionnaire de changement de texte robuste
-  const handleTextChange = useCallback((text: string) => {
-    // S'assurer que le texte est bien une chaîne
-    const safeText = text || '';
-    setSearchQuery(safeText);
-  }, []);
-
-  // Fonction de recherche
-  const performSearch = useCallback(async (query: string, category: SearchCategory) => {
-    if (query.trim().length < 2) {
-      setProsResults([]);
-      setCoursesResults([]);
-      return;
+  // Charger les pros pour tous les parcours quand les résultats changent
+  React.useEffect(() => {
+    if (coursesResults.length > 0) {
+      loadProsForAllCourses(coursesResults);
     }
+  }, [coursesResults, loadProsForAllCourses]);
 
-    setLoading(true);
+  // Gestionnaire de changement de texte
+  const handleTextChange = useCallback((text: string) => {
+    const safeText = text || '';
+    setQuery(safeText);
+  }, [setQuery]);
+
+  // Gestionnaire de sélection de catégorie
+  const handleCategoryChange = useCallback((newCategory: SearchCategory) => {
+    setCategory(newCategory === 'parcours' ? 'courses' : newCategory);
+  }, [setCategory]);
+
+  // Fonction pour charger les pros disponibles sur un parcours (pour la modal)
+  const loadProsForCourse = useCallback(async (course: CourseCardData) => {
+    setLoadingPros(true);
     try {
-      // Recherche des pros
-      if (category === 'all' || category === 'pros') {
-        const { data: pros, error: prosError } = await profileService.listProProfiles(
-          {},
-          { limit: 50 }
-        );
-
-        if (!prosError && pros) {
-          // Filtrer les pros par nom
-          const filteredPros = pros.filter((pro) => {
-            const fullName = `${pro.first_name} ${pro.last_name}`.toLowerCase();
-            const cityName = (pro.city || '').toLowerCase();
-            const searchLower = query.toLowerCase();
-            return fullName.includes(searchLower) || cityName.includes(searchLower);
-          });
-
-          // Transformer en JoueurData
-          const transformedPros: JoueurData[] = filteredPros
-            .map((pro) => {
-              const proProfile = pro.pro_profiles;
-
-              if (!proProfile) return null;
-
-              const specialties = proProfile.specialties || [];
-              const playStyle = proProfile.play_style || [];
-
-              return {
-                id: pro.id,
-                title: `${pro.first_name} ${pro.last_name}`,
-                imageUrl:
-                  pro.avatar_url ||
-                  'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=400&h=300&fit=crop&crop=center',
-                type: 'joueur' as const,
-                age: 30 + Math.floor(Math.random() * 15),
-                region: pro.city || 'Paris',
-                handicap: proProfile.handicap ? `+${proProfile.handicap}` : '+0',
-                scoreAverage: 72 - (proProfile.handicap || 0),
-                specialite: specialties.join(', ') || 'Polyvalent',
-                styleJeu: playStyle.join(', ') || 'Adaptatif',
-                experience: proProfile.years_experience || 5,
-                circuits: proProfile.professional_status || 'Professionnel',
-                meilleurResultat: proProfile.certifications?.join(', ') || 'Certifié PGA',
-                victoires: Math.floor(Math.random() * 10) + 1,
-                tarif: '120€', // Prix par défaut, sera remplacé par les vrais prix depuis pro_pricing
-                rating: 4.5 + Math.random() * 0.5,
-                isPremium: false, // À déterminer selon les prix dans pro_pricing
-                isAvailable: false,
-              };
-            })
-            .filter(Boolean) as JoueurData[];
-
-          setProsResults(transformedPros);
-        }
-      }
-
-      // Recherche des parcours
-      if (category === 'all' || category === 'parcours') {
-        const { data: courses, error: coursesError } =
-          await golfCourseService.listGolfCoursesWithLocation();
-
-        if (!coursesError && courses) {
-          // Filtrer les parcours par nom ou ville
-          const filteredCourses = courses.filter((course) => {
-            const courseName = (course.name || '').toLowerCase();
-            const cityName = (course.city || '').toLowerCase();
-            const searchLower = query.toLowerCase();
-            return courseName.includes(searchLower) || cityName.includes(searchLower);
-          });
-
-          // Ajouter les stats
-          const coursesWithStats = await Promise.all(
-            filteredCourses.map(async (course) => {
-              const { data: stats } = await golfCourseService.getCourseStats(course.id);
-              return {
-                ...course,
-                active_pros: stats?.activePros || 0,
-              };
-            })
-          );
-
-          setCoursesResults(coursesWithStats);
-        }
+      const { data: pros, error } = await proAvailabilityService.getProsAvailableOnCourse(course.id);
+      if (error) {
+        console.error('Erreur chargement pros:', error);
+        setAvailablePros([]);
+      } else {
+        setAvailablePros(pros || []);
       }
     } catch (error) {
-      console.error('Erreur lors de la recherche:', error);
+      console.error('Erreur chargement pros:', error);
+      setAvailablePros([]);
     } finally {
-      setLoading(false);
+      setLoadingPros(false);
     }
   }, []);
 
-  // Débounce la recherche
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      performSearch(searchQuery, selectedCategory);
-    }, 300);
+  // Fonction pour charger les pros de tous les parcours (pour les avatars dans les cards)
+  const loadProsForAllCourses = useCallback(async (courses: CourseCardData[]) => {
+    const prosPromises = courses.map(async (course) => {
+      try {
+        const { data: pros, error } = await proAvailabilityService.getProsAvailableOnCourse(course.id);
+        return {
+          courseId: course.id,
+          pros: error ? [] : (pros || [])
+        };
+      } catch (error) {
+        console.error('Erreur chargement pros pour parcours:', course.id, error);
+        return {
+          courseId: course.id,
+          pros: []
+        };
+      }
+    });
 
-    return () => clearTimeout(timer);
-  }, [searchQuery, selectedCategory, performSearch]);
+    try {
+      const results = await Promise.all(prosPromises);
+      const newCoursesPros: Record<string, any[]> = {};
+      results.forEach(({ courseId, pros }) => {
+        newCoursesPros[courseId] = pros;
+      });
+      setCoursesPros(newCoursesPros);
+    } catch (error) {
+      console.error('Erreur chargement pros pour tous les parcours:', error);
+    }
+  }, []);
 
-  // Handlers
+  // Handlers de navigation
   const handleProPress = useCallback(
-    (pro: JoueurData) => {
+    (pro: TransformedProData) => {
       router.push(`/profile/${pro.id}`);
     },
     [router]
   );
 
   const handleCoursePress = useCallback(
-    (course: CourseCardData) => {
-      router.push(`/parcours/${course.id}`);
+    async (course: CourseCardData) => {
+      setSelectedCourse(course);
+      setIsModalVisible(true);
+      await loadProsForCourse(course);
+    },
+    [loadProsForCourse]
+  );
+
+  const handleModalProPress = useCallback(
+    (pro: any) => {
+      setIsModalVisible(false);
+      router.push(`/profile/${pro.id}`);
     },
     [router]
   );
 
   // Render des résultats
-  const renderProResult = (pro: JoueurData) => (
+  const renderProResult = useCallback((pro: TransformedProData) => (
     <ProCard
       key={pro.id}
       data={pro}
-      onPress={handleProPress}
-      onCardPress={handleProPress}
+      onPress={() => handleProPress(pro)}
+      onCardPress={() => handleProPress(pro)}
       isHidden={false}
     />
-  );
+  ), [handleProPress]);
 
-  const renderCourseResult = (course: CourseCardData, index: number) => (
-    <TouchableOpacity
-      key={course.id}
-      style={styles.courseCard}
-      onPress={() => handleCoursePress(course)}
-      activeOpacity={0.9}
-    >
-      <Image
-        source={{
-          uri: course.images?.[0] || defaultCourseImages[index % defaultCourseImages.length],
-        }}
-        style={styles.courseImage}
-      />
-      <View style={styles.courseInfo}>
-        <Text variant="h4" color="charcoal" numberOfLines={1} style={styles.courseName}>
-          {course.name}
-        </Text>
-        <View style={styles.locationRow}>
-          <Icon name="location-on" size={14} color={Colors.neutral.course} family="MaterialIcons" />
-          <Text variant="caption" color="course">
-            {course.city}
+  const renderCourseResult = useCallback((course: CourseCardData, index: number) => {
+    // Calculer la distance réelle
+    const distance = userLocation && course.latitude && course.longitude
+      ? formatDistance(calculateDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          parseFloat(course.latitude.toString()),
+          parseFloat(course.longitude.toString())
+        ))
+      : "-- km";
+
+    // Récupérer les pros disponibles pour ce parcours
+    const coursePros = coursesPros[course.id] || [];
+
+    // Construire le nom avec département
+    const nameWithDepartment = course.department
+      ? `${course.name} - ${course.department}`
+      : course.name;
+
+    return (
+      <TouchableOpacity
+        key={course.id}
+        style={styles.courseCard}
+        onPress={() => handleCoursePress(course)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.courseHeader}>
+          <Text variant="body" color="charcoal" numberOfLines={1} style={styles.courseName}>
+            {nameWithDepartment}
+          </Text>
+          <Text variant="caption" color="accent" style={styles.courseDistance}>
+            {distance}
           </Text>
         </View>
-        <View style={styles.courseDetails}>
-          {course.hole_count && (
-            <Badge variant="default" size="small">
-              {course.hole_count} trous
-            </Badge>
-          )}
-          {course.par && (
-            <Badge variant="default" size="small">
-              Par {course.par}
-            </Badge>
-          )}
-          {course.active_pros > 0 && (
-            <Badge variant="success" size="small">
-              {course.active_pros} pros
-            </Badge>
+
+        {/* Section des avatars des pros */}
+        <View style={styles.prosSection}>
+          {coursePros.length > 0 ? (
+            <View style={styles.prosAvatars}>
+              {coursePros.slice(0, 4).map((pro, idx) => (
+                <CircleAvatar
+                  key={pro.id}
+                  avatarUrl={pro.avatar_url}
+                  firstName={pro.first_name}
+                  lastName={pro.last_name}
+                  size={36}
+                  style={[
+                    styles.proAvatar,
+                    idx > 0 && { marginLeft: -10 } // Superposition légère ajustée
+                  ]}
+                  borderWidth={2}
+                  borderColor={Colors.neutral.white}
+                />
+              ))}
+              {coursePros.length > 4 && (
+                <View style={[styles.moreProsBadge, { marginLeft: -10 }]}>
+                  <Text style={styles.moreProsBadgeText}>
+                    +{coursePros.length - 4}
+                  </Text>
+                </View>
+              )}
+            </View>
+          ) : (
+            <View style={styles.noProsContainer}>
+              <Text variant="caption" color="course" style={styles.noProsText}>
+                Aucun pro disponible
+              </Text>
+              <CourseAlertToggle
+                golfCourseId={course.id}
+                courseName={course.name}
+                compact={true}
+                style={styles.compactAlertToggle}
+              />
+            </View>
           )}
         </View>
-      </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  }, [handleCoursePress, userLocation, coursesPros]);
 
   const hasResults = prosResults.length > 0 || coursesResults.length > 0;
+  const showEmptyState = query.length >= 2 && !isLoading && !hasResults;
+
+  // Dimensions pour optimisation FlatList
+  const CARD_WIDTH = 280;
+  const CARD_SPACING = Spacing.m;
+
+  const getItemLayout = useCallback((data: any, index: number) => ({
+    length: CARD_WIDTH + CARD_SPACING,
+    offset: (CARD_WIDTH + CARD_SPACING) * index,
+    index,
+  }), []);
+
 
   return (
     <>
-      <Stack.Screen 
-        options={{ 
+      <Stack.Screen
+        options={{
           title: 'Recherche',
           headerShown: true,
-          headerStyle: { 
+          headerBackVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{ marginLeft: 16, padding: 8 }}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={24}
+                color={Colors.neutral.charcoal}
+              />
+            </TouchableOpacity>
+          ),
+          headerStyle: {
             backgroundColor: Colors.neutral.white,
           },
-          headerTitleStyle: { 
+          headerTitleStyle: {
             color: Colors.neutral.charcoal,
             fontSize: 18,
             fontWeight: '600',
           },
           headerShadowVisible: false,
-        }} 
+        }}
       />
       <SafeAreaView style={styles.container}>
       
@@ -267,7 +431,7 @@ export default function SearchScreen() {
           />
           <TextInput
             ref={inputRef}
-            value={searchQuery}
+            value={query}
             onChangeText={handleTextChange}
             placeholder="Rechercher des pros ou des parcours..."
             placeholderTextColor={Colors.neutral.course}
@@ -279,8 +443,8 @@ export default function SearchScreen() {
             editable={true}
             keyboardType="default"
           />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
+          {query.length > 0 && (
+            <TouchableOpacity onPress={() => setQuery('')} style={styles.clearButton}>
               <Ionicons name="close-circle" size={20} color={Colors.neutral.course} />
             </TouchableOpacity>
           )}
@@ -293,33 +457,33 @@ export default function SearchScreen() {
           <TouchableOpacity
             style={[
               styles.categoryButton,
-              selectedCategory === 'all' && styles.categoryButtonActive,
+              category === 'all' && styles.categoryButtonActive,
             ]}
-            onPress={() => setSelectedCategory('all')}
+            onPress={() => handleCategoryChange('all')}
           >
-            <Text variant="body" color={selectedCategory === 'all' ? 'white' : 'charcoal'}>
+            <Text variant="body" color={category === 'all' ? 'white' : 'charcoal'}>
               Tous
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.categoryButton,
-              selectedCategory === 'pros' && styles.categoryButtonActive,
+              category === 'pros' && styles.categoryButtonActive,
             ]}
-            onPress={() => setSelectedCategory('pros')}
+            onPress={() => handleCategoryChange('pros')}
           >
-            <Text variant="body" color={selectedCategory === 'pros' ? 'white' : 'charcoal'}>
+            <Text variant="body" color={category === 'pros' ? 'white' : 'charcoal'}>
               Pros
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.categoryButton,
-              selectedCategory === 'parcours' && styles.categoryButtonActive,
+              category === 'courses' && styles.categoryButtonActive,
             ]}
-            onPress={() => setSelectedCategory('parcours')}
+            onPress={() => handleCategoryChange('parcours')}
           >
-            <Text variant="body" color={selectedCategory === 'parcours' ? 'white' : 'charcoal'}>
+            <Text variant="body" color={category === 'courses' ? 'white' : 'charcoal'}>
               Parcours
             </Text>
           </TouchableOpacity>
@@ -327,66 +491,219 @@ export default function SearchScreen() {
       </View>
 
       {/* Résultats */}
-      {loading ? (
+      {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.primary.accent} />
+          <Text variant="caption" color="course" style={{ marginTop: Spacing.s }}>
+            Recherche en cours...
+          </Text>
+        </View>
+      ) : query.length < 2 ? (
+        <View style={styles.emptyState}>
+          <Ionicons name="search" size={48} color={Colors.neutral.mist} />
+          <Text variant="body" color="course" style={styles.emptyStateText}>
+            Tapez au moins 2 caractères pour lancer la recherche
+          </Text>
+        </View>
+      ) : showEmptyState ? (
+        <View style={styles.emptyState}>
+          <Ionicons name="search-outline" size={48} color={Colors.neutral.mist} />
+          <Text variant="h3" color="course">
+            Aucun résultat
+          </Text>
+          <Text variant="body" color="course" style={styles.emptyStateSubtext}>
+            Essayez avec d'autres mots-clés
+          </Text>
         </View>
       ) : (
-        <ScrollView
-          style={styles.resultsContainer}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
-        >
-          {searchQuery.length < 2 ? (
-            <View style={styles.emptyState}>
-              <Ionicons name="search" size={48} color={Colors.neutral.mist} />
-              <Text variant="body" color="course" style={styles.emptyStateText}>
-                Tapez au moins 2 caractères pour lancer la recherche
-              </Text>
-            </View>
-          ) : !hasResults ? (
-            <View style={styles.emptyState}>
-              <Text variant="h3" color="course">
-                Aucun résultat
-              </Text>
-              <Text variant="body" color="course" style={styles.emptyStateSubtext}>
-                Essayez avec d'autres mots-clés
-              </Text>
-            </View>
-          ) : (
-            <>
-              {/* Résultats des pros */}
-              {prosResults.length > 0 &&
-                (selectedCategory === 'all' || selectedCategory === 'pros') && (
-                  <View style={styles.section}>
-                    <Text variant="h3" color="charcoal" style={styles.sectionTitle}>
-                      Professionnels ({prosResults.length})
-                    </Text>
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={styles.horizontalScroll}
-                    >
-                      {prosResults.map(renderProResult)}
-                    </ScrollView>
-                  </View>
-                )}
+        <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+          <View style={styles.resultsContainer}>
+            {/* Résultats des pros */}
+            {prosResults.length > 0 &&
+              (category === 'all' || category === 'pros') && (
+                <View style={styles.section}>
+                  <Text variant="h3" color="charcoal" style={styles.sectionTitle}>
+                    Professionnels ({prosCount})
+                  </Text>
+                  <FlatList
+                    data={prosResults}
+                    renderItem={({ item }) => renderProResult(item)}
+                    keyExtractor={(item) => item.id}
+                    horizontal={true}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.horizontalScroll}
+                    getItemLayout={getItemLayout}
+                    windowSize={5}
+                    initialNumToRender={3}
+                    maxToRenderPerBatch={2}
+                    removeClippedSubviews={true}
+                    snapToInterval={CARD_WIDTH + CARD_SPACING}
+                    snapToAlignment="start"
+                    decelerationRate="fast"
+                  />
+                </View>
+              )}
 
-              {/* Résultats des parcours */}
-              {coursesResults.length > 0 &&
-                (selectedCategory === 'all' || selectedCategory === 'parcours') && (
-                  <View style={styles.section}>
-                    <Text variant="h3" color="charcoal" style={styles.sectionTitle}>
-                      Parcours ({coursesResults.length})
-                    </Text>
-                    {coursesResults.map((course, index) => renderCourseResult(course, index))}
-                  </View>
-                )}
-            </>
-          )}
+            {/* Résultats des parcours */}
+            {coursesResults.length > 0 &&
+              (category === 'all' || category === 'courses') && (
+                <View style={styles.section}>
+                  <Text variant="h3" color="charcoal" style={styles.sectionTitle}>
+                    Parcours ({coursesCount})
+                  </Text>
+                  <FlatList
+                    data={coursesResults}
+                    renderItem={({ item, index }) => renderCourseResult(item, index)}
+                    keyExtractor={(item) => item.id}
+                    scrollEnabled={false}
+                    initialNumToRender={5}
+                    maxToRenderPerBatch={3}
+                    removeClippedSubviews={true}
+                  />
+                </View>
+              )}
+          </View>
         </ScrollView>
       )}
       </SafeAreaView>
+
+      {/* Modal pros disponibles */}
+      <Modal
+        visible={isModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          {/* Header de la modal */}
+          <View style={styles.modalHeader}>
+            <View style={styles.modalTitleContainer}>
+              <Text variant="h3" color="charcoal" style={styles.modalTitle}>
+                {selectedCourse?.name || 'Pros disponibles'}
+              </Text>
+              {selectedCourse && userLocation && selectedCourse.latitude && selectedCourse.longitude && (
+                <View style={styles.modalDistanceBadge}>
+                  <Text style={styles.modalDistanceText}>
+                    {formatDistance(calculateDistance(
+                      userLocation.latitude,
+                      userLocation.longitude,
+                      parseFloat(selectedCourse.latitude.toString()),
+                      parseFloat(selectedCourse.longitude.toString())
+                    ))}
+                  </Text>
+                </View>
+              )}
+            </View>
+            <TouchableOpacity
+              onPress={() => setIsModalVisible(false)}
+              style={styles.closeButton}
+            >
+              <Ionicons name="close" size={24} color={Colors.neutral.charcoal} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Contenu de la modal */}
+          {loadingPros ? (
+            <View style={styles.modalLoadingContainer}>
+              <ActivityIndicator size="large" color={Colors.primary.accent} />
+              <Text variant="caption" color="course" style={{ marginTop: Spacing.s }}>
+                Chargement des pros...
+              </Text>
+            </View>
+          ) : availablePros.length === 0 ? (
+            <View style={styles.modalEmptyState}>
+              <Ionicons name="person-outline" size={48} color={Colors.neutral.mist} />
+              <Text variant="h3" color="course" style={styles.modalEmptyTitle}>
+                Aucun pro disponible
+              </Text>
+              <Text variant="body" color="course" style={styles.modalEmptySubtext}>
+                Aucun professionnel n'a de créneaux disponibles sur ce parcours pour le moment.
+              </Text>
+              {selectedCourse && (
+                <CourseAlertToggle
+                  golfCourseId={selectedCourse.id}
+                  courseName={selectedCourse.name}
+                  compact={false}
+                  style={styles.modalAlertToggle}
+                />
+              )}
+            </View>
+          ) : (
+            <FlatList
+              data={availablePros}
+              renderItem={({ item }) => {
+                const isFavorite = favoritePros.includes(item.id);
+                const worldRanking = item.pro_profiles?.world_ranking;
+
+                return (
+                  <TouchableOpacity
+                    style={styles.modalProCard}
+                    onPress={() => handleModalProPress(item)}
+                    activeOpacity={0.7}
+                  >
+                    {/* Avatar */}
+                    <CircleAvatar
+                      avatarUrl={item.avatar_url}
+                      firstName={item.first_name}
+                      lastName={item.last_name}
+                      size={40}
+                      style={styles.modalProAvatar}
+                    />
+
+                    {/* Informations principales */}
+                    <View style={styles.modalProInfo}>
+                      <View style={styles.modalProMainInfo}>
+                        <Text variant="h4" color="charcoal" numberOfLines={1} style={styles.modalProName}>
+                          {item.first_name} {item.last_name}
+                        </Text>
+
+                        <View style={styles.modalProBadges}>
+                          <DivisionBadge
+                            division={item.pro_profiles?.division}
+                            size="small"
+                            style={styles.modalDivisionBadge}
+                          />
+
+                          {worldRanking && (
+                            <Text variant="caption" color="course" style={styles.modalWorldRanking}>
+                              RW: {worldRanking}
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* Actions */}
+                    <View style={styles.modalProActions}>
+                      {/* Bouton Favoris */}
+                      <TouchableOpacity
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          toggleFavoritePro(item.id);
+                        }}
+                        style={styles.modalFavoriteButton}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <Ionicons
+                          name={isFavorite ? "heart" : "heart-outline"}
+                          size={20}
+                          color={isFavorite ? Colors.semantic.error.default : Colors.neutral.course}
+                        />
+                      </TouchableOpacity>
+
+                      {/* Flèche navigation */}
+                      <Ionicons name="chevron-forward" size={20} color={Colors.neutral.course} />
+                    </View>
+                  </TouchableOpacity>
+                );
+              }}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.modalList}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
+        </SafeAreaView>
+      </Modal>
     </>
   );
 }
@@ -426,19 +743,27 @@ const styles = StyleSheet.create({
   categoryContainer: {
     paddingVertical: Spacing.s,
     paddingHorizontal: Spacing.m,
-    backgroundColor: Colors.neutral.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.neutral.mist,
+    backgroundColor: 'transparent',
   },
   categoryButton: {
     paddingHorizontal: Spacing.l,
     paddingVertical: Spacing.s,
     marginRight: Spacing.s,
-    borderRadius: BorderRadius.medium,
+    borderRadius: 20,
     backgroundColor: Colors.neutral.mist,
+    shadowColor: Colors.neutral.charcoal,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   categoryButtonActive: {
     backgroundColor: Colors.primary.accent,
+    shadowColor: Colors.primary.accent,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   loadingContainer: {
     flex: 1,
@@ -446,9 +771,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: Spacing.xxl,
   },
-  resultsContainer: {
+  scrollContainer: {
     flex: 1,
-    backgroundColor: Colors.neutral.white,
+  },
+  resultsContainer: {
+    backgroundColor: 'transparent',
+    paddingBottom: Spacing.xl,
   },
   emptyState: {
     flex: 1,
@@ -478,30 +806,176 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.neutral.white,
     borderRadius: BorderRadius.large,
     marginHorizontal: Spacing.m,
-    marginBottom: Spacing.m,
+    marginBottom: Spacing.s,
+    paddingHorizontal: Spacing.m,
+    paddingVertical: Spacing.m,
     borderWidth: 1,
-    borderColor: Colors.ui.inputBorder,
-    overflow: 'hidden',
+    borderColor: Colors.neutral.mist,
   },
-  courseImage: {
-    width: '100%',
-    height: 180,
-    backgroundColor: Colors.neutral.mist,
-  },
-  courseInfo: {
-    padding: Spacing.m,
-  },
-  courseName: {
+  courseHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: Spacing.xs,
   },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xxs,
-    marginBottom: Spacing.s,
+  courseName: {
+    flex: 1,
+    marginRight: Spacing.s,
+  },
+  courseDistance: {
+    fontWeight: '600',
+  },
+  courseLocation: {
+    marginBottom: Spacing.xs,
   },
   courseDetails: {
     flexDirection: 'row',
-    gap: Spacing.s,
+    alignItems: 'center',
+  },
+  prosSection: {
+    marginTop: Spacing.xs,
+  },
+  prosAvatars: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  proAvatar: {
+    // Styles appliqués dans le composant CircleAvatar
+  },
+  moreProsBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.neutral.charcoal,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: Colors.neutral.white,
+  },
+  moreProsBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.neutral.white,
+  },
+  noProsContainer: {
+    // Conteneur pour l'état vide avec toggle
+  },
+  noProsText: {
+    fontStyle: 'italic',
+    marginBottom: Spacing.xs,
+  },
+  compactAlertToggle: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+  },
+  // Styles Modal
+  modalContainer: {
+    flex: 1,
+    backgroundColor: Colors.neutral.background,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingHorizontal: Spacing.m,
+    paddingVertical: Spacing.m,
+    backgroundColor: Colors.neutral.white,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.neutral.mist,
+  },
+  modalTitleContainer: {
+    flex: 1,
+    marginRight: Spacing.m,
+  },
+  modalTitle: {
+    marginBottom: Spacing.xs,
+  },
+  modalDistanceBadge: {
+    backgroundColor: Colors.primary.electric,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+  },
+  modalDistanceText: {
+    color: Colors.neutral.white,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  closeButton: {
+    padding: Spacing.xs,
+  },
+  modalLoadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalEmptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.xl,
+  },
+  modalEmptyTitle: {
+    marginTop: Spacing.m,
+    textAlign: 'center',
+  },
+  modalEmptySubtext: {
+    marginTop: Spacing.s,
+    textAlign: 'center',
+    marginBottom: Spacing.m,
+  },
+  modalAlertToggle: {
+    marginTop: Spacing.m,
+    marginHorizontal: Spacing.m,
+  },
+  modalList: {
+    padding: Spacing.m,
+  },
+  modalProCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.neutral.white,
+    padding: Spacing.m,
+    marginBottom: Spacing.s,
+    borderRadius: BorderRadius.large,
+    borderWidth: 1,
+    borderColor: Colors.neutral.mist,
+  },
+  modalProAvatar: {
+    marginRight: Spacing.s,
+  },
+  modalProInfo: {
+    flex: 1,
+    marginRight: Spacing.s,
+  },
+  modalProMainInfo: {
+    // Container pour nom et badges
+  },
+  modalProName: {
+    marginBottom: Spacing.xs,
+  },
+  modalProBadges: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  modalDivisionBadge: {
+    marginRight: Spacing.xs,
+  },
+  modalWorldRanking: {
+    fontWeight: '600',
+    fontSize: 11,
+  },
+  modalProActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  modalFavoriteButton: {
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: Spacing.xs,
+    marginRight: Spacing.xs,
   },
 });

@@ -10,6 +10,7 @@
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/utils/supabase/client';
+import { logger } from '@/utils/logger';
 
 export interface NotificationBadgeState {
   count: number;
@@ -74,14 +75,14 @@ export function useNotificationBadge(
     const now = Date.now();
     if (!forceRefresh && (now - lastFetchRef.current) < CACHE_DURATION) {
       if (debug) {
-        console.log('🔄 useNotificationBadge: Utilisation du cache');
+        logger.dev('🔄 useNotificationBadge: Utilisation du cache');
       }
       return state.count;
     }
 
     try {
       if (debug) {
-        console.log('📊 useNotificationBadge: Récupération du compteur...', userId);
+        logger.dev('📊 useNotificationBadge: Récupération du compteur...', userId);
       }
 
       // Utiliser la fonction SQL optimisée
@@ -105,13 +106,13 @@ export function useNotificationBadge(
       }));
 
       if (debug) {
-        console.log('✅ useNotificationBadge: Compteur mis à jour:', count);
+        logger.dev('✅ useNotificationBadge: Compteur mis à jour:', count);
       }
 
       return count;
 
     } catch (err) {
-      console.error('❌ Erreur récupération compteur notifications:', err);
+      logger.error('❌ Erreur récupération compteur notifications:', err);
       setState(prev => ({
         ...prev,
         isLoading: false,
@@ -132,7 +133,7 @@ export function useNotificationBadge(
     }));
 
     if (debug) {
-      console.log('➕ useNotificationBadge: Incrément local +', amount);
+      logger.dev('➕ useNotificationBadge: Incrément local +', amount);
     }
   }, [debug]);
 
@@ -147,7 +148,7 @@ export function useNotificationBadge(
     }));
 
     if (debug) {
-      console.log('➖ useNotificationBadge: Décrément local -', amount);
+      logger.dev('➖ useNotificationBadge: Décrément local -', amount);
     }
   }, [debug]);
 
@@ -162,7 +163,7 @@ export function useNotificationBadge(
     }));
 
     if (debug) {
-      console.log('🔄 useNotificationBadge: Reset compteur');
+      logger.dev('🔄 useNotificationBadge: Reset compteur');
     }
   }, [debug]);
 
@@ -179,7 +180,7 @@ export function useNotificationBadge(
     if (!userId || !enablePolling) return;
 
     if (debug) {
-      console.log('⏰ useNotificationBadge: Setup polling', pollingInterval + 'ms');
+      logger.dev('⏰ useNotificationBadge: Setup polling', pollingInterval + 'ms');
     }
 
     pollingIntervalRef.current = setInterval(async () => {

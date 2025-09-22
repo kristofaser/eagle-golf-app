@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Trip, TripStatus } from '@/types/trip';
 import { tripService } from '@/services/trip.service';
+import { logger } from '@/utils/logger';
 
 export const useTrips = () => {
   const [trips, setTrips] = useState<Trip[]>([]);
@@ -35,7 +36,7 @@ export const useTrips = () => {
         setAvailableTrips(available);
       }
     } catch (err) {
-      console.error('Erreur chargement voyages:', err);
+      logger.error('Erreur chargement voyages:', err);
       setError('Impossible de charger les voyages');
     } finally {
       setIsLoading(false);
@@ -68,7 +69,7 @@ export const useTrips = () => {
         }
       }
     } catch (err) {
-      console.error(`Erreur chargement voyages ${status}:`, err);
+      logger.error(`Erreur chargement voyages ${status}:`, err);
       setError(`Impossible de charger les voyages ${status}`);
     } finally {
       setIsLoading(false);
@@ -81,7 +82,7 @@ export const useTrips = () => {
 
     // S'abonner aux changements
     const subscription = tripService.subscribeToTrips((payload) => {
-      console.log('Changement détecté sur les voyages:', payload);
+      logger.dev('Changement détecté sur les voyages:', payload);
 
       // Recharger les données lors d'un changement
       if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE' || payload.eventType === 'DELETE') {

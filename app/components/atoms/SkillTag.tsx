@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, BorderRadius, Spacing } from '@/constants/theme';
-import { Text } from '@/components/atoms';
+import { Text } from './Text';
 
 interface SkillTagProps {
   skill: string;
@@ -28,6 +28,9 @@ const SkillTag: React.FC<SkillTagProps> = ({
           style={styles.videoButton}
           onPress={onVideoPress}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={`Voir la vidéo de ${skill}`}
+          accessibilityHint={`Lecture de la vidéo démonstrative pour la compétence ${skill}`}
         >
           <Ionicons
             name="play-circle"

@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -79,24 +80,22 @@ export default function BookingScreen() {
       );
 
       if (price) {
-        // price est déjà en euros, le convertir en centimes pour les calculs
-        const priceInCents = Math.round(price * 100);
-        const platformFeeInCents = Math.round(priceInCents * 0.2); // 20% de commission
-        const totalInCents = priceInCents + platformFeeInCents;
+        // price est en euros par personne, multiplier par le nombre de joueurs
+        const totalForAllPlayers = price * numberOfPlayers;
+        const platformFee = Math.round(totalForAllPlayers * 0.2); // 20% de commission
+        const total = totalForAllPlayers + platformFee;
 
         setPricing({
-          proFee: priceInCents,
-          platformFee: platformFeeInCents,
-          totalAmount: totalInCents
+          proFee: totalForAllPlayers,
+          platformFee: platformFee,
+          totalAmount: total
         });
       } else {
-        // Prix par défaut si aucun prix trouvé
-        const defaultPriceInCents = 12000; // 120€ par défaut
-        const platformFeeInCents = Math.round(defaultPriceInCents * 0.2);
+        // Aucun prix configuré, ne pas permettre la réservation
         setPricing({
-          proFee: defaultPriceInCents,
-          platformFee: platformFeeInCents,
-          totalAmount: defaultPriceInCents + platformFeeInCents
+          proFee: 0,
+          platformFee: 0,
+          totalAmount: 0
         });
       }
     };
@@ -259,9 +258,10 @@ export default function BookingScreen() {
           headerShown: true,
         }}
       />
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <KeyboardAvoidingView
+          style={styles.keyboardContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
@@ -380,42 +380,52 @@ export default function BookingScreen() {
               <View style={styles.priceBreakdown}>
                 <View style={styles.priceRow}>
                   <Text style={styles.priceLabel}>Honoraires du pro (4h)</Text>
-                  <Text style={styles.priceValue}>{(pricing.proFee / 100).toFixed(2)} €</Text>
+                  <Text style={styles.priceValue}>{pricing.proFee.toFixed(0)} €</Text>
                 </View>
                 <View style={styles.priceRow}>
                   <Text style={styles.priceLabel}>Frais de service</Text>
-                  <Text style={styles.priceValue}>{(pricing.platformFee / 100).toFixed(2)} €</Text>
+                  <Text style={styles.priceValue}>{pricing.platformFee.toFixed(0)} €</Text>
                 </View>
                 <View style={[styles.priceRow, styles.totalRow]}>
                   <Text style={styles.totalLabel}>Total</Text>
-                  <Text style={styles.totalValue}>{(pricing.totalAmount / 100).toFixed(2)} €</Text>
+                  <Text style={styles.totalValue}>{pricing.totalAmount.toFixed(0)} €</Text>
                 </View>
               </View>
             </Animated.View>
 
             {/* Bouton de confirmation */}
             <Animated.View entering={FadeInDown.delay(700)} style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={[styles.confirmButton, submitting && styles.disabledButton]}
-                onPress={handleBooking}
-                disabled={submitting}
-              >
-                {submitting ? (
-                  <ActivityIndicator color="white" />
-                ) : (
-                  <>
-                    <Ionicons name="checkmark-circle" size={24} color="white" />
-                    <Text style={styles.confirmButtonText}>Confirmer la réservation</Text>
-                  </>
-                )}
-              </TouchableOpacity>
+              {pricing.totalAmount > 0 ? (
+                <TouchableOpacity
+                  style={[styles.confirmButton, submitting && styles.disabledButton]}
+                  onPress={handleBooking}
+                  disabled={submitting}
+                >
+                  {submitting ? (
+                    <ActivityIndicator color="white" />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark-circle" size={24} color="white" />
+                      <Text style={styles.confirmButtonText}>Confirmer la réservation</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.noPriceContainer}>
+                  <Ionicons name="information-circle" size={24} color={Colors.neutral.slate} />
+                  <Text style={styles.noPriceText}>
+                    Prix non configuré. Contactez directement le professionnel.
+                  </Text>
+                </View>
+              )}
               <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
                 <Text style={styles.cancelButtonText}>Annuler</Text>
               </TouchableOpacity>
             </Animated.View>
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </>
   );
 }
@@ -423,7 +433,10 @@ export default function BookingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.neutral.background,
+    backgroundColor: Colors.neutral.cloud,
+  },
+  keyboardContainer: {
+    flex: 1,
   },
   centerContent: {
     justifyContent: 'center',
@@ -433,7 +446,7 @@ const styles = StyleSheet.create({
     padding: Spacing.m,
   },
   card: {
-    backgroundColor: Colors.neutral.ball,
+    backgroundColor: Colors.neutral.white,
     borderRadius: BorderRadius.medium,
     padding: Spacing.l,
     marginBottom: Spacing.m,
@@ -585,7 +598,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   confirmButtonText: {
-    color: Colors.neutral.ball,
+    color: Colors.neutral.white,
     fontSize: Typography.fontSize.body,
     fontWeight: Typography.fontWeight.semiBold,
   },
@@ -616,8 +629,26 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.small,
   },
   buttonText: {
-    color: Colors.neutral.ball,
+    color: Colors.neutral.white,
     fontSize: Typography.fontSize.body,
     fontWeight: Typography.fontWeight.semiBold,
+  },
+  noPriceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.neutral.snow,
+    padding: Spacing.m,
+    borderRadius: BorderRadius.small,
+    borderWidth: 1,
+    borderColor: Colors.neutral.pearl,
+    gap: Spacing.s,
+  },
+  noPriceText: {
+    flex: 1,
+    fontSize: 14,
+    color: Colors.neutral.slate,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });

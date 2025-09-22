@@ -2,6 +2,7 @@ import { BaseService, ServiceResponse, PaginationParams, SortParams } from './ba
 import { Tables } from '@/utils/supabase/types';
 import { WithDetails, FilterParams } from '@/types/utils';
 import { PostGISPoint } from '@/types/location';
+import { logger } from '@/utils/logger';
 
 export type GolfCourse = Tables<'golf_parcours'> & {
   location: PostGISPoint | null;
@@ -73,7 +74,7 @@ class GolfCourseService extends BaseService {
         data: data as GolfCourse,
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -102,9 +103,9 @@ class GolfCourseService extends BaseService {
       let courses = (data || []) as GolfCourse[];
 
       // Debug: log des données récupérées
-      console.log('🏌️ Golf courses from RPC:', courses.length);
+      logger.dev('🏌️ Golf courses from RPC:', courses.length);
       if (courses.length > 0) {
-        console.log('🏌️ First course data:', {
+        logger.dev('🏌️ First course data:', {
           id: courses[0].id,
           name: courses[0].name,
           location: courses[0].location,
@@ -146,7 +147,7 @@ class GolfCourseService extends BaseService {
               const distance = this.calculateDistance(
                 filters.nearLocation!.lat,
                 filters.nearLocation!.lng,
-                course.location as any
+                course.location
               );
               return { ...course, distance };
             })
@@ -178,7 +179,7 @@ class GolfCourseService extends BaseService {
         data: courses,
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -234,7 +235,7 @@ class GolfCourseService extends BaseService {
         data: coursesWithAvailability,
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -247,40 +248,38 @@ class GolfCourseService extends BaseService {
    */
   async listGolfCoursesWithLocation(): Promise<ServiceResponse<GolfCourse[]>> {
     try {
-      console.log('🔍 Requête directe golf_parcours');
+      logger.dev('🔍 Requête directe golf_parcours');
 
       const { data, error } = await this.supabase
         .from('golf_parcours')
         .select('*')
         .not('latitude', 'is', null)
-        .not('longitude', 'is', null)
-        ;
-
+        .not('longitude', 'is', null);
       if (error) {
-        console.error('❌ Erreur requête:', error);
+        logger.error('❌ Erreur requête:', error);
         throw error;
       }
 
-      console.log('✅ Données récupérées:', {
+      logger.dev('✅ Données récupérées:', {
         count: data?.length || 0,
         firstCourse: data?.[0],
       });
 
       // Transformer les données pour avoir le format PostGIS
-      const transformedData = (data || []).map((course: any) => {
+      const transformedData = (data || []).map((course) => {
         // Créer un objet location PostGIS à partir de latitude/longitude
         let location = null;
         if (course.latitude && course.longitude) {
           location = {
             type: 'Point',
-            coordinates: [course.longitude, course.latitude]
+            coordinates: [course.longitude, course.latitude],
           };
         }
 
         return { ...course, location };
       });
 
-      console.log('✅ Données transformées:', {
+      logger.dev('✅ Données transformées:', {
         count: transformedData.length,
         sampleLocation: transformedData[0]?.location,
       });
@@ -290,7 +289,7 @@ class GolfCourseService extends BaseService {
         error: null,
       };
     } catch (error) {
-      console.error('❌ Erreur listGolfCoursesWithLocation:', error);
+      logger.error('❌ Erreur listGolfCoursesWithLocation:', error);
       return {
         data: null,
         error: this.handleError(error),
@@ -313,38 +312,44 @@ class GolfCourseService extends BaseService {
         .from('golf_parcours')
         .select('*')
         .not('latitude', 'is', null)
-        .not('longitude', 'is', null)
-        ;
-
+        .not('longitude', 'is', null);
       if (error) throw error;
 
       // Calcul de distance côté client (Haversine)
-      const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+      const calculateDistance = (
+        lat1: number,
+        lng1: number,
+        lat2: number,
+        lng2: number
+      ): number => {
         const R = 6371; // Rayon de la Terre en km
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLng = (lng2 - lng1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                 Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                 Math.sin(dLng/2) * Math.sin(dLng/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const dLat = ((lat2 - lat1) * Math.PI) / 180;
+        const dLng = ((lng2 - lng1) * Math.PI) / 180;
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos((lat1 * Math.PI) / 180) *
+            Math.cos((lat2 * Math.PI) / 180) *
+            Math.sin(dLng / 2) *
+            Math.sin(dLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
       };
 
       // Filtrer par distance et transformer
       const nearbyData = (data || [])
-        .map((course: any) => {
+        .map((course) => {
           const distance = calculateDistance(lat, lng, course.latitude, course.longitude);
-          return { 
-            ...course, 
+          return {
+            ...course,
             distance,
             location: {
               type: 'Point',
-              coordinates: [course.longitude, course.latitude]
-            }
+              coordinates: [course.longitude, course.latitude],
+            },
           };
         })
-        .filter((course: any) => course.distance <= radiusKm)
-        .sort((a: any, b: any) => a.distance - b.distance)
+        .filter((course) => course.distance <= radiusKm)
+        .sort((a, b) => a.distance - b.distance)
         .slice(0, limit);
 
       return {
@@ -352,7 +357,7 @@ class GolfCourseService extends BaseService {
         error: null,
       };
     } catch (error: any) {
-      console.error('❌ Erreur dans searchNearbyGolfCourses:', error);
+      logger.error('❌ Erreur dans searchNearbyGolfCourses:', error);
       return {
         data: null,
         error: this.handleError(error),
@@ -404,7 +409,7 @@ class GolfCourseService extends BaseService {
         data: urls,
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -415,7 +420,14 @@ class GolfCourseService extends BaseService {
   /**
    * Récupère les statistiques d'un parcours
    */
-  async getCourseStats(courseId: string): Promise<ServiceResponse<any>> {
+  async getCourseStats(courseId: string): Promise<
+    ServiceResponse<{
+      totalBookings: number;
+      activePros: number;
+      averageRating: number;
+      totalReviews: number;
+    }>
+  > {
     try {
       // Nombre total de réservations
       const { count: totalBookings } = await this.supabase
@@ -444,7 +456,7 @@ class GolfCourseService extends BaseService {
         .eq('golf_course_id', courseId)
         .eq('status', 'completed');
 
-      const ratings = reviews?.flatMap((b) => b.reviews.map((r: any) => r.rating)) || [];
+      const ratings = reviews?.flatMap((b) => b.reviews.map((r) => r.rating)) || [];
       const avgRating = ratings.length
         ? ratings.reduce((acc, r) => acc + r, 0) / ratings.length
         : 0;
@@ -458,7 +470,7 @@ class GolfCourseService extends BaseService {
         },
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),

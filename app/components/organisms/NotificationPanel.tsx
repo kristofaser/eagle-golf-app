@@ -8,13 +8,13 @@ import React, { useEffect, useMemo } from 'react';
 import {
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { NotificationItem } from '@/components/molecules/NotificationItem';
 import { NotificationUIItem, useNotificationActions, useNotificationItems } from '@/stores/useUIStore';
 import { useNotificationList } from '@/hooks/useNotificationList';
@@ -40,7 +40,7 @@ export interface NotificationPanelProps {
   /**
    * Style personnalisé du container
    */
-  style?: any;
+  style?: object;
 }
 
 export const NotificationPanel: React.FC<NotificationPanelProps> = ({
@@ -155,6 +155,9 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
           <TouchableOpacity
             style={styles.closeButton}
             onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel="Fermer le panneau de notifications"
+            accessibilityHint="Ferme la liste des notifications et retourne à l'écran précédent"
           >
             <Text style={styles.closeButtonText}>×</Text>
           </TouchableOpacity>
@@ -177,7 +180,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
 
     return (
       <View style={styles.loadingFooter}>
-        <ActivityIndicator size="small" color="#3b82f6" />
+        <ActivityIndicator size="small" color={Colors.primary.electric} />
       </View>
     );
   };
@@ -201,17 +204,18 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
     <SafeAreaView style={[styles.container, fullScreen && styles.fullScreenContainer, style]}>
       {renderHeader()}
 
-      <FlatList
+      <FlashList
         data={allNotifications}
         renderItem={renderNotification}
         keyExtractor={(item) => item.id}
+        estimatedItemSize={80}
         ListEmptyComponent={!isLoading ? renderEmpty : null}
         ListFooterComponent={renderFooter}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
             onRefresh={handleRefresh}
-            tintColor="#3b82f6"
+            tintColor={Colors.primary.electric}
           />
         }
         onEndReached={hasMore && !isLoadingMore ? loadMore : undefined}
@@ -248,10 +252,10 @@ function getUIType(dbType: string): NotificationUIItem['type'] {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: Colors.neutral.cloud,
   },
   fullScreenContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: Colors.neutral.white,
   },
   header: {
     flexDirection: 'row',
@@ -304,9 +308,9 @@ const styles = StyleSheet.create({
     color: '#475569',
   },
   closeButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: '#f1f5f9',
     justifyContent: 'center',
     alignItems: 'center',

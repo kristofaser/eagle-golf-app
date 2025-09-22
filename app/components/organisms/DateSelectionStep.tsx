@@ -11,7 +11,7 @@ import { Text } from '@/components/atoms';
 
 interface DateSelectionStepProps {
   selectedDate: string;
-  markedDates: any;
+  markedDates: Record<string, { customStyles?: object; [key: string]: unknown }>;
   minDate?: string;
   maxDate?: string;
   isProAvailableOnDate: (date: string) => boolean;

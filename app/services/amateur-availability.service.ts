@@ -1,5 +1,6 @@
 import { supabase } from '@/utils/supabase/client';
 import { GolfParcours } from './golf-parcours.service';
+import { logger } from '@/utils/logger';
 
 export interface TimeSlot {
   time: string;
@@ -90,7 +91,7 @@ export const amateurAvailabilityService = {
 
       return { data: transformedData, error: null };
     } catch (err) {
-      console.error('Erreur récupération jours disponibles:', err);
+      logger.error('Erreur récupération jours disponibles:', err);
       return { data: null, error: err };
     }
   },
@@ -130,16 +131,16 @@ export const amateurAvailabilityService = {
       const { data, error } = await query.limit(1);
 
       if (error) {
-        console.error('Erreur vérification réservations pour date:', error);
+        logger.error('Erreur vérification réservations pour date:', error);
         return false;
       }
 
       const hasBookings = (data && data.length > 0);
-      console.log(`🔍 Vérification réservation ${dateString} (parcours: ${golfCourseId || 'tous'}): ${hasBookings ? 'RÉSERVÉ' : 'LIBRE'}`);
+      logger.dev(`🔍 Vérification réservation ${dateString} (parcours: ${golfCourseId || 'tous'}): ${hasBookings ? 'RÉSERVÉ' : 'LIBRE'}`);
       
       return hasBookings;
     } catch (err) {
-      console.error('Erreur vérification réservations pour date:', err);
+      logger.error('Erreur vérification réservations pour date:', err);
       return false;
     }
   },
@@ -171,7 +172,7 @@ export const amateurAvailabilityService = {
         currentBookings: data.current_bookings,
       };
     } catch (err) {
-      console.error('Erreur vérification disponibilité parcours/date:', err);
+      logger.error('Erreur vérification disponibilité parcours/date:', err);
       return { available: false, maxPlayers: 0, currentBookings: 0 };
     }
   },
@@ -205,13 +206,13 @@ export const amateurAvailabilityService = {
         .in('status', ['confirmed', 'pending']);
 
       if (error) {
-        console.error('Erreur vérification réservations:', error);
+        logger.error('Erreur vérification réservations:', error);
         return [];
       }
 
       return data || [];
     } catch (err) {
-      console.error('Erreur vérification réservations:', err);
+      logger.error('Erreur vérification réservations:', err);
       return [];
     }
   },
@@ -278,7 +279,7 @@ export const amateurAvailabilityService = {
         .single();
 
       if (fetchError || !availability) {
-        console.error('Erreur récupération availability pour incrémentation:', fetchError);
+        logger.error('Erreur récupération availability pour incrémentation:', fetchError);
         return false;
       }
 
@@ -289,20 +290,20 @@ export const amateurAvailabilityService = {
       });
 
       if (error) {
-        console.error('Erreur incrémentation réservations:', error);
+        logger.error('Erreur incrémentation réservations:', error);
         return false;
       }
 
       if (data && data.success) {
-        console.log(`✅ Réservation ${bookingId} ajoutée pour ${date} sur parcours ${golfCourseId}`);
-        console.log(`   Compteur: ${data.previous_count} → ${data.new_count} / ${data.max_players}`);
+        logger.dev(`✅ Réservation ${bookingId} ajoutée pour ${date} sur parcours ${golfCourseId}`);
+        logger.dev(`   Compteur: ${data.previous_count} → ${data.new_count} / ${data.max_players}`);
         return true;
       } else {
-        console.error('Erreur incrémentation:', data?.error || 'Erreur inconnue');
+        logger.error('Erreur incrémentation:', data?.error || 'Erreur inconnue');
         return false;
       }
     } catch (err) {
-      console.error('Erreur incrémentation réservations:', err);
+      logger.error('Erreur incrémentation réservations:', err);
       return false;
     }
   },
@@ -328,7 +329,7 @@ export const amateurAvailabilityService = {
         .single();
 
       if (fetchError || !availability) {
-        console.error('Erreur récupération availability pour décrémentation:', fetchError);
+        logger.error('Erreur récupération availability pour décrémentation:', fetchError);
         return false;
       }
 
@@ -339,20 +340,20 @@ export const amateurAvailabilityService = {
       });
 
       if (error) {
-        console.error('Erreur décrémentation réservations:', error);
+        logger.error('Erreur décrémentation réservations:', error);
         return false;
       }
 
       if (data && data.success) {
-        console.log(`✅ Réservation ${bookingId} annulée pour ${date} sur parcours ${golfCourseId}`);
-        console.log(`   Compteur: ${data.previous_count} → ${data.new_count} / ${data.max_players}`);
+        logger.dev(`✅ Réservation ${bookingId} annulée pour ${date} sur parcours ${golfCourseId}`);
+        logger.dev(`   Compteur: ${data.previous_count} → ${data.new_count} / ${data.max_players}`);
         return true;
       } else {
-        console.error('Erreur décrémentation:', data?.error || 'Erreur inconnue');
+        logger.error('Erreur décrémentation:', data?.error || 'Erreur inconnue');
         return false;
       }
     } catch (err) {
-      console.error('Erreur décrémentation réservations:', err);
+      logger.error('Erreur décrémentation réservations:', err);
       return false;
     }
   },
@@ -452,7 +453,7 @@ export const amateurAvailabilityService = {
 
       return { data: coursesArray, error: null };
     } catch (err) {
-      console.error('Erreur récupération parcours disponibles:', err);
+      logger.error('Erreur récupération parcours disponibles:', err);
       return { data: null, error: err };
     }
   },
@@ -462,7 +463,7 @@ export const amateurAvailabilityService = {
    * @deprecated Utilisez incrementBookingCount à la place
    */
   async markDayAsBooked(proId: string, date: string, bookingId: string): Promise<boolean> {
-    console.warn('⚠️ markDayAsBooked est déprécié. Utilisez incrementBookingCount avec golfCourseId.');
+    logger.warn('⚠️ markDayAsBooked est déprécié. Utilisez incrementBookingCount avec golfCourseId.');
     return true; // Retourne true pour éviter les erreurs dans l'ancien code
   },
 
@@ -470,7 +471,7 @@ export const amateurAvailabilityService = {
    * @deprecated Utilisez decrementBookingCount à la place
    */
   async markDayAsAvailable(proId: string, date: string): Promise<boolean> {
-    console.warn('⚠️ markDayAsAvailable est déprécié. Utilisez decrementBookingCount avec golfCourseId.');
+    logger.warn('⚠️ markDayAsAvailable est déprécié. Utilisez decrementBookingCount avec golfCourseId.');
     return true; // Retourne true pour éviter les erreurs dans l'ancien code
   },
 
@@ -490,20 +491,20 @@ export const amateurAvailabilityService = {
       });
 
       if (error) {
-        console.error('Erreur incrémentation réservations:', error);
+        logger.error('Erreur incrémentation réservations:', error);
         return false;
       }
 
       if (data && data.success) {
-        console.log(`✅ Réservation ${bookingId} ajoutée`);
-        console.log(`   Compteur: ${data.previous_count} → ${data.new_count} / ${data.max_players}`);
+        logger.dev(`✅ Réservation ${bookingId} ajoutée`);
+        logger.dev(`   Compteur: ${data.previous_count} → ${data.new_count} / ${data.max_players}`);
         return true;
       } else {
-        console.error('Erreur incrémentation:', data?.error || 'Erreur inconnue');
+        logger.error('Erreur incrémentation:', data?.error || 'Erreur inconnue');
         return false;
       }
     } catch (err) {
-      console.error('Erreur incrémentation réservations:', err);
+      logger.error('Erreur incrémentation réservations:', err);
       return false;
     }
   },
@@ -527,7 +528,7 @@ export const amateurAvailabilityService = {
         .single();
 
       if (error) {
-        console.error('❌ Erreur récupération availability_id:', error);
+        logger.error('❌ Erreur récupération availability_id:', error);
         return { 
           availability_id: null, 
           error: `Aucune disponibilité trouvée pour cette date et ce parcours` 
@@ -549,10 +550,10 @@ export const amateurAvailabilityService = {
         };
       }
 
-      console.log('✅ Availability trouvée:', data.id);
+      logger.dev('✅ Availability trouvée:', data.id);
       return { availability_id: data.id };
-    } catch (err: any) {
-      console.error('❌ Erreur getAvailabilityId:', err);
+    } catch (err) {
+      logger.error('❌ Erreur getAvailabilityId:', err);
       return { 
         availability_id: null, 
         error: err.message || 'Erreur lors de la récupération de la disponibilité' 

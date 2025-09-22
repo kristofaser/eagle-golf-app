@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Colors, Spacing } from '@/constants/theme';
 import { Logo, Text } from '@/components/atoms';
+import { logger } from '@/utils/logger';
 
 interface SplashScreenProps {
   onFinish?: () => void;
@@ -47,7 +48,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
     }
 
     hasStartedRef.current = true;
-    console.log('SplashScreen: Starting animations... (first time)');
+    logger.dev('SplashScreen: Starting animations... (first time)');
 
     // Le logo apparaît normalement d'abord
     logoScale.value = withSpring(1, {
@@ -76,7 +77,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
 
     // Call onFinish après l'animation complète
     const timer = setTimeout(() => {
-      console.log(
+      logger.dev(
         `SplashScreen: Animation complète après ${TOTAL_ANIMATION_DURATION}ms (${HEARTBEAT_CYCLES} battements), calling onFinish`
       );
       if (onFinishRef.current) {
@@ -85,7 +86,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
     }, TOTAL_ANIMATION_DURATION);
 
     return () => {
-      console.log('SplashScreen: Cleaning up timer');
+      logger.dev('SplashScreen: Cleaning up timer');
       clearTimeout(timer);
     };
   }, []); // Pas de dépendances pour éviter les re-exécutions

@@ -7,6 +7,7 @@ import { GolfParcours } from '@/services/golf-parcours.service';
 import { PostGISPoint } from '@/types/location';
 import { Text } from '@/components/atoms';
 import { golfMapStyle } from '@/constants/mapStyles';
+import { logger } from '@/utils/logger';
 
 interface GolfCoursesMapExpoProps {
   // Version ultra-simplifiée
@@ -44,7 +45,7 @@ export function GolfCoursesMapExpo({
       try {
         // Utiliser la position fournie en props si disponible
         if (propsUserLocation) {
-          console.log('📍 Utilisation position props:', propsUserLocation);
+          logger.dev('📍 Utilisation position props:', propsUserLocation);
           setRegion({
             latitude: propsUserLocation.latitude,
             longitude: propsUserLocation.longitude,
@@ -57,17 +58,17 @@ export function GolfCoursesMapExpo({
 
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          console.log('❌ Permission de localisation refusée');
+          logger.warn('❌ Permission de localisation refusée');
           setIsLoadingLocation(false);
           return;
         }
 
-        console.log('📍 Récupération de la position utilisateur...');
+        logger.dev('📍 Récupération de la position utilisateur...');
         const location = await Location.getCurrentPositionAsync({
           accuracy: Location.Accuracy.Balanced,
         });
 
-        console.log('✅ Position trouvée:', location.coords.latitude, location.coords.longitude);
+        logger.dev('✅ Position trouvée:', location.coords.latitude, location.coords.longitude);
         setUserLocation(location);
         
         setRegion({
@@ -77,7 +78,7 @@ export function GolfCoursesMapExpo({
           longitudeDelta: 0.15,
         });
       } catch (error) {
-        console.error('❌ Erreur localisation:', error);
+        logger.error('❌ Erreur localisation', error);
       } finally {
         setIsLoadingLocation(false);
       }
@@ -86,7 +87,7 @@ export function GolfCoursesMapExpo({
 
   // Version simplifiée : juste gérer le changement de région
   const handleRegionChangeComplete = useCallback((newRegion: Region) => {
-    console.log('🗺️ Région changée:', {
+    logger.dev('🗺️ Région changée:', {
       center: `${newRegion.latitude.toFixed(4)}, ${newRegion.longitude.toFixed(4)}`,
       delta: `${newRegion.latitudeDelta.toFixed(4)}°`,
     });
@@ -162,7 +163,7 @@ export function GolfCoursesMapExpo({
     return markers;
   };
 
-  console.log('🗺️ Rendu carte (version simple):', {
+  logger.dev('🗺️ Rendu carte (version simple):', {
     golfs: allGolfs.length,
     userLocation: !!userLocation || !!propsUserLocation,
   });

@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import {
   View,
-  Image,
   StyleSheet,
   ViewStyle,
-  ImageErrorEventData,
-  NativeSyntheticEvent,
   TouchableOpacity,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { Colors, BorderRadius, Typography, Elevation } from '@/constants/theme';
 import { Text } from './Text';
 import { AuthUser } from '@/utils/supabase/auth.types';
@@ -72,10 +70,13 @@ export const Avatar: React.FC<AvatarProps> = ({
     .toUpperCase()
     .slice(0, 2);
 
-  const handleImageError = (error: NativeSyntheticEvent<ImageErrorEventData>) => {
-    console.warn('Avatar image failed to load:', error.nativeEvent.error);
+  const handleImageError = (error: any) => {
+    console.warn('Avatar image failed to load:', error);
     setImageError(true);
   };
+
+  // Blurhash générique pour les avatars
+  const AVATAR_BLURHASH = 'L5H2EC=PM+yV0g-mq.wG9c010J}I';
 
   const handlePressIn = () => {
     if (onPress) {
@@ -171,7 +172,10 @@ export const Avatar: React.FC<AvatarProps> = ({
         >
           {avatarSource?.uri && !imageError ? (
             <Image
-              source={avatarSource}
+              source={{
+                uri: avatarSource.uri,
+                cacheKey: `avatar-${avatarSource.uri}`
+              }}
               style={[
                 styles.image,
                 {
@@ -181,7 +185,12 @@ export const Avatar: React.FC<AvatarProps> = ({
                 },
               ]}
               onError={handleImageError}
-              resizeMode="cover"
+              contentFit="cover"
+              transition={200}
+              cachePolicy="memory-disk"
+              placeholder={AVATAR_BLURHASH}
+              placeholderContentFit="cover"
+              priority={size === 'xlarge' ? 'high' : 'normal'}
             />
           ) : (
             <View
@@ -235,6 +244,9 @@ export const Avatar: React.FC<AvatarProps> = ({
         onPress={onPress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
+        accessibilityRole="button"
+        accessibilityLabel={displayName ? `Photo de profil de ${displayName}` : "Photo de profil"}
+        accessibilityHint="Appuyez pour voir le profil complet"
       >
         {AvatarContent}
       </TouchableOpacity>

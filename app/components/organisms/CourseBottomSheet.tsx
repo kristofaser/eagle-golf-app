@@ -23,7 +23,7 @@ import {
 } from '@gorhom/bottom-sheet';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Colors, Spacing, BorderRadius } from '@/constants/theme';
+import { Colors, Spacing, BorderRadius, TouchTarget } from '@/constants/theme';
 import { Text, Icon } from '@/components/atoms';
 import { GolfParcours } from '@/services/golf-parcours.service';
 import { profileService, ProProfileWithDetails } from '@/services/profile.service';
@@ -278,8 +278,11 @@ const styles = StyleSheet.create({
   },
   smallProCard: {
     width: 100, // Cards plus petites
+    minHeight: TouchTarget.minimum.height, // Assure touch target minimum
     alignItems: 'center',
     marginRight: Spacing.s,
+    justifyContent: 'center',
+    paddingVertical: Spacing.xs, // Padding pour augmenter la zone touchable
   },
   proImageContainer: {
     marginBottom: Spacing.xs,

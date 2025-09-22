@@ -16,7 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 // import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import { useUser } from '@/hooks/useUser';
 import { useAuth } from '@/hooks/useAuth';
-import { useSimpleProfileUpload } from '@/hooks/useSimpleProfileUpload';
+import { useSimpleProfileUpload } from '@/hooks/useImageUpload';
 import { Text, Input, Button, Avatar } from '@/components/atoms';
 import { Colors, Spacing } from '@/constants/theme';
 import { profileService, UpdateProfileData } from '@/services/profile.service';
@@ -48,10 +48,6 @@ export default function EditProfileScreen() {
   const [clubAffiliation, setClubAffiliation] = useState(amateurProfile?.club_affiliation || '');
   const [golfCourseId, setGolfCourseId] = useState(amateurProfile?.golf_course_id || '');
   const [licenseNumber, setLicenseNumber] = useState(amateurProfile?.license_number || '');
-
-  // États spécifiques Pro
-  const [canTravel, setCanTravel] = useState(proProfile?.can_travel || false);
-  const [travelRadius, setTravelRadius] = useState(proProfile?.travel_radius_km?.toString() || '');
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -134,11 +130,6 @@ export default function EditProfileScreen() {
           club_affiliation: clubAffiliation || null,
           golf_course_id: golfCourseId || null,
           license_number: licenseNumber || null,
-        };
-      } else if (isPro) {
-        updateData.proProfile = {
-          can_travel: canTravel,
-          travel_radius_km: travelRadius ? parseInt(travelRadius) : null,
         };
       }
 
@@ -333,44 +324,6 @@ export default function EditProfileScreen() {
                 </View>
               )}
 
-              {/* Informations spécifiques Pro */}
-              {isPro && (
-                <View style={styles.section}>
-                  <Text variant="h4" color="charcoal" style={styles.sectionTitle}>
-                    Informations Professionnelles
-                  </Text>
-
-                  <View style={styles.switchRow}>
-                    <View style={styles.switchContent}>
-                      <Text variant="body" color="charcoal">
-                        Je peux me déplacer
-                      </Text>
-                      <Text variant="caption" color="gray">
-                        Accepter les cours hors de ma ville
-                      </Text>
-                    </View>
-                    <Switch
-                      value={canTravel}
-                      onValueChange={setCanTravel}
-                      trackColor={{
-                        false: Colors.neutral.lightGray,
-                        true: Colors.primary.accent,
-                      }}
-                      thumbColor={Colors.neutral.white}
-                    />
-                  </View>
-
-                  {canTravel && (
-                    <Input
-                      label="Rayon de déplacement (km)"
-                      value={travelRadius}
-                      onChangeText={setTravelRadius}
-                      placeholder="50"
-                      keyboardType="numeric"
-                    />
-                  )}
-                </View>
-              )}
 
               <Button
                 variant="primary"

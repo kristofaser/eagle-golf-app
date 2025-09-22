@@ -26,6 +26,9 @@ export const Card: React.FC<CardProps> = ({
         style={cardStyle}
         onPress={onPress}
         activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel="Carte interactive"
+        accessibilityHint="Appuyez pour interagir avec cette carte"
         {...(props as TouchableOpacityProps)}
       >
         {children}

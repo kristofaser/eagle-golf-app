@@ -87,3 +87,6 @@ temp/
 
 # Claude specific
 .claude/
+
+# Sensitive files
+strip.txt

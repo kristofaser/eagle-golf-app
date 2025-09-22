@@ -94,7 +94,7 @@ class SearchService extends BaseService {
       const uniquePros = new Map<string, ProProfileWithDetails>();
       filteredAvailabilities.forEach((avail) => {
         if (avail.profiles && !uniquePros.has(avail.pro_id)) {
-          uniquePros.set(avail.pro_id, avail.profiles as any);
+          uniquePros.set(avail.pro_id, avail.profiles as ProProfileWithDetails);
         }
       });
 
@@ -108,7 +108,7 @@ class SearchService extends BaseService {
         },
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -124,7 +124,7 @@ class SearchService extends BaseService {
       const { city, date, specialties, priceRange, canTravel, language } = params;
 
       // Construire les filtres pour les pros
-      const proFilters: any = {};
+      const proFilters: Record<string, unknown> = {};
       if (city) proFilters.city = city;
       if (specialties?.length) proFilters.specialties = specialties;
       if (priceRange?.min !== undefined) proFilters.minHourlyRate = priceRange.min;
@@ -157,7 +157,7 @@ class SearchService extends BaseService {
       }
 
       // Récupérer les parcours uniques
-      const uniqueCourses = new Map<string, any>();
+      const uniqueCourses = new Map<string, GolfCourseWithAvailabilities>();
       availabilities.forEach((avail) => {
         if (avail.golf_parcours && !uniqueCourses.has(avail.golf_course_id)) {
           uniqueCourses.set(avail.golf_course_id, avail.golf_parcours);
@@ -174,7 +174,7 @@ class SearchService extends BaseService {
         },
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -233,7 +233,7 @@ class SearchService extends BaseService {
         data: results,
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -291,7 +291,7 @@ class SearchService extends BaseService {
         data: suggestions,
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -307,7 +307,7 @@ class SearchService extends BaseService {
     query: string;
     mode: 'by-course' | 'by-pro';
     limit?: number;
-  }): Promise<ServiceResponse<any[]>> {
+  }): Promise<ServiceResponse<Array<GolfCourseWithAvailabilities | ProProfileWithDetails>>> {
     try {
       const { query, mode, limit = 10 } = params;
 
@@ -360,7 +360,7 @@ class SearchService extends BaseService {
               .from('pro_availabilities')
               .select('id')
               .eq('pro_id', pro.id)
-              .eq('date', today as string)
+              .eq('date', today)
               .gt('max_players', 0)
               .limit(1);
 
@@ -390,7 +390,7 @@ class SearchService extends BaseService {
           error: null,
         };
       }
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),
@@ -425,7 +425,7 @@ class SearchService extends BaseService {
       const { query, filters, pagination } = params;
 
       // Recherche des pros
-      const proFilters: any = {};
+      const proFilters: Record<string, unknown> = {};
       if (filters.city) proFilters.city = filters.city;
       if (filters.priceMin) proFilters.minHourlyRate = filters.priceMin;
       if (filters.priceMax) proFilters.maxHourlyRate = filters.priceMax;
@@ -434,7 +434,7 @@ class SearchService extends BaseService {
       const { data: pros } = await profileService.listProProfiles(proFilters, pagination);
 
       // Recherche des parcours
-      const courseFilters: any = {};
+      const courseFilters: Record<string, unknown> = {};
       if (filters.city) courseFilters.city = filters.city;
       if (filters.amenities?.length) courseFilters.amenities = filters.amenities;
       if (filters.nearLocation) courseFilters.nearLocation = filters.nearLocation;
@@ -470,7 +470,7 @@ class SearchService extends BaseService {
         },
         error: null,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         data: null,
         error: this.handleError(error),

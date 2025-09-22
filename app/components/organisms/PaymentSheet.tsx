@@ -6,6 +6,7 @@ import { Text } from '@/components/atoms';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { paymentService, CreatePaymentIntentRequest } from '@/services/payment.service';
+import { logger } from '@/utils/logger';
 
 interface PaymentSheetProps {
   amount: number; // en centimes
@@ -92,9 +93,9 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
 
       // Paiement réussi
       onPaymentSuccess(response.payment_intent_id);
-    } catch (error: any) {
-      console.error('Erreur paiement:', error);
-      onPaymentError(error.message || 'Erreur lors du paiement');
+    } catch (error) {
+      logger.error('Erreur paiement:', error);
+      onPaymentError(error instanceof Error ? error.message : 'Erreur lors du paiement');
     } finally {
       setLoading(false);
     }
@@ -110,6 +111,7 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
   return (
     <View style={styles.container}>
       <TouchableOpacity
+        testID="payment-button"
         style={[
           styles.paymentButton,
           disabled && styles.paymentButtonDisabled,
@@ -119,7 +121,7 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
         disabled={disabled || loading}
       >
         {loading ? (
-          <ActivityIndicator color={Colors.neutral.white} />
+          <ActivityIndicator testID="payment-loading" color={Colors.neutral.white} />
         ) : (
           <>
             <Ionicons name="card-outline" size={20} color={Colors.neutral.white} />

@@ -11,7 +11,7 @@ const defaultOptions = {
     // Durée de conservation en cache augmentée (1 heure)
     gcTime: 60 * 60 * 1000,
     // Retry automatique en cas d'erreur
-    retry: (failureCount: number, error: any) => {
+    retry: (failureCount: number, error: Error & { status?: number }) => {
       // Ne pas retry sur les erreurs 4xx
       if (error?.status >= 400 && error?.status < 500) {
         return false;
@@ -56,7 +56,7 @@ export const queryKeys = {
   profiles: {
     all: ['profiles'] as const,
     lists: () => [...queryKeys.profiles.all, 'list'] as const,
-    list: (filters?: any) => [...queryKeys.profiles.lists(), filters] as const,
+    list: (filters?: Record<string, unknown>) => [...queryKeys.profiles.lists(), filters] as const,
     details: () => [...queryKeys.profiles.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.profiles.details(), id] as const,
   },
@@ -65,7 +65,7 @@ export const queryKeys = {
   bookings: {
     all: ['bookings'] as const,
     lists: () => [...queryKeys.bookings.all, 'list'] as const,
-    list: (filters?: any) => [...queryKeys.bookings.lists(), filters] as const,
+    list: (filters?: Record<string, unknown>) => [...queryKeys.bookings.lists(), filters] as const,
     details: () => [...queryKeys.bookings.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.bookings.details(), id] as const,
     userBookings: (userId: string) => [...queryKeys.bookings.all, 'user', userId] as const,
@@ -76,7 +76,7 @@ export const queryKeys = {
   parcours: {
     all: ['parcours'] as const,
     lists: () => [...queryKeys.parcours.all, 'list'] as const,
-    list: (filters?: any) => [...queryKeys.parcours.lists(), filters] as const,
+    list: (filters?: Record<string, unknown>) => [...queryKeys.parcours.lists(), filters] as const,
     details: () => [...queryKeys.parcours.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.parcours.details(), id] as const,
     nearby: (lat: number, lng: number, radius: number) =>
@@ -88,7 +88,7 @@ export const queryKeys = {
   pros: {
     all: ['pros'] as const,
     lists: () => [...queryKeys.pros.all, 'list'] as const,
-    list: (filters?: any) => [...queryKeys.pros.lists(), filters] as const,
+    list: (filters?: Record<string, unknown>) => [...queryKeys.pros.lists(), filters] as const,
     details: () => [...queryKeys.pros.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.pros.details(), id] as const,
     availabilities: (proId: string) => [...queryKeys.pros.all, 'availabilities', proId] as const,
@@ -116,7 +116,7 @@ export const queryKeys = {
   // Search
   search: {
     all: ['search'] as const,
-    results: (query: string, filters?: any) => [...queryKeys.search.all, query, filters] as const,
+    results: (query: string, filters?: Record<string, unknown>) => [...queryKeys.search.all, query, filters] as const,
     suggestions: (query: string) => [...queryKeys.search.all, 'suggestions', query] as const,
   },
 };
@@ -153,7 +153,7 @@ export const invalidateQueries = {
  */
 export const prefetchQueries = {
   // Prefetch un profil
-  profile: async (id: string, fetcher: () => Promise<any>) => {
+  profile: async <T>(id: string, fetcher: () => Promise<T>) => {
     await queryClient.prefetchQuery({
       queryKey: queryKeys.profiles.detail(id),
       queryFn: fetcher,
@@ -164,8 +164,8 @@ export const prefetchQueries = {
   // Prefetch une liste
   list: async (
     entity: 'profiles' | 'bookings' | 'parcours' | 'pros',
-    filters: any,
-    fetcher: () => Promise<any>
+    filters: Record<string, unknown>,
+    fetcher: () => Promise<unknown>
   ) => {
     await queryClient.prefetchQuery({
       queryKey: queryKeys[entity].list(filters),

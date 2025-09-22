@@ -12,6 +12,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/utils/supabase/client';
 import { useUIStore } from '@/stores/useUIStore';
+import { logger } from '@/utils/logger';
 
 export interface NotificationItem {
   id: string;
@@ -72,7 +73,7 @@ export function useNotificationRealtime(
     const notification: NotificationItem = payload.new;
 
     if (debug) {
-      console.log('🔔 Realtime Notification - INSERT:', {
+      logger.dev('🔔 Realtime Notification - INSERT:', {
         userId,
         notification
       });
@@ -103,7 +104,7 @@ export function useNotificationRealtime(
     const oldNotification: NotificationItem = payload.old;
 
     if (debug) {
-      console.log('🔄 Realtime Notification - UPDATE:', {
+      logger.dev('🔄 Realtime Notification - UPDATE:', {
         userId,
         old: oldNotification,
         new: notification
@@ -117,7 +118,7 @@ export function useNotificationRealtime(
     if (!oldNotification.read_at && notification.read_at) {
       // Logique pour décrémenter le compteur sera gérée par useNotificationBadge
       if (debug) {
-        console.log('📖 Notification marquée comme lue:', notification.id);
+        logger.dev('📖 Notification marquée comme lue:', notification.id);
       }
     }
   }, [userId, onNotificationUpdated, debug]);
@@ -126,13 +127,13 @@ export function useNotificationRealtime(
     // Ne pas s'abonner si pas d'utilisateur
     if (!userId) {
       if (debug) {
-        console.log('⏭️ Realtime Notifications: Pas d\'userId, skip subscription');
+        logger.dev('⏭️ Realtime Notifications: Pas d\'userId, skip subscription');
       }
       return;
     }
 
     if (debug) {
-      console.log('🔗 Realtime Notifications: Connexion pour userId:', userId);
+      logger.dev('🔗 Realtime Notifications: Connexion pour userId:', userId);
     }
 
     // Créer le channel Supabase Realtime unique par utilisateur
@@ -161,7 +162,7 @@ export function useNotificationRealtime(
       )
       .subscribe((status) => {
         if (debug) {
-          console.log('🔗 Realtime Notifications: Statut subscription:', status);
+          logger.dev('🔗 Realtime Notifications: Statut subscription:', status);
         }
       });
 
@@ -170,7 +171,7 @@ export function useNotificationRealtime(
     // Nettoyage à la destruction du composant
     return () => {
       if (debug) {
-        console.log('🔌 Realtime Notifications: Déconnexion channel');
+        logger.dev('🔌 Realtime Notifications: Déconnexion channel');
       }
 
       if (channelRef.current) {
@@ -211,7 +212,7 @@ export function useNotificationRealtime(
       channelRef.current = channel;
 
       if (debug) {
-        console.log('🔄 Realtime Notifications: Reconnexion forcée');
+        logger.dev('🔄 Realtime Notifications: Reconnexion forcée');
       }
     }
   }, [userId, handleNewNotification, handleNotificationUpdate, debug]);

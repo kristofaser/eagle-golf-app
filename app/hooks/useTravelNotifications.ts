@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from './useAuth';
 import { travelNotificationService } from '@/services/travel-notification.service';
+import { logger } from '@/utils/logger';
 
 const STORAGE_KEY = 'travel_notifications_enabled';
 
@@ -60,7 +61,7 @@ export const useTravelNotifications = () => {
         setIsEnabled(false);
       }
     } catch (err) {
-      console.error('Erreur chargement préférences voyage:', err);
+      logger.error('Erreur chargement préférences voyage', err);
       setError('Erreur lors du chargement des préférences');
       setIsEnabled(false);
     } finally {
@@ -73,7 +74,7 @@ export const useTravelNotifications = () => {
       setError(null);
 
       if (!user?.id) {
-        console.warn('Utilisateur non connecté');
+        logger.warn('Utilisateur non connecté');
         return false;
       }
 
@@ -93,14 +94,14 @@ export const useTravelNotifications = () => {
       const { error: dbError } = await travelNotificationService.updatePreferences(user.id, enabled);
       
       if (dbError) {
-        console.warn('Erreur sauvegarde en base, conservé en local:', dbError);
+        logger.warn('Erreur sauvegarde en base, conservé en local', dbError);
         // On continue malgré l'erreur DB, le cache local garde la préférence
       }
 
-      console.log(`✅ Préférences voyage sauvegardées: ${enabled ? 'activées' : 'désactivées'}`);
+      logger.dev(`✅ Préférences voyage sauvegardées: ${enabled ? 'activées' : 'désactivées'}`);
       return true;
     } catch (err) {
-      console.error('Erreur sauvegarde préférences voyage:', err);
+      logger.error('Erreur sauvegarde préférences voyage', err);
       setError('Erreur lors de la sauvegarde');
       return false;
     }
@@ -126,10 +127,10 @@ export const useTravelNotifications = () => {
       if (user?.id) {
         await AsyncStorage.removeItem(`${STORAGE_KEY}_${user.id}`);
         setIsEnabled(false);
-        console.log('🗑️ Préférences voyage supprimées');
+        logger.dev('🗑️ Préférences voyage supprimées');
       }
     } catch (err) {
-      console.error('Erreur suppression préférences voyage:', err);
+      logger.error('Erreur suppression préférences voyage', err);
       setError('Erreur lors de la suppression');
     }
   };

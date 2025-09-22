@@ -15,6 +15,7 @@ import { HugeiconsIcon } from '@hugeicons/react-native';
 import { Video02Icon, CloudUploadIcon, Delete02Icon, Image02Icon } from '@hugeicons/core-free-icons';
 import { useAuth } from '@/hooks/useAuth';
 import { s3, getPublicUrl, generateVideoKey, BUCKET_NAME } from '@/utils/scaleway';
+import { logger } from '@/utils/logger';
 
 interface SingleVideoUploadManagerProps {
   skillKey: string;
@@ -56,7 +57,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
         const asset = result.assets[0];
 
         // Vérifier la taille du fichier (limite à 50MB)
-        console.log('📁 Fichier sélectionné (DocumentPicker):', {
+        logger.dev('📁 Fichier sélectionné (DocumentPicker):', {
           name: asset.name,
           size: asset.size,
           sizeInMB: asset.size ? (asset.size / (1024 * 1024)).toFixed(2) : 'Inconnue',
@@ -77,7 +78,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
         setSelectedVideo(asset.uri);
       }
     } catch (error) {
-      console.error('Erreur lors de la sélection:', error);
+      logger.error('Erreur lors de la sélection', error);
       Alert.alert('Erreur', 'Impossible de sélectionner la vidéo');
     }
   }, []);
@@ -101,7 +102,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
       if (!result.canceled && result.assets && result.assets.length > 0) {
         const asset = result.assets[0];
 
-        console.log('📸 Fichier sélectionné (ImagePicker):', {
+        logger.dev('📸 Fichier sélectionné (ImagePicker):', {
           fileName: asset.fileName,
           fileSize: asset.fileSize,
           sizeInMB: asset.fileSize ? (asset.fileSize / (1024 * 1024)).toFixed(2) : 'Inconnue',
@@ -126,7 +127,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
         setSelectedVideo(asset.uri);
       }
     } catch (error) {
-      console.error('Erreur lors de la sélection depuis la galerie:', error);
+      logger.error('Erreur lors de la sélection depuis la galerie', error);
       Alert.alert('Erreur', 'Impossible de sélectionner la vidéo depuis la galerie');
     }
   }, []);
@@ -135,17 +136,17 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
     if (!user || !selectedVideo) return;
 
     try {
-      console.log('🎬 DÉBUT UPLOAD VIDÉO SCALEWAY');
-      console.log('📁 URI sélectionnée:', selectedVideo);
-      console.log('👤 User ID:', user.id);
-      console.log('🎯 Skill:', skillKey);
+      logger.dev('🎬 DÉBUT UPLOAD VIDÉO SCALEWAY');
+      logger.dev('📁 URI sélectionnée:', selectedVideo);
+      logger.dev('👤 User ID:', user.id);
+      logger.dev('🎯 Skill:', skillKey);
 
       updateUploadProgress(0, true);
 
       // Lire le fichier
-      console.log('📖 Début lecture du fichier local...');
+      logger.dev('📖 Début lecture du fichier local...');
       const response = await fetch(selectedVideo);
-      console.log('📡 Réponse fetch:', {
+      logger.dev('📡 Réponse fetch:', {
         ok: response.ok,
         status: response.status,
         statusText: response.statusText,
@@ -157,7 +158,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
       }
 
       const blob = await response.blob();
-      console.log('📦 Blob créé:', {
+      logger.dev('📦 Blob créé:', {
         size: blob.size,
         type: blob.type,
         sizeInMB: (blob.size / (1024 * 1024)).toFixed(2)
@@ -169,10 +170,10 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
 
       // Générer la clé d'objet
       const objectKey = generateVideoKey(user.id, skillKey);
-      console.log('Clé d\'objet générée:', objectKey);
+      logger.dev('Clé d\'objet générée:', objectKey);
 
       // Upload vers Scaleway Object Storage
-      console.log('Début upload vers Scaleway Object Storage...');
+      logger.dev('Début upload vers Scaleway Object Storage...');
 
       const uploadParams = {
         Bucket: BUCKET_NAME,
@@ -188,14 +189,14 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
       }).on('httpUploadProgress', (progress) => {
         const percentage = Math.round((progress.loaded / progress.total) * 100);
         updateUploadProgress(percentage, true);
-        console.log(`Progress: ${percentage}% (${(progress.loaded / (1024 * 1024)).toFixed(2)}MB / ${(progress.total / (1024 * 1024)).toFixed(2)}MB)`);
+        logger.dev(`Progress: ${percentage}% (${(progress.loaded / (1024 * 1024)).toFixed(2)}MB / ${(progress.total / (1024 * 1024)).toFixed(2)}MB)`);
       }).promise();
 
-      console.log('Résultat upload Scaleway:', result);
+      logger.dev('Résultat upload Scaleway:', result);
 
       // Générer l'URL publique
       const publicUrl = getPublicUrl(objectKey);
-      console.log('URL publique générée:', publicUrl);
+      logger.dev('URL publique générée:', publicUrl);
 
       updateUploadProgress(100, false);
 
@@ -203,12 +204,12 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
       setSelectedVideo('');
 
       onVideoUploaded?.(skillKey, publicUrl);
-      console.log('UPLOAD TERMINÉ AVEC SUCCÈS !');
+      logger.dev('UPLOAD TERMINÉ AVEC SUCCÈS !');
       Alert.alert('Succès', 'Vidéo uploadée avec succès !');
 
     } catch (error) {
-      console.error('ERREUR UPLOAD SCALEWAY:', error);
-      console.error('Stack trace:', error instanceof Error ? error.stack : 'Pas de stack trace');
+      logger.error('ERREUR UPLOAD SCALEWAY', error);
+      logger.error('Stack trace:', error instanceof Error ? error.stack : 'Pas de stack trace');
       updateUploadProgress(0, false);
       Alert.alert('Erreur', `Impossible d'uploader la vidéo: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     }
@@ -239,7 +240,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
               onVideoDeleted?.(skillKey);
               Alert.alert('Succès', 'Vidéo supprimée');
             } catch (error) {
-              console.error('Erreur suppression Scaleway:', error);
+              logger.error('Erreur suppression Scaleway', error);
               Alert.alert('Erreur', 'Impossible de supprimer la vidéo');
             }
           },
@@ -284,7 +285,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
             nativeControls={true}
             contentFit="contain"
             onError={(error) => {
-              console.error('Erreur lecture vidéo:', error);
+              logger.error('Erreur lecture vidéo', error);
             }}
           />
         </View>

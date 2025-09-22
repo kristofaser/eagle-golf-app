@@ -3,11 +3,11 @@ import {
   View,
   StyleSheet,
   SafeAreaView,
-  FlatList,
   TouchableOpacity,
   Alert,
   RefreshControl,
 } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
 import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, LoadingScreen, Avatar, FavoriteBadge } from '@/components/atoms';
@@ -186,12 +186,13 @@ export default function FavoritesScreen() {
         {isLoading ? (
           <LoadingScreen message="Chargement de vos favoris..." />
         ) : hasData ? (
-          <FlatList
+          <FlashList
             data={prosData}
             renderItem={renderProItem}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContainer}
             showsVerticalScrollIndicator={false}
+            estimatedItemSize={120}
             ItemSeparatorComponent={() => <View style={styles.separator} />}
             refreshControl={
               <RefreshControl
