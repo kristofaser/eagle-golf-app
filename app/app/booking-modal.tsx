@@ -604,7 +604,7 @@ export default function BookingModal() {
                         player2: { ...prev.player2, firstName: text },
                       }))
                     }
-                    placeholderTextColor={Colors.neutral.slate}
+                    placeholderTextColor={Colors.neutral.course}
                   />
                   <TextInput
                     style={[styles.playerInput, styles.playerInputRight]}
@@ -616,7 +616,7 @@ export default function BookingModal() {
                         player2: { ...prev.player2, lastName: text },
                       }))
                     }
-                    placeholderTextColor={Colors.neutral.slate}
+                    placeholderTextColor={Colors.neutral.course}
                   />
                 </View>
               </View>
@@ -635,7 +635,7 @@ export default function BookingModal() {
                         player3: { ...prev.player3, firstName: text },
                       }))
                     }
-                    placeholderTextColor={Colors.neutral.slate}
+                    placeholderTextColor={Colors.neutral.course}
                   />
                   <TextInput
                     style={[styles.playerInput, styles.playerInputRight]}
@@ -647,7 +647,7 @@ export default function BookingModal() {
                         player3: { ...prev.player3, lastName: text },
                       }))
                     }
-                    placeholderTextColor={Colors.neutral.slate}
+                    placeholderTextColor={Colors.neutral.course}
                   />
                 </View>
               </View>
