@@ -16,6 +16,10 @@ interface BookingData {
   golf_course_id: string;
   special_requests?: string;
   number_of_players?: number;
+  player2_first_name?: string;
+  player2_last_name?: string;
+  player3_first_name?: string;
+  player3_last_name?: string;
   amateur?: {
     first_name: string;
     last_name: string;
@@ -229,6 +233,31 @@ export default function BookingSidebar({ isOpen, onClose, booking, onValidate }:
                   </div>
                 )}
               </div>
+
+              {/* Liste des joueurs additionnels */}
+              {(booking.player2_first_name || booking.player3_first_name) && (
+                <div className="mt-4 pt-4 border-t border-blue-200">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Joueurs supplémentaires</h4>
+                  <div className="space-y-2">
+                    {booking.player2_first_name && (
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm">
+                          Joueur 2: {booking.player2_first_name} {booking.player2_last_name}
+                        </span>
+                      </div>
+                    )}
+                    {booking.player3_first_name && (
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm">
+                          Joueur 3: {booking.player3_first_name} {booking.player3_last_name}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Informations du parcours de golf */}

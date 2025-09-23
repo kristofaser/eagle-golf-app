@@ -5,12 +5,7 @@
  * Gère l'affichage, les interactions et le formatage des données.
  */
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { NotificationUIItem } from '@/stores/useUIStore';
@@ -81,7 +76,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
         styles.container,
         compact && styles.compactContainer,
         !notification.read && styles.unreadContainer,
-        style
+        style,
       ]}
       onPress={handlePress}
       activeOpacity={0.7}
@@ -92,26 +87,15 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
       {/* Contenu principal */}
       <View style={styles.content}>
         <View style={styles.header}>
-          <Text
-            style={[
-              styles.title,
-              !notification.read && styles.unreadTitle
-            ]}
-            numberOfLines={1}
-          >
+          <Text style={[styles.title, !notification.read && styles.unreadTitle]} numberOfLines={1}>
             {notification.title}
           </Text>
 
-          <Text style={styles.time}>
-            {timeAgo}
-          </Text>
+          <Text style={styles.time}>{timeAgo}</Text>
         </View>
 
         <Text
-          style={[
-            styles.message,
-            compact && styles.compactMessage
-          ]}
+          style={[styles.message, compact && styles.compactMessage]}
           numberOfLines={compact ? 2 : 3}
         >
           {notification.message}
@@ -120,17 +104,13 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({
         {/* Badge type pour les notifications importantes */}
         {(notification.type === 'error' || notification.type === 'warning') && (
           <View style={[styles.typeBadge, { backgroundColor: typeColor }]}>
-            <Text style={styles.typeBadgeText}>
-              {getTypeLabel(notification.type)}
-            </Text>
+            <Text style={styles.typeBadgeText}>{getTypeLabel(notification.type)}</Text>
           </View>
         )}
       </View>
 
       {/* Indicateur non lu */}
-      {!notification.read && (
-        <View style={styles.unreadDot} />
-      )}
+      {!notification.read && <View style={styles.unreadDot} />}
     </TouchableOpacity>
   );
 };

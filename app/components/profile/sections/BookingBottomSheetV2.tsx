@@ -1,4 +1,11 @@
-import React, { forwardRef, useImperativeHandle, useRef, useCallback, useState, useEffect } from 'react';
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useCallback,
+  useState,
+  useEffect,
+} from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
@@ -36,337 +43,347 @@ export interface BookingBottomSheetV2Ref {
   close: () => void;
 }
 
-export const BookingBottomSheetV2 = forwardRef<BookingBottomSheetV2Ref, BookingBottomSheetV2Props>(({
-  proId,
-  proName,
-  proPricing,
-  selectedCourseId,
-  selectedCourseName,
-  onBottomSheetChange,
-  onBookingComplete,
-}, ref) => {
-  const insets = useSafeAreaInsets();
-  const router = useRouter();
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const slideAnimation = useRef(new Animated.Value(0)).current;
-
-  // État pour la navigation entre étapes
-  const [currentStep, setCurrentStep] = useState(1);
-  const [canGoNext, setCanGoNext] = useState(false);
-
-  // État pour les données de réservation
-  const [bookingData, setBookingData] = useState({
-    players: 1,
-    holes: 9,
-    date: null as Date | null,
-    timeSlot: null as string | null,
-    specialRequests: '',
-    totalPrice: 0,
-  });
-
-  useImperativeHandle(ref, () => ({
-    open: () => {
-      setCurrentStep(1); // Reset to first step
-      bottomSheetRef.current?.expand();
+export const BookingBottomSheetV2 = forwardRef<BookingBottomSheetV2Ref, BookingBottomSheetV2Props>(
+  (
+    {
+      proId,
+      proName,
+      proPricing,
+      selectedCourseId,
+      selectedCourseName,
+      onBottomSheetChange,
+      onBookingComplete,
     },
-    close: () => bottomSheetRef.current?.close(),
-  }));
+    ref
+  ) => {
+    const insets = useSafeAreaInsets();
+    const router = useRouter();
+    const bottomSheetRef = useRef<BottomSheet>(null);
+    const slideAnimation = useRef(new Animated.Value(0)).current;
 
-  const renderBackdrop = useCallback(
-    (props: any) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-        opacity={0.5}
-      />
-    ),
-    []
-  );
+    // État pour la navigation entre étapes
+    const [currentStep, setCurrentStep] = useState(1);
+    const [canGoNext, setCanGoNext] = useState(false);
 
-  // Navigation entre étapes
-  const goToNextStep = () => {
-    if (currentStep < BOOKING_STEPS.length) {
-      Animated.spring(slideAnimation, {
-        toValue: -(currentStep * 100),
-        useNativeDriver: true,
-        friction: 8,
-        tension: 65,
-      }).start();
-      setCurrentStep(currentStep + 1);
-    }
-  };
+    // État pour les données de réservation
+    const [bookingData, setBookingData] = useState({
+      players: 1,
+      holes: 9,
+      date: null as Date | null,
+      timeSlot: null as string | null,
+      specialRequests: '',
+      totalPrice: 0,
+    });
 
-  const goToPreviousStep = () => {
-    if (currentStep > 1) {
-      Animated.spring(slideAnimation, {
-        toValue: -((currentStep - 2) * 100),
-        useNativeDriver: true,
-        friction: 8,
-        tension: 65,
-      }).start();
-      setCurrentStep(currentStep - 1);
-    }
-  };
+    useImperativeHandle(ref, () => ({
+      open: () => {
+        setCurrentStep(1); // Reset to first step
+        bottomSheetRef.current?.expand();
+      },
+      close: () => bottomSheetRef.current?.close(),
+    }));
 
-  // Calcul du prix dynamique
-  const calculatePrice = useCallback((players: number, holes: number) => {
-    // Logique de calcul basée sur proPricing, players et holes
-    // À implémenter selon la structure exacte de proPricing
-    const basePrice = 100; // Placeholder
-    return basePrice * players;
-  }, [proPricing]);
+    const renderBackdrop = useCallback(
+      (props: any) => (
+        <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.5} />
+      ),
+      []
+    );
 
-  useEffect(() => {
-    const newPrice = calculatePrice(bookingData.players, bookingData.holes);
-    if (newPrice !== bookingData.totalPrice) {
-      setBookingData(prev => ({
-        ...prev,
-        totalPrice: newPrice
-      }));
-    }
-  }, [bookingData.players, bookingData.holes, bookingData.totalPrice, calculatePrice]);
+    // Navigation entre étapes
+    const goToNextStep = () => {
+      if (currentStep < BOOKING_STEPS.length) {
+        Animated.spring(slideAnimation, {
+          toValue: -(currentStep * 100),
+          useNativeDriver: true,
+          friction: 8,
+          tension: 65,
+        }).start();
+        setCurrentStep(currentStep + 1);
+      }
+    };
 
-  // Validation pour passer à l'étape suivante
-  useEffect(() => {
-    switch (currentStep) {
-      case 1:
-        setCanGoNext(true); // Toujours possible car valeurs par défaut
-        break;
-      case 2:
-        setCanGoNext(bookingData.date !== null);
-        break;
-      case 3:
-        setCanGoNext(bookingData.timeSlot !== null);
-        break;
-      case 4:
-        setCanGoNext(true); // Récap toujours valide
-        break;
-      case 5:
-        setCanGoNext(false); // Géré par le paiement
-        break;
-      default:
-        setCanGoNext(false);
-    }
-  }, [currentStep, bookingData]);
+    const goToPreviousStep = () => {
+      if (currentStep > 1) {
+        Animated.spring(slideAnimation, {
+          toValue: -((currentStep - 2) * 100),
+          useNativeDriver: true,
+          friction: 8,
+          tension: 65,
+        }).start();
+        setCurrentStep(currentStep - 1);
+      }
+    };
 
-  // Déterminer la hauteur du BottomSheet selon l'étape
-  const getSnapPoints = () => {
-    switch (currentStep) {
-      case 1: return ['50%']; // Configuration
-      case 2: return ['65%']; // Calendrier
-      case 3: return ['55%']; // Créneaux
-      case 4: return ['60%']; // Récapitulatif
-      case 5: return ['65%']; // Paiement
-      case 6: return ['45%']; // Confirmation
-      default: return ['50%'];
-    }
-  };
+    // Calcul du prix dynamique
+    const calculatePrice = useCallback(
+      (players: number, holes: number) => {
+        // Logique de calcul basée sur proPricing, players et holes
+        // À implémenter selon la structure exacte de proPricing
+        const basePrice = 100; // Placeholder
+        return basePrice * players;
+      },
+      [proPricing]
+    );
 
-  return (
-    <BottomSheet
-      ref={bottomSheetRef}
-      index={-1}
-      snapPoints={getSnapPoints()}
-      enablePanDownToClose
-      backdropComponent={renderBackdrop}
-      handleIndicatorStyle={styles.indicator}
-      backgroundStyle={styles.background}
-      style={{
-        zIndex: 200, // Force un z-index élevé pour passer au-dessus du header
-      }}
-      onChange={(index) => {
-        if (index === -1) {
-          setCurrentStep(1); // Reset on close
-          onBottomSheetChange?.(false); // Notifier que la bottom sheet est fermée
-        } else {
-          onBottomSheetChange?.(true); // Notifier que la bottom sheet est ouverte
-        }
-      }}
-    >
-      <BottomSheetView style={[styles.content, { paddingBottom: insets.bottom }]}>
-        {/* Header avec indicateur de progression */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={goToPreviousStep}
-            style={[styles.navButton, currentStep === 1 && styles.navButtonDisabled]}
-            disabled={currentStep === 1}
-          >
-            <Ionicons
-              name="arrow-back"
-              size={24}
-              color={currentStep === 1 ? Colors.neutral.mist : Colors.neutral.charcoal}
-            />
-          </TouchableOpacity>
+    useEffect(() => {
+      const newPrice = calculatePrice(bookingData.players, bookingData.holes);
+      if (newPrice !== bookingData.totalPrice) {
+        setBookingData((prev) => ({
+          ...prev,
+          totalPrice: newPrice,
+        }));
+      }
+    }, [bookingData.players, bookingData.holes, bookingData.totalPrice, calculatePrice]);
 
-          <View style={styles.stepIndicator}>
-            {BOOKING_STEPS.map((step) => (
-              <View
-                key={step.id}
-                style={[
-                  styles.stepDot,
-                  step.id === currentStep && styles.stepDotActive,
-                  step.id < currentStep && styles.stepDotCompleted,
-                ]}
+    // Validation pour passer à l'étape suivante
+    useEffect(() => {
+      switch (currentStep) {
+        case 1:
+          setCanGoNext(true); // Toujours possible car valeurs par défaut
+          break;
+        case 2:
+          setCanGoNext(bookingData.date !== null);
+          break;
+        case 3:
+          setCanGoNext(bookingData.timeSlot !== null);
+          break;
+        case 4:
+          setCanGoNext(true); // Récap toujours valide
+          break;
+        case 5:
+          setCanGoNext(false); // Géré par le paiement
+          break;
+        default:
+          setCanGoNext(false);
+      }
+    }, [currentStep, bookingData]);
+
+    // Déterminer la hauteur du BottomSheet selon l'étape
+    const getSnapPoints = () => {
+      switch (currentStep) {
+        case 1:
+          return ['50%']; // Configuration
+        case 2:
+          return ['65%']; // Calendrier
+        case 3:
+          return ['55%']; // Créneaux
+        case 4:
+          return ['60%']; // Récapitulatif
+        case 5:
+          return ['65%']; // Paiement
+        case 6:
+          return ['45%']; // Confirmation
+        default:
+          return ['50%'];
+      }
+    };
+
+    return (
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={-1}
+        snapPoints={getSnapPoints()}
+        enablePanDownToClose
+        backdropComponent={renderBackdrop}
+        handleIndicatorStyle={styles.indicator}
+        backgroundStyle={styles.background}
+        style={{
+          zIndex: 200, // Force un z-index élevé pour passer au-dessus du header
+        }}
+        onChange={(index) => {
+          if (index === -1) {
+            setCurrentStep(1); // Reset on close
+            onBottomSheetChange?.(false); // Notifier que la bottom sheet est fermée
+          } else {
+            onBottomSheetChange?.(true); // Notifier que la bottom sheet est ouverte
+          }
+        }}
+      >
+        <BottomSheetView style={[styles.content, { paddingBottom: insets.bottom }]}>
+          {/* Header avec indicateur de progression */}
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={goToPreviousStep}
+              style={[styles.navButton, currentStep === 1 && styles.navButtonDisabled]}
+              disabled={currentStep === 1}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={24}
+                color={currentStep === 1 ? Colors.neutral.mist : Colors.neutral.charcoal}
               />
-            ))}
+            </TouchableOpacity>
+
+            <View style={styles.stepIndicator}>
+              {BOOKING_STEPS.map((step) => (
+                <View
+                  key={step.id}
+                  style={[
+                    styles.stepDot,
+                    step.id === currentStep && styles.stepDotActive,
+                    step.id < currentStep && styles.stepDotCompleted,
+                  ]}
+                />
+              ))}
+            </View>
+
+            <TouchableOpacity
+              onPress={() => bottomSheetRef.current?.close()}
+              style={styles.navButton}
+            >
+              <Ionicons name="close" size={24} color={Colors.neutral.charcoal} />
+            </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            onPress={() => bottomSheetRef.current?.close()}
-            style={styles.navButton}
-          >
-            <Ionicons name="close" size={24} color={Colors.neutral.charcoal} />
-          </TouchableOpacity>
-        </View>
+          {/* Titre de l'étape courante */}
+          <Text style={styles.stepTitle}>{BOOKING_STEPS[currentStep - 1].title}</Text>
 
-        {/* Titre de l'étape courante */}
-        <Text style={styles.stepTitle}>{BOOKING_STEPS[currentStep - 1].title}</Text>
-
-        {/* Contenu des étapes */}
-        <View style={styles.stepsContainer}>
-          {/* Étape 1: Configuration (Joueurs + Trous) */}
-          {currentStep === 1 && (
-            <View style={styles.stepContent}>
-              <Text style={styles.sectionTitle}>Nombre de joueurs</Text>
-              <View style={styles.playersSelector}>
-                {[1, 2, 3].map((num) => (
-                  <TouchableOpacity
-                    key={num}
-                    style={[
-                      styles.optionButton,
-                      bookingData.players === num && styles.optionButtonActive,
-                    ]}
-                    onPress={() => setBookingData(prev => ({ ...prev, players: num }))}
-                  >
-                    <Text
+          {/* Contenu des étapes */}
+          <View style={styles.stepsContainer}>
+            {/* Étape 1: Configuration (Joueurs + Trous) */}
+            {currentStep === 1 && (
+              <View style={styles.stepContent}>
+                <Text style={styles.sectionTitle}>Nombre de joueurs</Text>
+                <View style={styles.playersSelector}>
+                  {[1, 2, 3].map((num) => (
+                    <TouchableOpacity
+                      key={num}
                       style={[
-                        styles.optionText,
-                        bookingData.players === num && styles.optionTextActive,
+                        styles.optionButton,
+                        bookingData.players === num && styles.optionButtonActive,
                       ]}
+                      onPress={() => setBookingData((prev) => ({ ...prev, players: num }))}
                     >
-                      {num} {num === 1 ? 'joueur' : 'joueurs'}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                      <Text
+                        style={[
+                          styles.optionText,
+                          bookingData.players === num && styles.optionTextActive,
+                        ]}
+                      >
+                        {num} {num === 1 ? 'joueur' : 'joueurs'}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
 
-              <Text style={styles.sectionTitle}>Type de parcours</Text>
-              <View style={styles.holesSelector}>
-                {[9, 18].map((num) => (
-                  <TouchableOpacity
-                    key={num}
-                    style={[
-                      styles.optionButton,
-                      styles.optionButtonLarge,
-                      bookingData.holes === num && styles.optionButtonActive,
-                    ]}
-                    onPress={() => setBookingData(prev => ({ ...prev, holes: num }))}
-                  >
-                    <Text
+                <Text style={styles.sectionTitle}>Type de parcours</Text>
+                <View style={styles.holesSelector}>
+                  {[9, 18].map((num) => (
+                    <TouchableOpacity
+                      key={num}
                       style={[
-                        styles.optionText,
-                        bookingData.holes === num && styles.optionTextActive,
+                        styles.optionButton,
+                        styles.optionButtonLarge,
+                        bookingData.holes === num && styles.optionButtonActive,
                       ]}
+                      onPress={() => setBookingData((prev) => ({ ...prev, holes: num }))}
                     >
-                      {num} trous
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                      <Text
+                        style={[
+                          styles.optionText,
+                          bookingData.holes === num && styles.optionTextActive,
+                        ]}
+                      >
+                        {num} trous
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Affichage du prix dynamique */}
+                <View style={styles.pricePreview}>
+                  <Text style={styles.priceLabel}>Prix estimé</Text>
+                  <Text style={styles.priceValue}>
+                    {calculatePrice(bookingData.players, bookingData.holes)}€
+                  </Text>
+                </View>
               </View>
+            )}
 
-              {/* Affichage du prix dynamique */}
-              <View style={styles.pricePreview}>
-                <Text style={styles.priceLabel}>Prix estimé</Text>
-                <Text style={styles.priceValue}>{calculatePrice(bookingData.players, bookingData.holes)}€</Text>
-              </View>
-            </View>
+            {/* Étape 2: Sélection de la date */}
+            {currentStep === 2 && (
+              <CalendarStep
+                selectedDate={bookingData.date}
+                onDateSelect={(date) => setBookingData((prev) => ({ ...prev, date }))}
+                proId={proId}
+              />
+            )}
+
+            {/* Étape 3: Sélection des créneaux */}
+            {currentStep === 3 && (
+              <TimeSlotStep
+                selectedSlot={bookingData.timeSlot}
+                onSlotSelect={(slotId) => setBookingData((prev) => ({ ...prev, timeSlot: slotId }))}
+                selectedDate={bookingData.date}
+                proId={proId}
+              />
+            )}
+
+            {/* Étape 4: Récapitulatif */}
+            {currentStep === 4 && (
+              <SummaryStep
+                bookingData={bookingData}
+                proName={proName}
+                courseName={selectedCourseName}
+              />
+            )}
+
+            {/* Étape 5: Paiement */}
+            {currentStep === 5 && (
+              <PaymentStep
+                totalAmount={bookingData.totalPrice}
+                onPaymentSuccess={() => {
+                  goToNextStep();
+                }}
+                onPaymentError={(error) => {
+                  console.error('Payment error:', error);
+                  // Gérer l'erreur de paiement
+                }}
+                bookingData={bookingData}
+              />
+            )}
+
+            {/* Étape 6: Confirmation */}
+            {currentStep === 6 && (
+              <SuccessStep
+                proName={proName}
+                courseName={selectedCourseName}
+                bookingData={bookingData}
+              />
+            )}
+          </View>
+
+          {/* Bouton d'action principal */}
+          {currentStep < 6 && (
+            <TouchableOpacity
+              style={[styles.nextButton, !canGoNext && styles.nextButtonDisabled]}
+              onPress={goToNextStep}
+              disabled={!canGoNext}
+            >
+              <Text style={styles.nextButtonText}>{currentStep === 5 ? 'Payer' : 'Continuer'}</Text>
+            </TouchableOpacity>
           )}
 
-          {/* Étape 2: Sélection de la date */}
-          {currentStep === 2 && (
-            <CalendarStep
-              selectedDate={bookingData.date}
-              onDateSelect={(date) => setBookingData(prev => ({ ...prev, date }))}
-              proId={proId}
-            />
-          )}
-
-          {/* Étape 3: Sélection des créneaux */}
-          {currentStep === 3 && (
-            <TimeSlotStep
-              selectedSlot={bookingData.timeSlot}
-              onSlotSelect={(slotId) => setBookingData(prev => ({ ...prev, timeSlot: slotId }))}
-              selectedDate={bookingData.date}
-              proId={proId}
-            />
-          )}
-
-          {/* Étape 4: Récapitulatif */}
-          {currentStep === 4 && (
-            <SummaryStep
-              bookingData={bookingData}
-              proName={proName}
-              courseName={selectedCourseName}
-            />
-          )}
-
-          {/* Étape 5: Paiement */}
-          {currentStep === 5 && (
-            <PaymentStep
-              totalAmount={bookingData.totalPrice}
-              onPaymentSuccess={() => {
-                goToNextStep();
-              }}
-              onPaymentError={(error) => {
-                console.error('Payment error:', error);
-                // Gérer l'erreur de paiement
-              }}
-              bookingData={bookingData}
-            />
-          )}
-
-          {/* Étape 6: Confirmation */}
           {currentStep === 6 && (
-            <SuccessStep
-              proName={proName}
-              courseName={selectedCourseName}
-              bookingData={bookingData}
-            />
+            <TouchableOpacity
+              style={styles.nextButton}
+              onPress={() => {
+                bottomSheetRef.current?.close();
+                onBookingComplete?.();
+                // Fermer toutes les modales et naviguer directement vers le profil
+                router.dismissAll();
+                router.replace('/profile');
+              }}
+            >
+              <Text style={styles.nextButtonText}>Terminé</Text>
+            </TouchableOpacity>
           )}
-        </View>
-
-        {/* Bouton d'action principal */}
-        {currentStep < 6 && (
-          <TouchableOpacity
-            style={[styles.nextButton, !canGoNext && styles.nextButtonDisabled]}
-            onPress={goToNextStep}
-            disabled={!canGoNext}
-          >
-            <Text style={styles.nextButtonText}>
-              {currentStep === 5 ? 'Payer' : 'Continuer'}
-            </Text>
-          </TouchableOpacity>
-        )}
-
-        {currentStep === 6 && (
-          <TouchableOpacity
-            style={styles.nextButton}
-            onPress={() => {
-              bottomSheetRef.current?.close();
-              onBookingComplete?.();
-              // Fermer toutes les modales et naviguer directement vers le profil
-              router.dismissAll();
-              router.replace('/profile');
-            }}
-          >
-            <Text style={styles.nextButtonText}>Terminé</Text>
-          </TouchableOpacity>
-        )}
-      </BottomSheetView>
-    </BottomSheet>
-  );
-});
+        </BottomSheetView>
+      </BottomSheet>
+    );
+  }
+);
 
 BookingBottomSheetV2.displayName = 'BookingBottomSheetV2';
 

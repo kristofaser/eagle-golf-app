@@ -37,7 +37,6 @@ interface TransformedProData extends JoueurData {
   original: ProProfileWithDetails;
 }
 
-
 export default function SearchScreen() {
   const router = useRouter();
   const inputRef = useRef<TextInput>(null);
@@ -91,7 +90,7 @@ export default function SearchScreen() {
     if (!experience || typeof experience !== 'object') return 5;
 
     // Si l'experience est un objet avec des années, calculer la moyenne
-    const years = Object.values(experience).filter(val => typeof val === 'number') as number[];
+    const years = Object.values(experience).filter((val) => typeof val === 'number');
     if (years.length > 0) {
       return Math.round(years.reduce((sum, year) => sum + year, 0) / years.length);
     }
@@ -120,9 +119,8 @@ export default function SearchScreen() {
         proProfile?.skill_mental,
       ].filter(Boolean) as number[];
 
-      const averageSkill = skills.length > 0
-        ? skills.reduce((sum, skill) => sum + skill, 0) / skills.length
-        : 0;
+      const averageSkill =
+        skills.length > 0 ? skills.reduce((sum, skill) => sum + skill, 0) / skills.length : 0;
 
       // Extraire les spécialités basées sur les scores les plus élevés
       const skillNames = ['driving', 'irons', 'wedging', 'chipping', 'putting', 'mental'];
@@ -137,28 +135,36 @@ export default function SearchScreen() {
 
       const topSkills = skillNames
         .map((name, index) => ({ name, score: skillScores[index] }))
-        .filter(skill => skill.score >= 7)
+        .filter((skill) => skill.score >= 7)
         .sort((a, b) => b.score - a.score)
         .slice(0, 2)
-        .map(skill => skill.name);
+        .map((skill) => skill.name);
 
       return {
         id: pro.id,
         title: `${pro.first_name} ${pro.last_name}`,
-        imageUrl: pro.avatar_url || 'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=400&h=300&fit=crop&crop=center',
+        imageUrl:
+          pro.avatar_url ||
+          'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=400&h=300&fit=crop&crop=center',
         type: 'joueur' as const,
         age: proProfile?.date_of_birth ? calculateAge(proProfile.date_of_birth) : undefined,
         region: pro.city || 'Non spécifié',
         handicap: proProfile?.division ? `Division ${proProfile.division}` : 'Pro',
         scoreAverage: averageSkill > 0 ? Math.round(72 - (averageSkill - 5)) : undefined,
         specialite: topSkills.length > 0 ? topSkills.join(', ') : 'Polyvalent',
-        styleJeu: proProfile?.experience ?
-          Object.keys(proProfile.experience).join(', ') : 'Adaptatif',
+        styleJeu: proProfile?.experience
+          ? Object.keys(proProfile.experience).join(', ')
+          : 'Adaptatif',
         experience: calculateExperienceYears(proProfile?.experience),
-        circuits: proProfile?.company_status === 'auto_entrepreneur' ? 'Indépendant' :
-                 proProfile?.company_status === 'micro_entreprise' ? 'Micro-entreprise' : 'Professionnel',
-        meilleurResultat: proProfile?.world_ranking ?
-          `Classement mondial: ${proProfile.world_ranking}` : 'Professionnel certifié',
+        circuits:
+          proProfile?.company_status === 'auto_entrepreneur'
+            ? 'Indépendant'
+            : proProfile?.company_status === 'micro_entreprise'
+              ? 'Micro-entreprise'
+              : 'Professionnel',
+        meilleurResultat: proProfile?.world_ranking
+          ? `Classement mondial: ${proProfile.world_ranking}`
+          : 'Professionnel certifié',
         victoires: Math.floor(averageSkill / 2), // Estimation basée sur les compétences
         tarif: '120€', // TODO: récupérer depuis pro_pricing
         rating: Math.min(5, Math.max(3, averageSkill / 2)),
@@ -199,21 +205,29 @@ export default function SearchScreen() {
   }, [coursesResults, loadProsForAllCourses]);
 
   // Gestionnaire de changement de texte
-  const handleTextChange = useCallback((text: string) => {
-    const safeText = text || '';
-    setQuery(safeText);
-  }, [setQuery]);
+  const handleTextChange = useCallback(
+    (text: string) => {
+      const safeText = text || '';
+      setQuery(safeText);
+    },
+    [setQuery]
+  );
 
   // Gestionnaire de sélection de catégorie
-  const handleCategoryChange = useCallback((newCategory: SearchCategory) => {
-    setCategory(newCategory === 'parcours' ? 'courses' : newCategory);
-  }, [setCategory]);
+  const handleCategoryChange = useCallback(
+    (newCategory: SearchCategory) => {
+      setCategory(newCategory === 'parcours' ? 'courses' : newCategory);
+    },
+    [setCategory]
+  );
 
   // Fonction pour charger les pros disponibles sur un parcours (pour la modal)
   const loadProsForCourse = useCallback(async (course: CourseCardData) => {
     setLoadingPros(true);
     try {
-      const { data: pros, error } = await proAvailabilityService.getProsAvailableOnCourse(course.id);
+      const { data: pros, error } = await proAvailabilityService.getProsAvailableOnCourse(
+        course.id
+      );
       if (error) {
         console.error('Erreur chargement pros:', error);
         setAvailablePros([]);
@@ -232,16 +246,18 @@ export default function SearchScreen() {
   const loadProsForAllCourses = useCallback(async (courses: CourseCardData[]) => {
     const prosPromises = courses.map(async (course) => {
       try {
-        const { data: pros, error } = await proAvailabilityService.getProsAvailableOnCourse(course.id);
+        const { data: pros, error } = await proAvailabilityService.getProsAvailableOnCourse(
+          course.id
+        );
         return {
           courseId: course.id,
-          pros: error ? [] : (pros || [])
+          pros: error ? [] : pros || [],
         };
       } catch (error) {
         console.error('Erreur chargement pros pour parcours:', course.id, error);
         return {
           courseId: course.id,
-          pros: []
+          pros: [],
         };
       }
     });
@@ -284,95 +300,102 @@ export default function SearchScreen() {
   );
 
   // Render des résultats
-  const renderProResult = useCallback((pro: TransformedProData) => (
-    <ProCard
-      key={pro.id}
-      data={pro}
-      onPress={() => handleProPress(pro)}
-      onCardPress={() => handleProPress(pro)}
-      isHidden={false}
-    />
-  ), [handleProPress]);
+  const renderProResult = useCallback(
+    (pro: TransformedProData) => (
+      <ProCard
+        key={pro.id}
+        data={pro}
+        onPress={() => handleProPress(pro)}
+        onCardPress={() => handleProPress(pro)}
+        isHidden={false}
+      />
+    ),
+    [handleProPress]
+  );
 
-  const renderCourseResult = useCallback((course: CourseCardData, index: number) => {
-    // Calculer la distance réelle
-    const distance = userLocation && course.latitude && course.longitude
-      ? formatDistance(calculateDistance(
-          userLocation.latitude,
-          userLocation.longitude,
-          parseFloat(course.latitude.toString()),
-          parseFloat(course.longitude.toString())
-        ))
-      : "-- km";
+  const renderCourseResult = useCallback(
+    (course: CourseCardData, index: number) => {
+      // Calculer la distance réelle
+      const distance =
+        userLocation && course.latitude && course.longitude
+          ? formatDistance(
+              calculateDistance(
+                userLocation.latitude,
+                userLocation.longitude,
+                parseFloat(course.latitude.toString()),
+                parseFloat(course.longitude.toString())
+              )
+            )
+          : '-- km';
 
-    // Récupérer les pros disponibles pour ce parcours
-    const coursePros = coursesPros[course.id] || [];
+      // Récupérer les pros disponibles pour ce parcours
+      const coursePros = coursesPros[course.id] || [];
 
-    // Construire le nom avec département
-    const nameWithDepartment = course.department
-      ? `${course.name} - ${course.department}`
-      : course.name;
+      // Construire le nom avec département
+      const nameWithDepartment = course.department
+        ? `${course.name} - ${course.department}`
+        : course.name;
 
-    return (
-      <TouchableOpacity
-        key={course.id}
-        style={styles.courseCard}
-        onPress={() => handleCoursePress(course)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.courseHeader}>
-          <Text variant="body" color="charcoal" numberOfLines={1} style={styles.courseName}>
-            {nameWithDepartment}
-          </Text>
-          <Text variant="caption" color="accent" style={styles.courseDistance}>
-            {distance}
-          </Text>
-        </View>
+      return (
+        <TouchableOpacity
+          key={course.id}
+          style={styles.courseCard}
+          onPress={() => handleCoursePress(course)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.courseHeader}>
+            <Text variant="body" color="charcoal" numberOfLines={1} style={styles.courseName}>
+              {nameWithDepartment}
+            </Text>
+            <Text variant="caption" color="accent" style={styles.courseDistance}>
+              {distance}
+            </Text>
+          </View>
 
-        {/* Section des avatars des pros */}
-        <View style={styles.prosSection}>
-          {coursePros.length > 0 ? (
-            <View style={styles.prosAvatars}>
-              {coursePros.slice(0, 4).map((pro, idx) => (
-                <CircleAvatar
-                  key={pro.id}
-                  avatarUrl={pro.avatar_url}
-                  firstName={pro.first_name}
-                  lastName={pro.last_name}
-                  size={36}
-                  style={[
-                    styles.proAvatar,
-                    idx > 0 && { marginLeft: -10 } // Superposition légère ajustée
-                  ]}
-                  borderWidth={2}
-                  borderColor={Colors.neutral.white}
+          {/* Section des avatars des pros */}
+          <View style={styles.prosSection}>
+            {coursePros.length > 0 ? (
+              <View style={styles.prosAvatars}>
+                {coursePros.slice(0, 4).map((pro, idx) => (
+                  <CircleAvatar
+                    key={pro.id}
+                    avatarUrl={pro.avatar_url}
+                    firstName={pro.first_name}
+                    lastName={pro.last_name}
+                    size={36}
+                    style={[
+                      styles.proAvatar,
+                      idx > 0 && { marginLeft: -10 }, // Superposition légère ajustée
+                    ]}
+                    borderWidth={2}
+                    borderColor={Colors.neutral.white}
+                  />
+                ))}
+                {coursePros.length > 4 && (
+                  <View style={[styles.moreProsBadge, { marginLeft: -10 }]}>
+                    <Text style={styles.moreProsBadgeText}>+{coursePros.length - 4}</Text>
+                  </View>
+                )}
+              </View>
+            ) : (
+              <View style={styles.noProsContainer}>
+                <Text variant="caption" color="course" style={styles.noProsText}>
+                  Aucun pro disponible
+                </Text>
+                <CourseAlertToggle
+                  golfCourseId={course.id}
+                  courseName={course.name}
+                  compact={true}
+                  style={styles.compactAlertToggle}
                 />
-              ))}
-              {coursePros.length > 4 && (
-                <View style={[styles.moreProsBadge, { marginLeft: -10 }]}>
-                  <Text style={styles.moreProsBadgeText}>
-                    +{coursePros.length - 4}
-                  </Text>
-                </View>
-              )}
-            </View>
-          ) : (
-            <View style={styles.noProsContainer}>
-              <Text variant="caption" color="course" style={styles.noProsText}>
-                Aucun pro disponible
-              </Text>
-              <CourseAlertToggle
-                golfCourseId={course.id}
-                courseName={course.name}
-                compact={true}
-                style={styles.compactAlertToggle}
-              />
-            </View>
-          )}
-        </View>
-      </TouchableOpacity>
-    );
-  }, [handleCoursePress, userLocation, coursesPros]);
+              </View>
+            )}
+          </View>
+        </TouchableOpacity>
+      );
+    },
+    [handleCoursePress, userLocation, coursesPros]
+  );
 
   const hasResults = prosResults.length > 0 || coursesResults.length > 0;
   const showEmptyState = query.length >= 2 && !isLoading && !hasResults;
@@ -381,12 +404,14 @@ export default function SearchScreen() {
   const CARD_WIDTH = 280;
   const CARD_SPACING = Spacing.m;
 
-  const getItemLayout = useCallback((data: any, index: number) => ({
-    length: CARD_WIDTH + CARD_SPACING,
-    offset: (CARD_WIDTH + CARD_SPACING) * index,
-    index,
-  }), []);
-
+  const getItemLayout = useCallback(
+    (data: any, index: number) => ({
+      length: CARD_WIDTH + CARD_SPACING,
+      offset: (CARD_WIDTH + CARD_SPACING) * index,
+      index,
+    }),
+    []
+  );
 
   return (
     <>
@@ -396,15 +421,8 @@ export default function SearchScreen() {
           headerShown: true,
           headerBackVisible: false,
           headerLeft: () => (
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={{ marginLeft: 16, padding: 8 }}
-            >
-              <Ionicons
-                name="arrow-back"
-                size={24}
-                color={Colors.neutral.charcoal}
-              />
+            <TouchableOpacity onPress={() => router.back()} style={{ marginLeft: 16, padding: 8 }}>
+              <Ionicons name="arrow-back" size={24} color={Colors.neutral.charcoal} />
             </TouchableOpacity>
           ),
           headerStyle: {
@@ -419,108 +437,97 @@ export default function SearchScreen() {
         }}
       />
       <SafeAreaView style={styles.container}>
-      
-      {/* Header avec barre de recherche */}
-      <View style={styles.searchHeader}>
-        <View style={styles.searchInputContainer}>
-          <Ionicons
-            name="search"
-            size={20}
-            color={Colors.neutral.course}
-            style={styles.searchIcon}
-          />
-          <TextInput
-            ref={inputRef}
-            value={query}
-            onChangeText={handleTextChange}
-            placeholder="Rechercher des pros ou des parcours..."
-            placeholderTextColor={Colors.neutral.course}
-            style={styles.searchInput}
-            autoCapitalize="none"
-            autoCorrect={false}
-            returnKeyType="search"
-            enablesReturnKeyAutomatically
-            editable={true}
-            keyboardType="default"
-          />
-          {query.length > 0 && (
-            <TouchableOpacity onPress={() => setQuery('')} style={styles.clearButton}>
-              <Ionicons name="close-circle" size={20} color={Colors.neutral.course} />
+        {/* Header avec barre de recherche */}
+        <View style={styles.searchHeader}>
+          <View style={styles.searchInputContainer}>
+            <Ionicons
+              name="search"
+              size={20}
+              color={Colors.neutral.course}
+              style={styles.searchIcon}
+            />
+            <TextInput
+              ref={inputRef}
+              value={query}
+              onChangeText={handleTextChange}
+              placeholder="Rechercher des pros ou des parcours..."
+              placeholderTextColor={Colors.neutral.course}
+              style={styles.searchInput}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="search"
+              enablesReturnKeyAutomatically
+              editable={true}
+              keyboardType="default"
+            />
+            {query.length > 0 && (
+              <TouchableOpacity onPress={() => setQuery('')} style={styles.clearButton}>
+                <Ionicons name="close-circle" size={20} color={Colors.neutral.course} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* Filtres de catégorie */}
+        <View style={styles.categoryContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <TouchableOpacity
+              style={[styles.categoryButton, category === 'all' && styles.categoryButtonActive]}
+              onPress={() => handleCategoryChange('all')}
+            >
+              <Text variant="body" color={category === 'all' ? 'white' : 'charcoal'}>
+                Tous
+              </Text>
             </TouchableOpacity>
-          )}
+            <TouchableOpacity
+              style={[styles.categoryButton, category === 'pros' && styles.categoryButtonActive]}
+              onPress={() => handleCategoryChange('pros')}
+            >
+              <Text variant="body" color={category === 'pros' ? 'white' : 'charcoal'}>
+                Pros
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.categoryButton, category === 'courses' && styles.categoryButtonActive]}
+              onPress={() => handleCategoryChange('parcours')}
+            >
+              <Text variant="body" color={category === 'courses' ? 'white' : 'charcoal'}>
+                Parcours
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
         </View>
-      </View>
 
-      {/* Filtres de catégorie */}
-      <View style={styles.categoryContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <TouchableOpacity
-            style={[
-              styles.categoryButton,
-              category === 'all' && styles.categoryButtonActive,
-            ]}
-            onPress={() => handleCategoryChange('all')}
-          >
-            <Text variant="body" color={category === 'all' ? 'white' : 'charcoal'}>
-              Tous
+        {/* Résultats */}
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.primary.accent} />
+            <Text variant="caption" color="course" style={{ marginTop: Spacing.s }}>
+              Recherche en cours...
             </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.categoryButton,
-              category === 'pros' && styles.categoryButtonActive,
-            ]}
-            onPress={() => handleCategoryChange('pros')}
-          >
-            <Text variant="body" color={category === 'pros' ? 'white' : 'charcoal'}>
-              Pros
+          </View>
+        ) : query.length < 2 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="search" size={48} color={Colors.neutral.mist} />
+            <Text variant="body" color="course" style={styles.emptyStateText}>
+              Tapez au moins 2 caractères pour lancer la recherche
             </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.categoryButton,
-              category === 'courses' && styles.categoryButtonActive,
-            ]}
-            onPress={() => handleCategoryChange('parcours')}
-          >
-            <Text variant="body" color={category === 'courses' ? 'white' : 'charcoal'}>
-              Parcours
+          </View>
+        ) : showEmptyState ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="search-outline" size={48} color={Colors.neutral.mist} />
+            <Text variant="h3" color="course">
+              Aucun résultat
             </Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
-
-      {/* Résultats */}
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary.accent} />
-          <Text variant="caption" color="course" style={{ marginTop: Spacing.s }}>
-            Recherche en cours...
-          </Text>
-        </View>
-      ) : query.length < 2 ? (
-        <View style={styles.emptyState}>
-          <Ionicons name="search" size={48} color={Colors.neutral.mist} />
-          <Text variant="body" color="course" style={styles.emptyStateText}>
-            Tapez au moins 2 caractères pour lancer la recherche
-          </Text>
-        </View>
-      ) : showEmptyState ? (
-        <View style={styles.emptyState}>
-          <Ionicons name="search-outline" size={48} color={Colors.neutral.mist} />
-          <Text variant="h3" color="course">
-            Aucun résultat
-          </Text>
-          <Text variant="body" color="course" style={styles.emptyStateSubtext}>
-            Essayez avec d'autres mots-clés
-          </Text>
-        </View>
-      ) : (
-        <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-          <View style={styles.resultsContainer}>
-            {/* Résultats des pros */}
-            {prosResults.length > 0 &&
-              (category === 'all' || category === 'pros') && (
+            <Text variant="body" color="course" style={styles.emptyStateSubtext}>
+              Essayez avec d'autres mots-clés
+            </Text>
+          </View>
+        ) : (
+          <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+            <View style={styles.resultsContainer}>
+              {/* Résultats des pros */}
+              {prosResults.length > 0 && (category === 'all' || category === 'pros') && (
                 <View style={styles.section}>
                   <Text variant="h3" color="charcoal" style={styles.sectionTitle}>
                     Professionnels ({prosCount})
@@ -544,9 +551,8 @@ export default function SearchScreen() {
                 </View>
               )}
 
-            {/* Résultats des parcours */}
-            {coursesResults.length > 0 &&
-              (category === 'all' || category === 'courses') && (
+              {/* Résultats des parcours */}
+              {coursesResults.length > 0 && (category === 'all' || category === 'courses') && (
                 <View style={styles.section}>
                   <Text variant="h3" color="charcoal" style={styles.sectionTitle}>
                     Parcours ({coursesCount})
@@ -562,9 +568,9 @@ export default function SearchScreen() {
                   />
                 </View>
               )}
-          </View>
-        </ScrollView>
-      )}
+            </View>
+          </ScrollView>
+        )}
       </SafeAreaView>
 
       {/* Modal pros disponibles */}
@@ -581,23 +587,25 @@ export default function SearchScreen() {
               <Text variant="h3" color="charcoal" style={styles.modalTitle}>
                 {selectedCourse?.name || 'Pros disponibles'}
               </Text>
-              {selectedCourse && userLocation && selectedCourse.latitude && selectedCourse.longitude && (
-                <View style={styles.modalDistanceBadge}>
-                  <Text style={styles.modalDistanceText}>
-                    {formatDistance(calculateDistance(
-                      userLocation.latitude,
-                      userLocation.longitude,
-                      parseFloat(selectedCourse.latitude.toString()),
-                      parseFloat(selectedCourse.longitude.toString())
-                    ))}
-                  </Text>
-                </View>
-              )}
+              {selectedCourse &&
+                userLocation &&
+                selectedCourse.latitude &&
+                selectedCourse.longitude && (
+                  <View style={styles.modalDistanceBadge}>
+                    <Text style={styles.modalDistanceText}>
+                      {formatDistance(
+                        calculateDistance(
+                          userLocation.latitude,
+                          userLocation.longitude,
+                          parseFloat(selectedCourse.latitude.toString()),
+                          parseFloat(selectedCourse.longitude.toString())
+                        )
+                      )}
+                    </Text>
+                  </View>
+                )}
             </View>
-            <TouchableOpacity
-              onPress={() => setIsModalVisible(false)}
-              style={styles.closeButton}
-            >
+            <TouchableOpacity onPress={() => setIsModalVisible(false)} style={styles.closeButton}>
               <Ionicons name="close" size={24} color={Colors.neutral.charcoal} />
             </TouchableOpacity>
           </View>
@@ -653,7 +661,12 @@ export default function SearchScreen() {
                     {/* Informations principales */}
                     <View style={styles.modalProInfo}>
                       <View style={styles.modalProMainInfo}>
-                        <Text variant="h4" color="charcoal" numberOfLines={1} style={styles.modalProName}>
+                        <Text
+                          variant="h4"
+                          color="charcoal"
+                          numberOfLines={1}
+                          style={styles.modalProName}
+                        >
                           {item.first_name} {item.last_name}
                         </Text>
 
@@ -685,7 +698,7 @@ export default function SearchScreen() {
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                       >
                         <Ionicons
-                          name={isFavorite ? "heart" : "heart-outline"}
+                          name={isFavorite ? 'heart' : 'heart-outline'}
                           size={20}
                           color={isFavorite ? Colors.semantic.error.default : Colors.neutral.course}
                         />

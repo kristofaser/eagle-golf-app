@@ -17,11 +17,7 @@ interface SuccessStepProps {
   };
 }
 
-export const SuccessStep: React.FC<SuccessStepProps> = ({
-  proName,
-  courseName,
-  bookingData,
-}) => {
+export const SuccessStep: React.FC<SuccessStepProps> = ({ proName, courseName, bookingData }) => {
   // Animations
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -84,9 +80,7 @@ export const SuccessStep: React.FC<SuccessStepProps> = ({
         ]}
       >
         <Text style={styles.successTitle}>Félicitations !</Text>
-        <Text style={styles.successMessage}>
-          Votre réservation est en cours de traitement
-        </Text>
+        <Text style={styles.successMessage}>Votre réservation est en cours de traitement</Text>
       </Animated.View>
 
       {/* Détails de la réservation */}
@@ -104,16 +98,12 @@ export const SuccessStep: React.FC<SuccessStepProps> = ({
 
           <View style={styles.detailRow}>
             <Ionicons name="person" size={18} color={Colors.primary.electric} />
-            <Text style={styles.detailText}>
-              {proName}
-            </Text>
+            <Text style={styles.detailText}>{proName}</Text>
           </View>
 
           <View style={styles.detailRow}>
             <Ionicons name="golf" size={18} color={Colors.primary.electric} />
-            <Text style={styles.detailText}>
-              {courseName}
-            </Text>
+            <Text style={styles.detailText}>{courseName}</Text>
           </View>
 
           <View style={styles.detailRow}>
@@ -125,15 +115,14 @@ export const SuccessStep: React.FC<SuccessStepProps> = ({
 
           <View style={styles.detailRow}>
             <Ionicons name="time" size={18} color={Colors.primary.electric} />
-            <Text style={styles.detailText}>
-              {getFormattedTimeSlot()}
-            </Text>
+            <Text style={styles.detailText}>{getFormattedTimeSlot()}</Text>
           </View>
 
           <View style={styles.detailRow}>
             <Ionicons name="people" size={18} color={Colors.primary.electric} />
             <Text style={styles.detailText}>
-              {bookingData.players} {bookingData.players === 1 ? 'joueur' : 'joueurs'} • {bookingData.holes} trous
+              {bookingData.players} {bookingData.players === 1 ? 'joueur' : 'joueurs'} •{' '}
+              {bookingData.holes} trous
             </Text>
           </View>
 
@@ -158,12 +147,11 @@ export const SuccessStep: React.FC<SuccessStepProps> = ({
         <View style={styles.infoTextContainer}>
           <Text style={styles.infoTitle}>Prochaines étapes</Text>
           <Text style={styles.infoText}>
-            Eagle va contacter le golf pour valider votre réservation.
-            Vous recevrez une confirmation définitive sous 24h.
+            Eagle va contacter le golf pour valider votre réservation. Vous recevrez une
+            confirmation définitive sous 24h.
           </Text>
         </View>
       </Animated.View>
-
     </View>
   );
 };

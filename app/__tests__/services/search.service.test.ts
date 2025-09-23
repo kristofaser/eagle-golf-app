@@ -166,7 +166,7 @@ describe('SearchService', () => {
       expect(result.data?.availabilities?.[0].id).toBe('avail-2');
     });
 
-    it('devrait gérer le cas où le parcours n\'existe pas', async () => {
+    it("devrait gérer le cas où le parcours n'existe pas", async () => {
       (golfCourseService.getGolfCourse as jest.Mock).mockResolvedValue({
         data: null,
         error: new Error('Parcours non trouvé'),
@@ -178,9 +178,11 @@ describe('SearchService', () => {
       });
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Parcours non trouvé',
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Parcours non trouvé',
+        })
+      );
     });
 
     it('devrait gérer les erreurs de récupération des disponibilités', async () => {
@@ -200,12 +202,14 @@ describe('SearchService', () => {
       });
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Erreur disponibilités',
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Erreur disponibilités',
+        })
+      );
     });
 
-    it('devrait gérer le cas où aucune disponibilité n\'est trouvée', async () => {
+    it("devrait gérer le cas où aucune disponibilité n'est trouvée", async () => {
       (golfCourseService.getGolfCourse as jest.Mock).mockResolvedValue({
         data: mockGolfCourse,
         error: null,
@@ -377,12 +381,14 @@ describe('SearchService', () => {
       const result = await searchService.searchByPro({});
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Erreur récupération pros',
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Erreur récupération pros',
+        })
+      );
     });
 
-    it('devrait filtrer les résultats des disponibilités en cas d\'erreur partielle', async () => {
+    it("devrait filtrer les résultats des disponibilités en cas d'erreur partielle", async () => {
       (profileService.listProProfiles as jest.Mock).mockResolvedValue({
         data: mockPros,
         error: null,
@@ -463,7 +469,7 @@ describe('SearchService', () => {
       expect(result.data?.golfCourses).toHaveLength(0);
     });
 
-    it('devrait gérer le cas où aucun pro n\'est trouvé', async () => {
+    it("devrait gérer le cas où aucun pro n'est trouvé", async () => {
       (profileService.listProProfiles as jest.Mock).mockResolvedValue({
         data: [],
         error: null,
@@ -600,10 +606,7 @@ describe('SearchService', () => {
       select: jest.fn().mockReturnValue({
         ilike: jest.fn().mockReturnValue({
           limit: jest.fn().mockResolvedValue({
-            data: [
-              { name: 'Golf Club Paris' },
-              { name: 'Golf Club Lyon' },
-            ],
+            data: [{ name: 'Golf Club Paris' }, { name: 'Golf Club Lyon' }],
             error: null,
           }),
         }),
@@ -671,9 +674,11 @@ describe('SearchService', () => {
       const result = await searchService.getSuggestions('test', 'pros');
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Erreur base de données',
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Erreur base de données',
+        })
+      );
     });
 
     it('devrait gérer les erreurs de requête pour les parcours', async () => {
@@ -690,9 +695,11 @@ describe('SearchService', () => {
       const result = await searchService.getSuggestions('test', 'courses');
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Erreur réseau',
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Erreur réseau',
+        })
+      );
     });
 
     it('devrait retourner un tableau vide si aucune donnée', async () => {
@@ -811,10 +818,12 @@ describe('SearchService', () => {
 
       expect(result.error).toBeNull();
       expect(result.data).toHaveLength(1);
-      expect(result.data?.[0]).toEqual(expect.objectContaining({
-        name: 'Golf Club Paris',
-        city: 'Paris',
-      }));
+      expect(result.data?.[0]).toEqual(
+        expect.objectContaining({
+          name: 'Golf Club Paris',
+          city: 'Paris',
+        })
+      );
     });
 
     it('devrait rechercher les pros en mode by-pro avec disponibilités', async () => {
@@ -830,11 +839,13 @@ describe('SearchService', () => {
 
       expect(result.error).toBeNull();
       expect(result.data).toHaveLength(1);
-      expect(result.data?.[0]).toEqual(expect.objectContaining({
-        first_name: 'Jean',
-        last_name: 'Dupont',
-        has_availabilities: true,
-      }));
+      expect(result.data?.[0]).toEqual(
+        expect.objectContaining({
+          first_name: 'Jean',
+          last_name: 'Dupont',
+          has_availabilities: true,
+        })
+      );
     });
 
     it('devrait retourner un tableau vide pour une requête trop courte', async () => {
@@ -867,9 +878,11 @@ describe('SearchService', () => {
       });
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Erreur requête',
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Erreur requête',
+        })
+      );
     });
 
     it('devrait marquer les pros sans disponibilités', async () => {
@@ -898,9 +911,11 @@ describe('SearchService', () => {
       });
 
       expect(result.error).toBeNull();
-      expect(result.data?.[0]).toEqual(expect.objectContaining({
-        has_availabilities: false,
-      }));
+      expect(result.data?.[0]).toEqual(
+        expect.objectContaining({
+          has_availabilities: false,
+        })
+      );
     });
 
     it('devrait appliquer la limite de résultats', async () => {
@@ -1037,9 +1052,11 @@ describe('SearchService', () => {
       });
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Service indisponible',
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Service indisponible',
+        })
+      );
     });
 
     it('devrait gérer les erreurs dans searchByPro avec dependencies qui échouent', async () => {
@@ -1052,9 +1069,11 @@ describe('SearchService', () => {
       });
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Service profiles indisponible',
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Service profiles indisponible',
+        })
+      );
     });
 
     it('devrait gérer les erreurs dans quickSearch avec requêtes Supabase qui échouent', async () => {
@@ -1076,9 +1095,11 @@ describe('SearchService', () => {
       });
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Connexion perdue',
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Connexion perdue',
+        })
+      );
     });
 
     it('devrait gérer les erreurs dans advancedSearch avec services qui échouent', async () => {
@@ -1091,9 +1112,11 @@ describe('SearchService', () => {
       });
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Service en maintenance',
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Service en maintenance',
+        })
+      );
     });
 
     it('devrait filtrer correctement les pros avec profiles null dans quickSearch', async () => {
@@ -1280,9 +1303,11 @@ describe('SearchService', () => {
 
       // L'erreur dans Promise.all fait échouer toute la méthode
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Erreur disponibilités',
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Erreur disponibilités',
+        })
+      );
     });
 
     it('devrait appliquer les bons filtres dans advancedSearch', async () => {
@@ -1332,7 +1357,7 @@ describe('SearchService', () => {
           {
             id: 'pro-1',
             first_name: 'Jean-Pierre',
-            last_name: 'O\'Connor',
+            last_name: "O'Connor",
             bio: 'Spécialiste "putting" & driving',
           },
         ],

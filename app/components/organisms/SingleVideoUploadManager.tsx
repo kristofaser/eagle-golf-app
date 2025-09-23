@@ -1,18 +1,17 @@
 import React, { useState, useCallback } from 'react';
-import {
-  View,
-  StyleSheet,
-  Alert,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
+import { View, StyleSheet, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { VideoView, useVideoPlayer } from 'expo-video';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { Text, Button } from '@/components/atoms';
 import { HugeiconsIcon } from '@hugeicons/react-native';
-import { Video02Icon, CloudUploadIcon, Delete02Icon, Image02Icon } from '@hugeicons/core-free-icons';
+import {
+  Video02Icon,
+  CloudUploadIcon,
+  Delete02Icon,
+  Image02Icon,
+} from '@hugeicons/core-free-icons';
 import { useAuth } from '@/hooks/useAuth';
 import { s3, getPublicUrl, generateVideoKey, BUCKET_NAME } from '@/utils/scaleway';
 import { logger } from '@/utils/logger';
@@ -38,7 +37,10 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
   onVideoDeleted,
 }) => {
   const { user } = useAuth();
-  const [uploadProgress, setUploadProgress] = useState<UploadProgress>({ progress: 0, isUploading: false });
+  const [uploadProgress, setUploadProgress] = useState<UploadProgress>({
+    progress: 0,
+    isUploading: false,
+  });
   const [selectedVideo, setSelectedVideo] = useState<string>('');
 
   const updateUploadProgress = useCallback((progress: number, isUploading: boolean) => {
@@ -62,7 +64,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
           size: asset.size,
           sizeInMB: asset.size ? (asset.size / (1024 * 1024)).toFixed(2) : 'Inconnue',
           uri: asset.uri,
-          mimeType: asset.mimeType
+          mimeType: asset.mimeType,
         });
 
         if (asset.size && asset.size > 50 * 1024 * 1024) {
@@ -89,7 +91,10 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (status !== 'granted') {
-        Alert.alert('Permission requise', 'L\'accès à la galerie est nécessaire pour sélectionner une vidéo');
+        Alert.alert(
+          'Permission requise',
+          "L'accès à la galerie est nécessaire pour sélectionner une vidéo"
+        );
         return;
       }
 
@@ -110,7 +115,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
           type: asset.type,
           width: asset.width,
           height: asset.height,
-          duration: asset.duration
+          duration: asset.duration,
         });
 
         // Vérifier la taille du fichier (limite à 50MB)
@@ -150,7 +155,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
         ok: response.ok,
         status: response.status,
         statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries())
+        headers: Object.fromEntries(response.headers.entries()),
       });
 
       if (!response.ok) {
@@ -161,7 +166,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
       logger.dev('📦 Blob créé:', {
         size: blob.size,
         type: blob.type,
-        sizeInMB: (blob.size / (1024 * 1024)).toFixed(2)
+        sizeInMB: (blob.size / (1024 * 1024)).toFixed(2),
       });
 
       if (blob.size === 0) {
@@ -170,7 +175,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
 
       // Générer la clé d'objet
       const objectKey = generateVideoKey(user.id, skillKey);
-      logger.dev('Clé d\'objet générée:', objectKey);
+      logger.dev("Clé d'objet générée:", objectKey);
 
       // Upload vers Scaleway Object Storage
       logger.dev('Début upload vers Scaleway Object Storage...');
@@ -183,14 +188,19 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
         ACL: 'public-read', // Bucket public configuré
       };
 
-      const result = await s3.upload(uploadParams, {
-        partSize: 10 * 1024 * 1024, // 10MB chunks
-        queueSize: 1,
-      }).on('httpUploadProgress', (progress) => {
-        const percentage = Math.round((progress.loaded / progress.total) * 100);
-        updateUploadProgress(percentage, true);
-        logger.dev(`Progress: ${percentage}% (${(progress.loaded / (1024 * 1024)).toFixed(2)}MB / ${(progress.total / (1024 * 1024)).toFixed(2)}MB)`);
-      }).promise();
+      const result = await s3
+        .upload(uploadParams, {
+          partSize: 10 * 1024 * 1024, // 10MB chunks
+          queueSize: 1,
+        })
+        .on('httpUploadProgress', (progress) => {
+          const percentage = Math.round((progress.loaded / progress.total) * 100);
+          updateUploadProgress(percentage, true);
+          logger.dev(
+            `Progress: ${percentage}% (${(progress.loaded / (1024 * 1024)).toFixed(2)}MB / ${(progress.total / (1024 * 1024)).toFixed(2)}MB)`
+          );
+        })
+        .promise();
 
       logger.dev('Résultat upload Scaleway:', result);
 
@@ -206,47 +216,45 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
       onVideoUploaded?.(skillKey, publicUrl);
       logger.dev('UPLOAD TERMINÉ AVEC SUCCÈS !');
       Alert.alert('Succès', 'Vidéo uploadée avec succès !');
-
     } catch (error) {
       logger.error('ERREUR UPLOAD SCALEWAY', error);
       logger.error('Stack trace:', error instanceof Error ? error.stack : 'Pas de stack trace');
       updateUploadProgress(0, false);
-      Alert.alert('Erreur', `Impossible d'uploader la vidéo: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+      Alert.alert(
+        'Erreur',
+        `Impossible d'uploader la vidéo: ${error instanceof Error ? error.message : 'Erreur inconnue'}`
+      );
     }
   }, [user, selectedVideo, skillKey, updateUploadProgress, onVideoUploaded]);
 
   const deleteVideo = useCallback(async () => {
     if (!user) return;
 
-    Alert.alert(
-      'Supprimer la vidéo',
-      'Êtes-vous sûr de vouloir supprimer cette vidéo ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const objectKey = generateVideoKey(user.id, skillKey);
+    Alert.alert('Supprimer la vidéo', 'Êtes-vous sûr de vouloir supprimer cette vidéo ?', [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Supprimer',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const objectKey = generateVideoKey(user.id, skillKey);
 
-              const deleteParams = {
-                Bucket: BUCKET_NAME,
-                Key: objectKey,
-              };
+            const deleteParams = {
+              Bucket: BUCKET_NAME,
+              Key: objectKey,
+            };
 
-              await s3.deleteObject(deleteParams).promise();
+            await s3.deleteObject(deleteParams).promise();
 
-              onVideoDeleted?.(skillKey);
-              Alert.alert('Succès', 'Vidéo supprimée');
-            } catch (error) {
-              logger.error('Erreur suppression Scaleway', error);
-              Alert.alert('Erreur', 'Impossible de supprimer la vidéo');
-            }
-          },
+            onVideoDeleted?.(skillKey);
+            Alert.alert('Succès', 'Vidéo supprimée');
+          } catch (error) {
+            logger.error('Erreur suppression Scaleway', error);
+            Alert.alert('Erreur', 'Impossible de supprimer la vidéo');
+          }
         },
-      ]
-    );
+      },
+    ]);
   }, [user, skillKey, onVideoDeleted]);
 
   const hasCurrentVideo = !!currentVideoUrl;
@@ -254,7 +262,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
 
   // Create video player for preview
   const previewVideoUrl = selectedVideo || currentVideoUrl;
-  const player = useVideoPlayer(previewVideoUrl || '', player => {
+  const player = useVideoPlayer(previewVideoUrl || '', (player) => {
     if (previewVideoUrl) {
       player.play();
       player.loop = false;
@@ -307,10 +315,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
       <View style={styles.actionButtons}>
         {!hasSelectedVideo && !uploadProgress.isUploading && (
           <View style={styles.selectionButtons}>
-            <TouchableOpacity
-              style={styles.selectButton}
-              onPress={selectFromGallery}
-            >
+            <TouchableOpacity style={styles.selectButton} onPress={selectFromGallery}>
               <HugeiconsIcon
                 icon={Image02Icon}
                 size={16}
@@ -322,10 +327,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.selectButton}
-              onPress={selectVideo}
-            >
+            <TouchableOpacity style={styles.selectButton} onPress={selectVideo}>
               <HugeiconsIcon
                 icon={CloudUploadIcon}
                 size={16}
@@ -340,11 +342,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
         )}
 
         {hasSelectedVideo && !uploadProgress.isUploading && (
-          <Button
-            variant="primary"
-            size="small"
-            onPress={uploadVideo}
-          >
+          <Button variant="primary" size="small" onPress={uploadVideo}>
             Uploader
           </Button>
         )}
@@ -359,10 +357,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
         )}
 
         {hasCurrentVideo && !uploadProgress.isUploading && (
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={deleteVideo}
-          >
+          <TouchableOpacity style={styles.deleteButton} onPress={deleteVideo}>
             <HugeiconsIcon
               icon={Delete02Icon}
               size={16}

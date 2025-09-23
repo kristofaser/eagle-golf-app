@@ -18,7 +18,7 @@ import { Colors, Typography, Spacing, BorderRadius, Elevation } from '@/constant
 import { ANIMATION_PRESETS, SPRING_CONFIGS } from '@/constants/animations';
 
 interface ButtonProps extends TouchableOpacityProps {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'success' | 'warning' | 'danger';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'soft' | 'success' | 'warning' | 'danger';
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   loading?: boolean;
   disabled?: boolean;
@@ -57,19 +57,22 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   // Animated styles
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: opacity.value,
-  }), []);
+  const animatedStyle = useAnimatedStyle(
+    () => ({
+      transform: [{ scale: scale.value }],
+      opacity: opacity.value,
+    }),
+    []
+  );
 
   // Gesture handling with premium micro-interactions
   const tapGesture = Gesture.Tap()
     .enabled(!isDisabled)
     .onBegin(() => {
       'worklet';
-      // Press down animation with spring bounce
-      scale.value = withSpring(ANIMATION_PRESETS.BUTTON_PRESS.scale, SPRING_CONFIGS.BOUNCY);
-      opacity.value = withSpring(0.8, SPRING_CONFIGS.MEDIUM);
+      // Press down animation plus subtile pour style épuré
+      scale.value = withSpring(0.98, SPRING_CONFIGS.MEDIUM);
+      opacity.value = withSpring(0.9, SPRING_CONFIGS.MEDIUM);
     })
     .onFinalize((event) => {
       'worklet';
@@ -78,7 +81,8 @@ export const Button: React.FC<ButtonProps> = ({
       opacity.value = withSpring(1, SPRING_CONFIGS.MEDIUM);
 
       // Trigger onPress if gesture was successful
-      if (event.state === 5 && onPress) { // 5 = END state
+      if (event.state === 5 && onPress) {
+        // 5 = END state
         runOnJS(onPress)(event as any);
       }
     });
@@ -97,16 +101,15 @@ export const Button: React.FC<ButtonProps> = ({
         accessibilityRole="button"
         accessibilityState={{
           disabled: isDisabled,
-          busy: loading
+          busy: loading,
         }}
-        accessibilityLabel={loading ? "Chargement en cours..." : (typeof children === 'string' ? children : undefined)}
+        accessibilityLabel={
+          loading ? 'Chargement en cours...' : typeof children === 'string' ? children : undefined
+        }
         {...props}
       >
         {loading ? (
-          <ActivityIndicator
-            color={getLoaderColor()}
-            size="small"
-          />
+          <ActivityIndicator color={getLoaderColor()} size="small" />
         ) : (
           <Text
             style={[
@@ -130,18 +133,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: BorderRadius.medium,
+    borderRadius: BorderRadius.xlarge, // Plus moderne
   },
 
-  // Variants
+  // Variants - Style moderne/épuré
   primary: {
-    backgroundColor: Colors.primary.electric,
-    ...Elevation.small,
+    backgroundColor: Colors.primary.navy, // Navy sophistiqué
+    paddingHorizontal: Spacing.xl, // Plus de padding horizontal
+    paddingVertical: Spacing.l, // Plus de padding vertical
+    minHeight: 52, // Hauteur plus ergonomique
+    ...Elevation.minimal, // Ombre plus subtile
   },
   secondary: {
-    backgroundColor: Colors.neutral.cloud,
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: Colors.neutral.mist,
+    borderColor: `rgba(2, 33, 66, 0.12)`, // Navy transparent
+  },
+  soft: {
+    backgroundColor: `rgba(2, 33, 66, 0.04)`, // Navy très transparent
+    paddingHorizontal: Spacing.xl, // Plus de padding horizontal
+    paddingVertical: Spacing.l, // Plus de padding vertical
+    minHeight: 52, // Hauteur plus ergonomique
+    borderWidth: 1,
+    borderColor: `rgba(2, 33, 66, 0.08)`,
   },
   outline: {
     backgroundColor: 'transparent',
@@ -181,9 +195,9 @@ const styles = StyleSheet.create({
     minHeight: 40,
   },
   lg: {
-    paddingHorizontal: Spacing.l,
-    paddingVertical: Spacing.s,
-    minHeight: 44,
+    paddingHorizontal: Spacing.xl, // Plus de padding horizontal pour confort
+    paddingVertical: Spacing.l, // Plus de padding vertical pour hauteur
+    minHeight: 52, // Hauteur augmentée pour meilleure ergonomie
   },
   xl: {
     paddingHorizontal: Spacing.xl,
@@ -196,17 +210,21 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
 
-  // Text styles
+  // Text styles - Style épuré
   text: {
     fontFamily: Typography.fontFamily.primary,
-    fontWeight: Typography.fontWeight.semiBold,
+    fontWeight: Typography.fontWeight.medium, // Moins bold pour plus d'élégance
     textAlign: 'center',
+    letterSpacing: 0.3, // Espacement subtil pour modernité
   },
   primaryText: {
     color: Colors.neutral.white,
   },
   secondaryText: {
-    color: Colors.neutral.charcoal,
+    color: Colors.primary.navy, // Cohérence avec le style épuré
+  },
+  softText: {
+    color: Colors.primary.navy,
   },
   outlineText: {
     color: Colors.primary.electric,

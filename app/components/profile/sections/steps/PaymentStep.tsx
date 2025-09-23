@@ -97,7 +97,7 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
       setIsProcessing(false);
     } catch (error: any) {
       setIsProcessing(false);
-      onPaymentError(error.message || 'Erreur d\'initialisation du paiement');
+      onPaymentError(error.message || "Erreur d'initialisation du paiement");
     }
   };
 
@@ -130,7 +130,6 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
       } else {
         throw new Error(bookingResult.error || 'Erreur lors de la création de la réservation');
       }
-
     } catch (error: any) {
       setIsProcessing(false);
       onPaymentError(error.message || 'Le paiement a échoué');
@@ -195,9 +194,7 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
       <View style={styles.amountCard}>
         <Text style={styles.amountLabel}>Montant total à payer</Text>
         <Text style={styles.amountValue}>{totalAmount}€</Text>
-        <Text style={styles.amountInfo}>
-          Incluant les frais de service Eagle (20%)
-        </Text>
+        <Text style={styles.amountInfo}>Incluant les frais de service Eagle (20%)</Text>
       </View>
 
       {/* Méthodes de paiement acceptées */}
@@ -223,21 +220,15 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
       <View style={styles.securityInfo}>
         <View style={styles.securityItem}>
           <Ionicons name="lock-closed" size={16} color={Colors.primary.electric} />
-          <Text style={styles.securityText}>
-            Vos données bancaires sont cryptées et sécurisées
-          </Text>
+          <Text style={styles.securityText}>Vos données bancaires sont cryptées et sécurisées</Text>
         </View>
         <View style={styles.securityItem}>
           <Ionicons name="time" size={16} color={Colors.primary.electric} />
-          <Text style={styles.securityText}>
-            Annulation gratuite jusqu'à 24h avant la partie
-          </Text>
+          <Text style={styles.securityText}>Annulation gratuite jusqu'à 24h avant la partie</Text>
         </View>
         <View style={styles.securityItem}>
           <Ionicons name="checkmark-circle" size={16} color={Colors.primary.electric} />
-          <Text style={styles.securityText}>
-            Paiement débité après confirmation du golf
-          </Text>
+          <Text style={styles.securityText}>Paiement débité après confirmation du golf</Text>
         </View>
       </View>
 

@@ -82,7 +82,7 @@ const LEGAL_STATUS_MAPPING: Record<string, string> = {
 
   // SA (Société Anonyme) - mappées vers SAS car plus courant
   '5499': 'SAS',
-  '5505': 'SAS', 
+  '5505': 'SAS',
   '5510': 'SAS',
   '5515': 'SAS',
   '5520': 'SAS',

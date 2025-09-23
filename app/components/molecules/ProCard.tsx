@@ -37,7 +37,8 @@ const getDivisionShortName = (division: string): string => {
 
 // Fonction pour obtenir le style du badge selon la division
 const getDivisionBadgeStyle = (division: string) => {
-  const divisionConfig = Colors.division[division as keyof typeof Colors.division] || Colors.division.default;
+  const divisionConfig =
+    Colors.division[division as keyof typeof Colors.division] || Colors.division.default;
   return {
     backgroundColor: divisionConfig.background,
     borderColor: divisionConfig.border,
@@ -91,15 +92,15 @@ const ProCardComponent: React.FC<ProCardProps> = ({
   );
 
   // Mémoriser les styles calculés pour éviter les re-calculs
-  const divisionBadgeStyle = useMemo(
-    () => getDivisionBadgeStyle(data.division),
-    [data.division]
-  );
+  const divisionBadgeStyle = useMemo(() => getDivisionBadgeStyle(data.division), [data.division]);
 
-  const cardStyle = useMemo(() => ({
-    width: cardWidth,
-    opacity: isHidden ? 0 : 1,
-  }), [cardWidth, isHidden]);
+  const cardStyle = useMemo(
+    () => ({
+      width: cardWidth,
+      opacity: isHidden ? 0 : 1,
+    }),
+    [cardWidth, isHidden]
+  );
 
   if (isHorizontal) {
     return (
@@ -138,7 +139,12 @@ const ProCardComponent: React.FC<ProCardProps> = ({
             {/* Division */}
             {data.division && (
               <View style={[styles.horizontalDivisionBadge, divisionBadgeStyle]}>
-                <Text variant="caption" color="ball" weight="semiBold" style={styles.horizontalDivisionText}>
+                <Text
+                  variant="caption"
+                  color="ball"
+                  weight="semiBold"
+                  style={styles.horizontalDivisionText}
+                >
                   {getDivisionShortName(data.division)}
                 </Text>
               </View>
@@ -162,7 +168,12 @@ const ProCardComponent: React.FC<ProCardProps> = ({
             {data.rating && (
               <View style={styles.horizontalRatingContainer}>
                 <Icon name="star" size={12} color={Colors.primary.accent} family="FontAwesome" />
-                <Text variant="caption" color="charcoal" weight="medium" style={styles.horizontalRatingText}>
+                <Text
+                  variant="caption"
+                  color="charcoal"
+                  weight="medium"
+                  style={styles.horizontalRatingText}
+                >
                   {data.rating.toFixed(1)}
                 </Text>
               </View>
@@ -175,16 +186,22 @@ const ProCardComponent: React.FC<ProCardProps> = ({
             onPress={handleFavoritePress}
             activeOpacity={0.7}
             accessibilityRole="button"
-            accessibilityLabel={showDeleteButton ? "Supprimer" : (isFavorite ? "Retirer des favoris" : "Ajouter aux favoris")}
-            accessibilityHint={showDeleteButton ? `Supprimer ${data.title}` : `${isFavorite ? "Retirer" : "Ajouter"} ${data.title} de votre liste de favoris`}
+            accessibilityLabel={
+              showDeleteButton
+                ? 'Supprimer'
+                : isFavorite
+                  ? 'Retirer des favoris'
+                  : 'Ajouter aux favoris'
+            }
+            accessibilityHint={
+              showDeleteButton
+                ? `Supprimer ${data.title}`
+                : `${isFavorite ? 'Retirer' : 'Ajouter'} ${data.title} de votre liste de favoris`
+            }
             accessibilityState={{ selected: !showDeleteButton && isFavorite }}
           >
             {showDeleteButton ? (
-              <Ionicons
-                name="trash-outline"
-                size={20}
-                color={Colors.semantic.error}
-              />
+              <Ionicons name="trash-outline" size={20} color={Colors.semantic.error} />
             ) : (
               <View style={[styles.heartContainer, isToggling && styles.heartAnimating]}>
                 <Ionicons
@@ -229,8 +246,8 @@ const ProCardComponent: React.FC<ProCardProps> = ({
             onPress={handleFavoritePress}
             activeOpacity={0.7}
             accessibilityRole="button"
-            accessibilityLabel={isFavorite ? "Retirer des favoris" : "Ajouter aux favoris"}
-            accessibilityHint={`${isFavorite ? "Retirer" : "Ajouter"} ${data.title} de votre liste de favoris`}
+            accessibilityLabel={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            accessibilityHint={`${isFavorite ? 'Retirer' : 'Ajouter'} ${data.title} de votre liste de favoris`}
             accessibilityState={{ selected: isFavorite }}
           >
             <View style={[styles.heartContainer, isToggling && styles.heartAnimating]}>
@@ -256,7 +273,11 @@ const ProCardComponent: React.FC<ProCardProps> = ({
                 weight="semiBold"
                 style={[
                   styles.divisionText,
-                  { color: Colors.division[data.division as keyof typeof Colors.division]?.text || Colors.division.default.text }
+                  {
+                    color:
+                      Colors.division[data.division as keyof typeof Colors.division]?.text ||
+                      Colors.division.default.text,
+                  },
                 ]}
               >
                 {getDivisionShortName(data.division)}
@@ -273,19 +294,13 @@ const ProCardComponent: React.FC<ProCardProps> = ({
               </Text>
             </View>
           )}
-
         </View>
 
         {/* Informations sous l'image */}
         <View style={styles.infoContainer}>
           <View style={styles.titleRow}>
             {data.isAvailable && <View style={styles.statusDot} />}
-            <Text
-              variant="body"
-              color="charcoal"
-              numberOfLines={1}
-              style={styles.name}
-            >
+            <Text variant="body" color="charcoal" numberOfLines={1} style={styles.name}>
               {data.title}
             </Text>
           </View>

@@ -5,7 +5,10 @@ import { Text, LoadingScreen } from '@/components/atoms';
 import { useUser } from '@/hooks/useUser';
 import { useUserContext } from '@/contexts/UserContext';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
-import { checkUserProRequestStatus, UserProRequestResult } from '@/services/pro-request-status.service';
+import {
+  checkUserProRequestStatus,
+  UserProRequestResult,
+} from '@/services/pro-request-status.service';
 import { useProRequestRealtime } from '@/hooks/useProRequestRealtime';
 import BecomeProScreen from '../become-pro';
 import ProRequestPendingScreen from './pro-request-pending';
@@ -19,7 +22,7 @@ export default function ProStatusScreen() {
   const [statusResult, setStatusResult] = useState<UserProRequestResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // 🔄 Realtime : Écoute automatique des changements de statut pro
   // Se connecte seulement si l'utilisateur existe et n'est pas déjà pro
   const shouldListenRealtime = user?.id && user.profile?.user_type !== 'pro';
@@ -30,13 +33,13 @@ export default function ProStatusScreen() {
       // Rafraîchir l'affichage quand le statut change
       console.log('🔄 Realtime callback: Statut changé de', oldStatus, 'vers', newStatus);
       await refreshStatus();
-    }
+    },
   });
 
   // Fonction pour rafraîchir le statut (appelée par le realtime)
   const refreshStatus = React.useCallback(async () => {
     if (!user?.id) return;
-    
+
     try {
       console.log('🔄 Rafraîchissement du statut pro request...');
       const result = await checkUserProRequestStatus(user.id);
@@ -51,7 +54,7 @@ export default function ProStatusScreen() {
     const checkStatus = async () => {
       try {
         if (!user?.id) {
-          console.log('❌ Pas d\'utilisateur connecté');
+          console.log("❌ Pas d'utilisateur connecté");
           router.replace('/(auth)/login');
           return;
         }
@@ -65,10 +68,9 @@ export default function ProStatusScreen() {
 
         console.log('🔍 Vérification du statut pour utilisateur amateur:', user.id);
         const result = await checkUserProRequestStatus(user.id);
-        
+
         console.log('📊 Résultat du statut:', result);
         setStatusResult(result);
-        
       } catch (err) {
         console.error('❌ Erreur lors de la vérification du statut:', err);
         setError('Erreur lors du chargement du statut de votre demande');
@@ -132,7 +134,7 @@ export default function ProStatusScreen() {
     case 'pending':
       console.log('📋 Affichage écran demande en attente');
       return (
-        <ProRequestPendingScreen 
+        <ProRequestPendingScreen
           request={statusResult.request!}
           onContactSupport={() => {
             // TODO: Implémenter contact support
@@ -141,7 +143,7 @@ export default function ProStatusScreen() {
           onBackToProfile={() => router.back()}
         />
       );
-      
+
     case 'rejected':
       console.log('❌ Affichage écran demande rejetée');
       return (
@@ -153,13 +155,13 @@ export default function ProStatusScreen() {
             router.replace('/become-pro');
           }}
           onContactSupport={() => {
-            // TODO: Implémenter contact support  
+            // TODO: Implémenter contact support
             console.log('📞 Contact support demandé');
           }}
           onBackToProfile={() => router.back()}
         />
       );
-      
+
     case 'approved':
       console.log('✅ Affichage écran demande approuvée (cas rare)');
       return (
@@ -177,7 +179,7 @@ export default function ProStatusScreen() {
           onBackToProfile={() => router.back()}
         />
       );
-      
+
     case 'none':
     default:
       console.log('📝 Aucune demande - affichage formulaire become-pro');

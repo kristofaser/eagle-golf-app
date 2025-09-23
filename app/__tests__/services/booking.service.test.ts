@@ -254,7 +254,10 @@ describe('BookingService', () => {
       (supabase.from as jest.Mock).mockImplementation((table) => {
         if (table === 'pro_availabilities') {
           // Premier appel pour select, deuxième pour update
-          if ((supabase.from as jest.Mock).mock.calls.filter(c => c[0] === 'pro_availabilities').length === 1) {
+          if (
+            (supabase.from as jest.Mock).mock.calls.filter((c) => c[0] === 'pro_availabilities')
+              .length === 1
+          ) {
             return mockAvailabilityQuery;
           }
           return mockAvailabilityUpdate;
@@ -274,7 +277,7 @@ describe('BookingService', () => {
       });
     });
 
-    it('devrait rejeter si le créneau n\'existe pas', async () => {
+    it("devrait rejeter si le créneau n'existe pas", async () => {
       const mockAvailabilityQuery = {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
@@ -456,7 +459,7 @@ describe('BookingService', () => {
       expect(result.error).toBeNull();
     });
 
-    it('devrait gérer le cas où la réservation n\'existe pas', async () => {
+    it("devrait gérer le cas où la réservation n'existe pas", async () => {
       const mockQuery = {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
@@ -507,9 +510,9 @@ describe('BookingService', () => {
         booking_date: '2024-01-20',
         start_time: '10:00',
         number_of_players: 1,
-        total_amount: 57.50,
+        total_amount: 57.5,
         pro_fee: 50,
-        platform_fee: 7.50,
+        platform_fee: 7.5,
       };
 
       const invalidBooking: CreateBookingData = {
@@ -531,9 +534,9 @@ describe('BookingService', () => {
         booking_date: '2024-01-20',
         start_time: '10:00',
         number_of_players: 1,
-        total_amount: 57.50,
+        total_amount: 57.5,
         pro_fee: 50,
-        platform_fee: 7.50,
+        platform_fee: 7.5,
         // Pas de statut fourni
       };
 
@@ -558,7 +561,7 @@ describe('BookingService', () => {
     it('devrait accepter les statuts valides', () => {
       const validStatuses = ['pending', 'confirmed', 'cancelled', 'completed'];
 
-      validStatuses.forEach(status => {
+      validStatuses.forEach((status) => {
         const booking: CreateBookingData = {
           amateur_id: 'amateur_123',
           pro_id: 'pro_456',
@@ -566,14 +569,65 @@ describe('BookingService', () => {
           booking_date: '2024-01-20',
           start_time: '10:00',
           number_of_players: 1,
-          total_amount: 57.50,
+          total_amount: 57.5,
           pro_fee: 50,
-          platform_fee: 7.50,
+          platform_fee: 7.5,
           status: status as any,
         };
 
         expect(booking.status).toBe(status);
       });
+    });
+  });
+
+  describe('Calcul de remboursement', () => {
+    it('devrait calculer un remboursement intégral (48h+)', () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 3); // Dans 3 jours
+
+      const refundInfo = bookingService.calculateRefundInfo(
+        futureDate.toISOString().split('T')[0],
+        '14:00',
+        15000
+      );
+
+      expect(refundInfo.refundStatus).toBe('full');
+      expect(refundInfo.refundPercentage).toBe(100);
+      expect(refundInfo.refundAmount).toBe(15000);
+      expect(refundInfo.refundMessage).toBe('Remboursement intégral');
+    });
+
+    it('devrait calculer un remboursement partiel (24-48h)', () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+      futureDate.setHours(futureDate.getHours() + 12); // Dans ~36h
+
+      const refundInfo = bookingService.calculateRefundInfo(
+        futureDate.toISOString().split('T')[0],
+        '14:00',
+        15000
+      );
+
+      expect(refundInfo.refundStatus).toBe('partial');
+      expect(refundInfo.refundPercentage).toBe(50);
+      expect(refundInfo.refundAmount).toBe(7500);
+      expect(refundInfo.refundMessage).toBe('Remboursement partiel (50%)');
+    });
+
+    it('devrait calculer aucun remboursement (<24h)', () => {
+      const futureDate = new Date();
+      futureDate.setHours(futureDate.getHours() + 12); // Dans 12h
+
+      const refundInfo = bookingService.calculateRefundInfo(
+        futureDate.toISOString().split('T')[0],
+        '14:00',
+        15000
+      );
+
+      expect(refundInfo.refundStatus).toBe('none');
+      expect(refundInfo.refundPercentage).toBe(0);
+      expect(refundInfo.refundAmount).toBe(0);
+      expect(refundInfo.refundMessage).toBe('Non remboursable');
     });
   });
 });

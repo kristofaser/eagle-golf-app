@@ -68,19 +68,16 @@ export const CourseBottomSheet = forwardRef<BottomSheetModal, CourseBottomSheetP
 
     const loadAllPros = async () => {
       if (!course) return;
-      
+
       setIsLoadingPros(true);
       try {
         console.log(`Chargement des pros pour le parcours ${course.name}...`);
-        
+
         // Récupérer uniquement les pros qui ont des disponibilités sur ce parcours
-        const { data, error } = await profileService.getProsByGolfCourse(
-          course.id,
-          {
-            onlyAvailable: false, // Montrer tous les pros avec des disponibilités (même si complet)
-            limit: 20
-          }
-        );
+        const { data, error } = await profileService.getProsByGolfCourse(course.id, {
+          onlyAvailable: false, // Montrer tous les pros avec des disponibilités (même si complet)
+          limit: 20,
+        });
 
         if (data && !error) {
           console.log(`${data.length} pros trouvés pour ce parcours`);
@@ -209,17 +206,22 @@ export const CourseBottomSheet = forwardRef<BottomSheetModal, CourseBottomSheetP
                 </ScrollView>
               ) : (
                 <View style={styles.emptyState}>
-                  <Icon 
-                    name="person-off" 
-                    size={32} 
-                    color={Colors.neutral.course} 
-                    family="MaterialIcons" 
+                  <Icon
+                    name="person-off"
+                    size={32}
+                    color={Colors.neutral.course}
+                    family="MaterialIcons"
                   />
                   <Text variant="body" color="course" style={{ marginTop: Spacing.s }}>
                     Aucun professionnel disponible sur ce parcours
                   </Text>
-                  <Text variant="caption" color="gray" style={{ marginTop: Spacing.xs, textAlign: 'center' }}>
-                    Les professionnels apparaîtront ici lorsqu'ils auront indiqué leurs disponibilités
+                  <Text
+                    variant="caption"
+                    color="gray"
+                    style={{ marginTop: Spacing.xs, textAlign: 'center' }}
+                  >
+                    Les professionnels apparaîtront ici lorsqu'ils auront indiqué leurs
+                    disponibilités
                   </Text>
                 </View>
               )}

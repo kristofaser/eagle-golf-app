@@ -21,156 +21,154 @@ export interface BookingBottomSheetRef {
   close: () => void;
 }
 
-export const BookingBottomSheet = forwardRef<BookingBottomSheetRef, BookingBottomSheetProps>(({
-  price,
-  players,
-  onPlayersChange,
-  onBook,
-  isAuthenticated,
-  canIncrementPlayers,
-  canDecrementPlayers,
-  selectedCourseName,
-}, ref) => {
-  const insets = useSafeAreaInsets();
-  const bottomSheetRef = useRef<BottomSheet>(null);
+export const BookingBottomSheet = forwardRef<BookingBottomSheetRef, BookingBottomSheetProps>(
+  (
+    {
+      price,
+      players,
+      onPlayersChange,
+      onBook,
+      isAuthenticated,
+      canIncrementPlayers,
+      canDecrementPlayers,
+      selectedCourseName,
+    },
+    ref
+  ) => {
+    const insets = useSafeAreaInsets();
+    const bottomSheetRef = useRef<BottomSheet>(null);
 
-  useImperativeHandle(ref, () => ({
-    open: () => bottomSheetRef.current?.expand(),
-    close: () => bottomSheetRef.current?.close(),
-  }));
+    useImperativeHandle(ref, () => ({
+      open: () => bottomSheetRef.current?.expand(),
+      close: () => bottomSheetRef.current?.close(),
+    }));
 
-  const renderBackdrop = useCallback(
-    (props: any) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-        opacity={0.5}
-      />
-    ),
-    []
-  );
+    const renderBackdrop = useCallback(
+      (props: any) => (
+        <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} opacity={0.5} />
+      ),
+      []
+    );
 
-  const handleBookingPress = () => {
-    bottomSheetRef.current?.close();
-    onBook();
-  };
+    const handleBookingPress = () => {
+      bottomSheetRef.current?.close();
+      onBook();
+    };
 
-  return (
-    <BottomSheet
-      ref={bottomSheetRef}
-      index={-1}
-      snapPoints={['45%']}
-      enablePanDownToClose
-      backdropComponent={renderBackdrop}
-      handleIndicatorStyle={styles.indicator}
-      backgroundStyle={styles.background}
-    >
-      <BottomSheetView style={[styles.content, { paddingBottom: insets.bottom }]}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.title}>Configurer votre réservation</Text>
-          <TouchableOpacity
-            onPress={() => bottomSheetRef.current?.close()}
-            style={styles.closeButton}
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Fermer"
-          >
-            <Ionicons name="close" size={24} color={Colors.neutral.charcoal} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Golf sélectionné */}
-        {selectedCourseName && (
-          <View style={styles.courseInfo}>
-            <Ionicons name="location-outline" size={20} color={Colors.primary.coral} />
-            <Text style={styles.courseName}>{selectedCourseName}</Text>
-          </View>
-        )}
-
-        {/* Sélecteur de joueurs */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Nombre de joueurs</Text>
-          <View style={styles.playersSelector}>
+    return (
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={-1}
+        snapPoints={['45%']}
+        enablePanDownToClose
+        backdropComponent={renderBackdrop}
+        handleIndicatorStyle={styles.indicator}
+        backgroundStyle={styles.background}
+      >
+        <BottomSheetView style={[styles.content, { paddingBottom: insets.bottom }]}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Configurer votre réservation</Text>
             <TouchableOpacity
-              style={[styles.playerButton, !canDecrementPlayers && styles.playerButtonDisabled]}
-              onPress={() => onPlayersChange(players - 1)}
-              disabled={!canDecrementPlayers}
-              activeOpacity={0.7}
+              onPress={() => bottomSheetRef.current?.close()}
+              style={styles.closeButton}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Fermer"
             >
-              <Ionicons
-                name="remove-circle"
-                size={32}
-                color={!canDecrementPlayers ? Colors.neutral.mist : Colors.primary.coral}
-              />
-            </TouchableOpacity>
-
-            <View style={styles.playersDisplay}>
-              <Text style={styles.playersNumber}>{players}</Text>
-              <Text style={styles.playersLabel}>
-                {players === 1 ? 'joueur' : 'joueurs'}
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              style={[styles.playerButton, !canIncrementPlayers && styles.playerButtonDisabled]}
-              onPress={() => onPlayersChange(players + 1)}
-              disabled={!canIncrementPlayers}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="add-circle"
-                size={32}
-                color={!canIncrementPlayers ? Colors.neutral.mist : Colors.primary.coral}
-              />
+              <Ionicons name="close" size={24} color={Colors.neutral.charcoal} />
             </TouchableOpacity>
           </View>
-          <Text style={styles.playersHint}>
-            Le tarif peut varier selon le nombre de participants
-          </Text>
-        </View>
 
-        {/* Prix récapitulatif */}
-        <View style={styles.priceSection}>
-          <Text style={styles.priceSectionTitle}>Tarif estimé</Text>
-          <View style={styles.priceRow}>
-            <Text style={styles.priceLabel}>Par joueur</Text>
-            {price > 0 ? (
-              <Text style={styles.priceValue}>{price}€</Text>
-            ) : (
-              <Text style={styles.priceValue}>Sur devis</Text>
-            )}
-          </View>
-          {players > 1 && price > 0 && (
-            <View style={[styles.priceRow, styles.totalRow]}>
-              <Text style={styles.totalLabel}>Total ({players} joueurs)</Text>
-              <Text style={styles.totalValue}>{price * players}€</Text>
+          {/* Golf sélectionné */}
+          {selectedCourseName && (
+            <View style={styles.courseInfo}>
+              <Ionicons name="location-outline" size={20} color={Colors.primary.coral} />
+              <Text style={styles.courseName}>{selectedCourseName}</Text>
             </View>
           )}
-        </View>
 
-        {/* Bouton de confirmation */}
-        <TouchableOpacity
-          style={styles.confirmButton}
-          onPress={handleBookingPress}
-          activeOpacity={0.8}
-          accessible={true}
-          accessibilityRole="button"
-          accessibilityLabel={
-            isAuthenticated
-              ? `Confirmer la réservation pour ${players} ${players === 1 ? 'joueur' : 'joueurs'}`
-              : 'Se connecter pour réserver'
-          }
-        >
-          <Text style={styles.confirmButtonText}>
-            {isAuthenticated ? 'Confirmer la réservation' : 'Se connecter pour réserver'}
-          </Text>
-        </TouchableOpacity>
-      </BottomSheetView>
-    </BottomSheet>
-  );
-});
+          {/* Sélecteur de joueurs */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Nombre de joueurs</Text>
+            <View style={styles.playersSelector}>
+              <TouchableOpacity
+                style={[styles.playerButton, !canDecrementPlayers && styles.playerButtonDisabled]}
+                onPress={() => onPlayersChange(players - 1)}
+                disabled={!canDecrementPlayers}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="remove-circle"
+                  size={32}
+                  color={!canDecrementPlayers ? Colors.neutral.mist : Colors.primary.coral}
+                />
+              </TouchableOpacity>
+
+              <View style={styles.playersDisplay}>
+                <Text style={styles.playersNumber}>{players}</Text>
+                <Text style={styles.playersLabel}>{players === 1 ? 'joueur' : 'joueurs'}</Text>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.playerButton, !canIncrementPlayers && styles.playerButtonDisabled]}
+                onPress={() => onPlayersChange(players + 1)}
+                disabled={!canIncrementPlayers}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name="add-circle"
+                  size={32}
+                  color={!canIncrementPlayers ? Colors.neutral.mist : Colors.primary.coral}
+                />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.playersHint}>
+              Le tarif peut varier selon le nombre de participants
+            </Text>
+          </View>
+
+          {/* Prix récapitulatif */}
+          <View style={styles.priceSection}>
+            <Text style={styles.priceSectionTitle}>Tarif estimé</Text>
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>Par joueur</Text>
+              {price > 0 ? (
+                <Text style={styles.priceValue}>{price}€</Text>
+              ) : (
+                <Text style={styles.priceValue}>Sur devis</Text>
+              )}
+            </View>
+            {players > 1 && price > 0 && (
+              <View style={[styles.priceRow, styles.totalRow]}>
+                <Text style={styles.totalLabel}>Total ({players} joueurs)</Text>
+                <Text style={styles.totalValue}>{price * players}€</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Bouton de confirmation */}
+          <TouchableOpacity
+            style={styles.confirmButton}
+            onPress={handleBookingPress}
+            activeOpacity={0.8}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel={
+              isAuthenticated
+                ? `Confirmer la réservation pour ${players} ${players === 1 ? 'joueur' : 'joueurs'}`
+                : 'Se connecter pour réserver'
+            }
+          >
+            <Text style={styles.confirmButtonText}>
+              {isAuthenticated ? 'Confirmer la réservation' : 'Se connecter pour réserver'}
+            </Text>
+          </TouchableOpacity>
+        </BottomSheetView>
+      </BottomSheet>
+    );
+  }
+);
 
 BookingBottomSheet.displayName = 'BookingBottomSheet';
 

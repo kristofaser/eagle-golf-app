@@ -51,20 +51,26 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           const {
             data: { user },
           } = await supabase.auth.getUser();
-          
+
           if (user && user.id === userId) {
-            logger.warn('🚨 UserContext: Profil manquant détecté pour utilisateur authentifié:', userId);
-            
+            logger.warn(
+              '🚨 UserContext: Profil manquant détecté pour utilisateur authentifié:',
+              userId
+            );
+
             // Vérifier si c'est un problème de création incomplète
             const { data: authUser } = await supabase.auth.getUser();
-            const isRecentlyCreated = authUser?.user && 
+            const isRecentlyCreated =
+              authUser?.user &&
               new Date(authUser.user.created_at).getTime() > Date.now() - 10 * 60 * 1000; // 10 min
-            
+
             if (isRecentlyCreated) {
               // 🚨 NOUVEAUX COMPTES : Ne pas déconnecter immédiatement
               // Laisser le temps à la création différée de profil amateur
-              logger.warn('⏳ UserContext: Profil manquant pour nouveau compte, attente création différée...');
-              
+              logger.warn(
+                '⏳ UserContext: Profil manquant pour nouveau compte, attente création différée...'
+              );
+
               // Ne pas déconnecter pour l'instant, laisser la chance à la création différée
               // Le profil sera rechargé automatiquement via l'effet dans SessionContext
               return null;
@@ -72,22 +78,23 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               // Comptes anciens : comportement normal (vraie suppression admin)
               try {
                 await supabase.auth.signOut();
-                logger.dev('✅ UserContext: Déconnexion déclenchée pour profil manquant (compte ancien)');
-                
+                logger.dev(
+                  '✅ UserContext: Déconnexion déclenchée pour profil manquant (compte ancien)'
+                );
+
                 Alert.alert(
                   'Compte supprimé',
                   'Votre compte a été supprimé par un administrateur. Vous avez été déconnecté.',
                   [{ text: 'OK', style: 'default' }]
                 );
-                
               } catch (error) {
                 logger.error('❌ UserContext: Erreur lors de signOut:', error);
               }
-              
+
               return null;
             }
           }
-          
+
           return null;
         }
 

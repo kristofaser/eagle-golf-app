@@ -44,7 +44,12 @@ interface SkillSliderProps {
   onCameraPress?: () => void;
 }
 
-const SkillSlider: React.FC<SkillSliderProps> = ({ label, value, onValueChange, onCameraPress }) => {
+const SkillSlider: React.FC<SkillSliderProps> = ({
+  label,
+  value,
+  onValueChange,
+  onCameraPress,
+}) => {
   // S'assurer que value est un nombre valide
   const safeValue = isNaN(value) || value === undefined || value === null ? 0 : value;
 
@@ -821,7 +826,6 @@ export default function ProSettingsScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-
           </ScrollView>
 
           {/* Bouton de sauvegarde fixe */}
@@ -1127,7 +1131,6 @@ const styles = StyleSheet.create({
   addExperienceText: {
     marginLeft: Spacing.xs,
   },
-
 
   // Styles pour AddExperienceBottomSheet
   typeSelector: {

@@ -61,10 +61,10 @@ const OptimizedImageComponent: React.FC<OptimizedImageProps> = ({
 
   // Si erreur, afficher le fallback ou placeholder
   if (imageError) {
-    return fallback || (
-      <View style={[styles.fallback, imageStyle]}>
-        {placeholder || <ProfileSkeleton />}
-      </View>
+    return (
+      fallback || (
+        <View style={[styles.fallback, imageStyle]}>{placeholder || <ProfileSkeleton />}</View>
+      )
     );
   }
 

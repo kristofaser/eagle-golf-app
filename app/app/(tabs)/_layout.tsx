@@ -4,7 +4,7 @@ import { Colors, Typography, TouchTarget } from '@/constants/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useOverlay } from '@/contexts/OverlayContext';
 import { HugeiconsIcon } from '@hugeicons/react-native';
-import { TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View, Alert } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useUser } from '@/hooks/useUser';
 import { Avatar, FavoriteBadge } from '@/components/atoms';
@@ -43,6 +43,7 @@ export default function TabLayout() {
       router.push('/profile');
     }
   };
+
 
   return (
     <>
@@ -118,10 +119,7 @@ export default function TabLayout() {
               </TouchableOpacity>
 
               {/* Bouton Search */}
-              <TouchableOpacity
-                onPress={handleSearchPress}
-                style={TouchTarget.minimum}
-              >
+              <TouchableOpacity onPress={handleSearchPress} style={TouchTarget.minimum}>
                 <HugeiconsIcon icon={Search01Icon} size={24} color={Colors.primary.accent} />
               </TouchableOpacity>
             </View>

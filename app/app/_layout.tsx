@@ -6,7 +6,7 @@ import {
   Inter_500Medium,
   Inter_600SemiBold,
   Inter_700Bold,
-  Inter_800ExtraBold
+  Inter_800ExtraBold,
 } from '@expo-google-fonts/inter';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -123,10 +123,10 @@ export default function RootLayout() {
   const [loaded, error] = useFonts({
     ...FontAwesome.font,
     // Police mono disponible
-    'SpaceMono': require('../assets/fonts/SpaceMono-Regular.ttf'),
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     // Polices Inter pour le design system
     'Inter-Light': Inter_300Light,
-    'Inter': Inter_400Regular,
+    Inter: Inter_400Regular,
     'Inter-Regular': Inter_400Regular,
     'Inter-Medium': Inter_500Medium,
     'Inter-SemiBold': Inter_600SemiBold,

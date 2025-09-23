@@ -1,11 +1,11 @@
 /**
  * Hook useUserDeletionRealtime - Déconnexion automatique si utilisateur supprimé
- * 
+ *
  * Écoute en temps réel les suppressions de profils pour déconnecter immédiatement
  * l'utilisateur si son compte est supprimé par un administrateur depuis le backoffice.
- * 
+ *
  * ✅ SÉCURISÉ : Hook isolé sans effet de bord sur l'architecture existante
- * ✅ NON INVASIF : Utilise seulement des callbacks vers l'extérieur  
+ * ✅ NON INVASIF : Utilise seulement des callbacks vers l'extérieur
  * ✅ PERFORMANT : Se désabonne automatiquement au démontage
  * ✅ ROBUSTE : Gestion d'erreur complète avec fallback
  */
@@ -20,19 +20,19 @@ interface UserDeletionRealtimeOptions {
    * Permet à l'appelant de décider quoi faire (déconnexion, navigation, etc.)
    */
   onUserDeleted?: () => void;
-  
+
   /**
    * Message personnalisé à afficher à l'utilisateur
    * @default "Votre compte a été supprimé par un administrateur. Vous avez été déconnecté."
    */
   deletionMessage?: string;
-  
+
   /**
    * Afficher une alerte à l'utilisateur
    * @default true
    */
   showAlert?: boolean;
-  
+
   /**
    * Debug mode pour voir les logs de développement
    * @default false
@@ -42,10 +42,10 @@ interface UserDeletionRealtimeOptions {
 
 /**
  * Hook pour écouter les suppressions d'utilisateur en temps réel
- * 
+ *
  * @param userId - ID de l'utilisateur à surveiller (null = pas d'écoute)
  * @param options - Options de configuration du hook
- * 
+ *
  * @example
  * ```typescript
  * // Usage basique dans un contexte
@@ -55,8 +55,8 @@ interface UserDeletionRealtimeOptions {
  *   }
  * });
  * ```
- * 
- * @example  
+ *
+ * @example
  * ```typescript
  * // Usage avec options complètes
  * useUserDeletionRealtime(userId, {
@@ -77,83 +77,83 @@ export function useUserDeletionRealtime(
     onUserDeleted,
     deletionMessage = 'Votre compte a été supprimé par un administrateur. Vous avez été déconnecté.',
     showAlert = true,
-    debug = false
+    debug = false,
   } = options;
-  
+
   const channelRef = useRef<any>(null);
   const isSubscribedRef = useRef(false);
-  
-  const handleUserDeletion = useCallback(async (payload: any) => {
-    if (debug) {
-      logger.dev('🚨 Realtime User Deletion: Utilisateur supprimé détecté', {
-        userId,
-        deletedId: payload.old?.id,
-        payload: payload.old
-      });
-    }
-    
-    try {
-      // Vérifier que c'est bien notre utilisateur qui a été supprimé
-      if (payload.old?.id !== userId) {
-        if (debug) {
-          logger.dev('⏭️ Realtime User Deletion: Utilisateur différent ignoré', {
-            deletedId: payload.old?.id,
-            currentUserId: userId
-          });
-        }
-        return;
-      }
-      
-      // Afficher l'alerte si demandé
-      if (showAlert) {
-        Alert.alert(
-          'Compte supprimé',
-          deletionMessage,
-          [{ 
-            text: 'OK', 
-            style: 'default',
-            onPress: () => {
-              if (debug) {
-                logger.dev('✅ Realtime User Deletion: Utilisateur a confirmé l\'alerte');
-              }
-            }
-          }]
-        );
-      }
-      
-      // Callback personnalisé (déconnexion, navigation, etc.)
-      if (onUserDeleted) {
-        if (debug) {
-          logger.dev('🔄 Realtime User Deletion: Exécution callback onUserDeleted');
-        }
-        await onUserDeleted();
-      }
-      
+
+  const handleUserDeletion = useCallback(
+    async (payload: any) => {
       if (debug) {
-        logger.dev('✅ Realtime User Deletion: Traitement terminé avec succès');
+        logger.dev('🚨 Realtime User Deletion: Utilisateur supprimé détecté', {
+          userId,
+          deletedId: payload.old?.id,
+          payload: payload.old,
+        });
       }
-      
-    } catch (error) {
-      logger.error('❌ Realtime User Deletion: Erreur lors du traitement', error);
-      
-      // En cas d'erreur, essayer quand même d'exécuter le callback
+
       try {
+        // Vérifier que c'est bien notre utilisateur qui a été supprimé
+        if (payload.old?.id !== userId) {
+          if (debug) {
+            logger.dev('⏭️ Realtime User Deletion: Utilisateur différent ignoré', {
+              deletedId: payload.old?.id,
+              currentUserId: userId,
+            });
+          }
+          return;
+        }
+
+        // Afficher l'alerte si demandé
+        if (showAlert) {
+          Alert.alert('Compte supprimé', deletionMessage, [
+            {
+              text: 'OK',
+              style: 'default',
+              onPress: () => {
+                if (debug) {
+                  logger.dev("✅ Realtime User Deletion: Utilisateur a confirmé l'alerte");
+                }
+              },
+            },
+          ]);
+        }
+
+        // Callback personnalisé (déconnexion, navigation, etc.)
         if (onUserDeleted) {
+          if (debug) {
+            logger.dev('🔄 Realtime User Deletion: Exécution callback onUserDeleted');
+          }
           await onUserDeleted();
         }
-      } catch (callbackError) {
-        logger.error('❌ Realtime User Deletion: Erreur callback fallback', callbackError);
+
+        if (debug) {
+          logger.dev('✅ Realtime User Deletion: Traitement terminé avec succès');
+        }
+      } catch (error) {
+        logger.error('❌ Realtime User Deletion: Erreur lors du traitement', error);
+
+        // En cas d'erreur, essayer quand même d'exécuter le callback
+        try {
+          if (onUserDeleted) {
+            await onUserDeleted();
+          }
+        } catch (callbackError) {
+          logger.error('❌ Realtime User Deletion: Erreur callback fallback', callbackError);
+        }
       }
-    }
-  }, [userId, onUserDeleted, deletionMessage, showAlert, debug]);
-  
+    },
+    [userId, onUserDeleted, deletionMessage, showAlert, debug]
+  );
+
   useEffect(() => {
     // Ne pas s'abonner si pas d'utilisateur
     if (!userId) {
       if (debug) {
-        logger.dev('⏭️ Realtime User Deletion: Pas d\'userId, skip subscription');
+        logger.dev("⏭️ Realtime User Deletion: Pas d'userId, skip subscription");
       }
-      
+
       // Nettoyer une éventuelle subscription précédente
       if (channelRef.current) {
         if (debug) {
@@ -163,36 +163,38 @@ export function useUserDeletionRealtime(
         channelRef.current = null;
         isSubscribedRef.current = false;
       }
-      
+
       return;
     }
-    
+
     // Éviter les subscriptions multiples pour le même userId
     // Utiliser une ref stable pour comparer
     const currentChannelName = channelRef.current?.topic;
     const expectedChannelPrefix = `user-deletion-${userId}`;
-    
+
     if (currentChannelName?.startsWith(expectedChannelPrefix) && isSubscribedRef.current) {
       if (debug) {
         logger.dev('⏭️ Realtime User Deletion: Subscription déjà active pour cet userId');
       }
       return;
     }
-    
+
     // Nettoyer l'ancienne subscription si elle existe (changement d'userId)
     if (channelRef.current) {
       if (debug) {
-        logger.dev('🔌 Realtime User Deletion: Nettoyage subscription précédente (changement userId)');
+        logger.dev(
+          '🔌 Realtime User Deletion: Nettoyage subscription précédente (changement userId)'
+        );
       }
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
       isSubscribedRef.current = false;
     }
-    
+
     if (debug) {
       logger.dev('🔗 Realtime User Deletion: Connexion pour userId:', userId);
     }
-    
+
     // Créer le channel Supabase Realtime avec un nom unique
     const channelName = `user-deletion-${userId}-${Date.now()}`;
     const channel = supabase
@@ -203,72 +205,72 @@ export function useUserDeletionRealtime(
           event: 'DELETE', // Écouter uniquement les suppressions
           schema: 'public',
           table: 'profiles',
-          filter: `id=eq.${userId}` // Filtrer par notre utilisateur uniquement
+          filter: `id=eq.${userId}`, // Filtrer par notre utilisateur uniquement
         },
         handleUserDeletion
       )
       .subscribe((status) => {
         isSubscribedRef.current = status === 'SUBSCRIBED';
-        
+
         if (debug) {
           logger.dev('🔗 Realtime User Deletion: Statut subscription:', status);
         }
-        
+
         if (status === 'CHANNEL_ERROR') {
           logger.error('❌ Realtime User Deletion: Erreur de channel');
           isSubscribedRef.current = false;
         }
-        
+
         if (status === 'TIMED_OUT') {
           logger.warn('⏰ Realtime User Deletion: Timeout de connexion');
           isSubscribedRef.current = false;
         }
       });
-    
+
     channelRef.current = channel;
-    
+
     // Nettoyage à la destruction du composant
     return () => {
       if (debug) {
         logger.dev('🔌 Realtime User Deletion: Déconnexion channel pour userId:', userId);
       }
-      
+
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
-      
+
       isSubscribedRef.current = false;
     };
   }, [userId, handleUserDeletion, debug]);
-  
+
   // Fonction utilitaire pour forcer une reconnexion (troubleshooting)
   const reconnect = useCallback(() => {
     if (debug) {
       logger.dev('🔄 Realtime User Deletion: Reconnexion forcée demandée');
     }
-    
+
     // Nettoyer la connexion actuelle
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     }
     isSubscribedRef.current = false;
-    
+
     // La reconnexion se fera automatiquement via useEffect
   }, [debug]);
-  
+
   return {
     /**
      * Indique si le hook est actif (a un userId valide)
      */
     isActive: !!userId,
-    
+
     /**
      * Indique si la subscription Realtime est établie
      */
     isSubscribed: isSubscribedRef.current,
-    
+
     /**
      * Forcer une reconnexion au channel realtime
      * Utile pour le troubleshooting ou après une erreur de connexion
@@ -280,7 +282,7 @@ export function useUserDeletionRealtime(
 /**
  * Version simplifiée du hook pour usage basique
  * Configure automatiquement les options les plus courantes
- * 
+ *
  * @param userId - ID de l'utilisateur à surveiller
  * @param onUserDeleted - Callback appelé lors de la suppression
  */

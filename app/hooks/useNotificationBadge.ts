@@ -49,7 +49,7 @@ export function useNotificationBadge(
   const {
     pollingInterval = 30000, // 30 secondes
     enablePolling = true,
-    debug = false
+    debug = false,
   } = options;
 
   // État du badge
@@ -68,98 +68,106 @@ export function useNotificationBadge(
   /**
    * Récupère le nombre de notifications non lues
    */
-  const fetchUnreadCount = useCallback(async (forceRefresh = false): Promise<number> => {
-    if (!userId) return 0;
+  const fetchUnreadCount = useCallback(
+    async (forceRefresh = false): Promise<number> => {
+      if (!userId) return 0;
 
-    // Vérifier le cache (sauf si refresh forcé)
-    const now = Date.now();
-    if (!forceRefresh && (now - lastFetchRef.current) < CACHE_DURATION) {
-      if (debug) {
-        logger.dev('🔄 useNotificationBadge: Utilisation du cache');
-      }
-      return state.count;
-    }
-
-    try {
-      if (debug) {
-        logger.dev('📊 useNotificationBadge: Récupération du compteur...', userId);
+      // Vérifier le cache (sauf si refresh forcé)
+      const now = Date.now();
+      if (!forceRefresh && now - lastFetchRef.current < CACHE_DURATION) {
+        if (debug) {
+          logger.dev('🔄 useNotificationBadge: Utilisation du cache');
+        }
+        return state.count;
       }
 
-      // Utiliser la fonction SQL optimisée
-      const { data, error } = await supabase.rpc('get_unread_notification_count', {
-        p_user_id: userId
-      });
+      try {
+        if (debug) {
+          logger.dev('📊 useNotificationBadge: Récupération du compteur...', userId);
+        }
 
-      if (error) {
-        throw error;
+        // Utiliser la fonction SQL optimisée
+        const { data, error } = await supabase.rpc('get_unread_notification_count', {
+          p_user_id: userId,
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        const count = data || 0;
+        lastFetchRef.current = now;
+
+        setState((prev) => ({
+          ...prev,
+          count,
+          isLoading: false,
+          error: null,
+          lastUpdated: new Date(),
+        }));
+
+        if (debug) {
+          logger.dev('✅ useNotificationBadge: Compteur mis à jour:', count);
+        }
+
+        return count;
+      } catch (err) {
+        logger.error('❌ Erreur récupération compteur notifications:', err);
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: err instanceof Error ? err.message : 'Erreur inconnue',
+        }));
+        return state.count; // Retourner la valeur en cache en cas d'erreur
       }
-
-      const count = data || 0;
-      lastFetchRef.current = now;
-
-      setState(prev => ({
-        ...prev,
-        count,
-        isLoading: false,
-        error: null,
-        lastUpdated: new Date()
-      }));
-
-      if (debug) {
-        logger.dev('✅ useNotificationBadge: Compteur mis à jour:', count);
-      }
-
-      return count;
-
-    } catch (err) {
-      logger.error('❌ Erreur récupération compteur notifications:', err);
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        error: err instanceof Error ? err.message : 'Erreur inconnue'
-      }));
-      return state.count; // Retourner la valeur en cache en cas d'erreur
-    }
-  }, [userId, debug, state.count]);
+    },
+    [userId, debug, state.count]
+  );
 
   /**
    * Incrémente le compteur localement (appelé par realtime)
    */
-  const incrementCount = useCallback((amount = 1) => {
-    setState(prev => ({
-      ...prev,
-      count: prev.count + amount,
-      lastUpdated: new Date()
-    }));
+  const incrementCount = useCallback(
+    (amount = 1) => {
+      setState((prev) => ({
+        ...prev,
+        count: prev.count + amount,
+        lastUpdated: new Date(),
+      }));
 
-    if (debug) {
-      logger.dev('➕ useNotificationBadge: Incrément local +', amount);
-    }
-  }, [debug]);
+      if (debug) {
+        logger.dev('➕ useNotificationBadge: Incrément local +', amount);
+      }
+    },
+    [debug]
+  );
 
   /**
    * Décrémente le compteur localement (appelé lors de lectures)
    */
-  const decrementCount = useCallback((amount = 1) => {
-    setState(prev => ({
-      ...prev,
-      count: Math.max(0, prev.count - amount),
-      lastUpdated: new Date()
-    }));
+  const decrementCount = useCallback(
+    (amount = 1) => {
+      setState((prev) => ({
+        ...prev,
+        count: Math.max(0, prev.count - amount),
+        lastUpdated: new Date(),
+      }));
 
-    if (debug) {
-      logger.dev('➖ useNotificationBadge: Décrément local -', amount);
-    }
-  }, [debug]);
+      if (debug) {
+        logger.dev('➖ useNotificationBadge: Décrément local -', amount);
+      }
+    },
+    [debug]
+  );
 
   /**
    * Remet à zéro le compteur
    */
   const resetCount = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       count: 0,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     }));
 
     if (debug) {
@@ -171,7 +179,7 @@ export function useNotificationBadge(
    * Force un refresh du compteur depuis la base
    */
   const refresh = useCallback(async () => {
-    setState(prev => ({ ...prev, isLoading: true }));
+    setState((prev) => ({ ...prev, isLoading: true }));
     await fetchUnreadCount(true);
   }, [fetchUnreadCount]);
 
@@ -230,6 +238,6 @@ export function useNotificationBadge(
  */
 export function useNotificationBadgeSimple(userId: string | null | undefined) {
   return useNotificationBadge(userId, {
-    debug: __DEV__
+    debug: __DEV__,
   });
 }

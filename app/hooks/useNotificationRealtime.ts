@@ -1,15 +1,17 @@
 /**
  * Hook useNotificationRealtime - Écoute en temps réel les nouvelles notifications
  *
- * Utilise Supabase Realtime pour détecter les nouvelles notifications et mettre à jour
- * automatiquement le store UI et les compteurs non lus.
+ * Utilise Supabase Realtime pour détecter les nouvelles notifications et coordonne
+ * intelligemment avec le système de push notifications pour éviter les doublons.
  *
  * ✅ SÉCURISÉ : Utilise RLS et filtre par utilisateur connecté
  * ✅ NON INVASIF : Hook séparé basé sur le pattern useProRequestRealtime
  * ✅ PERFORMANT : Se désabonne automatiquement au démontage
  * ✅ INTÉGRÉ : Synchronise avec useUIStore pour l'affichage
+ * ✅ COORDONNÉ : Évite les doublons avec les push notifications
  */
 import { useEffect, useCallback, useRef } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import { supabase } from '@/utils/supabase/client';
 import { useUIStore } from '@/stores/useUIStore';
 import { logger } from '@/utils/logger';
@@ -47,6 +49,19 @@ interface NotificationRealtimeOptions {
    * @default false
    */
   debug?: boolean;
+
+  /**
+   * État de l'application pour coordination push/in-app
+   * Si fourni, utilise cet état au lieu de détecter automatiquement
+   */
+  appState?: AppStateStatus;
+
+  /**
+   * Indique si les push notifications sont disponibles
+   * Permet d'optimiser l'affichage in-app en conséquence
+   * @default false
+   */
+  isPushAvailable?: boolean;
 }
 
 /**
@@ -63,71 +78,132 @@ export function useNotificationRealtime(
     showInAppNotifications = true,
     onNewNotification,
     onNotificationUpdated,
-    debug = false
+    debug = false,
+    appState: providedAppState,
+    isPushAvailable = false,
   } = options;
 
   const { addNotification, incrementUnreadCount } = useUIStore();
   const channelRef = useRef<any>(null);
+  const currentAppState = useRef<AppStateStatus>(AppState.currentState);
 
-  const handleNewNotification = useCallback(async (payload: any) => {
-    const notification: NotificationItem = payload.new;
-
-    if (debug) {
-      logger.dev('🔔 Realtime Notification - INSERT:', {
-        userId,
-        notification
-      });
-    }
-
-    // Callback personnalisé
-    onNewNotification?.(notification);
-
-    // Ajouter au store UI pour affichage
-    if (showInAppNotifications) {
-      addNotification({
-        id: notification.id,
-        type: getNotificationDisplayType(notification.type),
-        title: notification.title,
-        message: notification.message,
-        data: notification.data,
-        timestamp: new Date(notification.created_at),
-        read: false,
-      });
-
-      // Incrémenter le compteur des notifications non lues
-      incrementUnreadCount();
-    }
-  }, [userId, onNewNotification, showInAppNotifications, addNotification, incrementUnreadCount, debug]);
-
-  const handleNotificationUpdate = useCallback(async (payload: any) => {
-    const notification: NotificationItem = payload.new;
-    const oldNotification: NotificationItem = payload.old;
-
-    if (debug) {
-      logger.dev('🔄 Realtime Notification - UPDATE:', {
-        userId,
-        old: oldNotification,
-        new: notification
-      });
-    }
-
-    // Callback personnalisé
-    onNotificationUpdated?.(notification);
-
-    // Si la notification vient d'être marquée comme lue
-    if (!oldNotification.read_at && notification.read_at) {
-      // Logique pour décrémenter le compteur sera gérée par useNotificationBadge
+  // Suivre l'état de l'application
+  useEffect(() => {
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+      currentAppState.current = nextAppState;
       if (debug) {
-        logger.dev('📖 Notification marquée comme lue:', notification.id);
+        logger.dev('📱 App State changed in useNotificationRealtime:', {
+          from: currentAppState.current,
+          to: nextAppState,
+          isPushAvailable,
+        });
       }
-    }
-  }, [userId, onNotificationUpdated, debug]);
+    };
+
+    const subscription = AppState.addEventListener('change', handleAppStateChange);
+    return () => subscription?.remove();
+  }, [debug, isPushAvailable]);
+
+  const handleNewNotification = useCallback(
+    async (payload: any) => {
+      const notification: NotificationItem = payload.new;
+      const effectiveAppState = providedAppState || currentAppState.current;
+      const isAppInForeground = effectiveAppState === 'active';
+
+      if (debug) {
+        logger.dev('🔔 Realtime Notification - INSERT:', {
+          userId,
+          notification,
+          appState: effectiveAppState,
+          isAppInForeground,
+          isPushAvailable,
+          shouldShowInApp: showInAppNotifications && isAppInForeground,
+        });
+      }
+
+      // Callback personnalisé (toujours appelé)
+      onNewNotification?.(notification);
+
+      // Logique de coordination push/in-app :
+      // - App en foreground → affichage in-app
+      // - App en background ET push disponible → skip in-app (push géré par l'OS)
+      // - App en background MAIS pas de push → affichage in-app quand même
+      const shouldShowInApp = showInAppNotifications && (isAppInForeground || !isPushAvailable);
+
+      if (shouldShowInApp) {
+        addNotification({
+          id: notification.id,
+          type: getNotificationDisplayType(notification.type),
+          title: notification.title,
+          message: notification.message,
+          data: notification.data,
+          timestamp: new Date(notification.created_at),
+          read: false,
+        });
+
+        // Incrémenter le compteur des notifications non lues
+        incrementUnreadCount();
+
+        if (debug) {
+          logger.dev('✅ Notification in-app ajoutée:', {
+            id: notification.id,
+            title: notification.title,
+            reason: isAppInForeground ? 'app_foreground' : 'no_push_available',
+          });
+        }
+      } else if (debug) {
+        logger.dev('⏭️ Notification in-app skippée (push handling):', {
+          id: notification.id,
+          title: notification.title,
+          appState: effectiveAppState,
+          isPushAvailable,
+        });
+      }
+    },
+    [
+      userId,
+      onNewNotification,
+      showInAppNotifications,
+      addNotification,
+      incrementUnreadCount,
+      debug,
+      providedAppState,
+      isPushAvailable,
+    ]
+  );
+
+  const handleNotificationUpdate = useCallback(
+    async (payload: any) => {
+      const notification: NotificationItem = payload.new;
+      const oldNotification: NotificationItem = payload.old;
+
+      if (debug) {
+        logger.dev('🔄 Realtime Notification - UPDATE:', {
+          userId,
+          old: oldNotification,
+          new: notification,
+        });
+      }
+
+      // Callback personnalisé
+      onNotificationUpdated?.(notification);
+
+      // Si la notification vient d'être marquée comme lue
+      if (!oldNotification.read_at && notification.read_at) {
+        // Logique pour décrémenter le compteur sera gérée par useNotificationBadge
+        if (debug) {
+          logger.dev('📖 Notification marquée comme lue:', notification.id);
+        }
+      }
+    },
+    [userId, onNotificationUpdated, debug]
+  );
 
   useEffect(() => {
     // Ne pas s'abonner si pas d'utilisateur
     if (!userId) {
       if (debug) {
-        logger.dev('⏭️ Realtime Notifications: Pas d\'userId, skip subscription');
+        logger.dev("⏭️ Realtime Notifications: Pas d'userId, skip subscription");
       }
       return;
     }
@@ -146,7 +222,7 @@ export function useNotificationRealtime(
           event: 'INSERT', // Nouvelles notifications
           schema: 'public',
           table: 'notifications',
-          filter: `user_id=eq.${userId}` // Filtrer par utilisateur connecté
+          filter: `user_id=eq.${userId}`, // Filtrer par utilisateur connecté
         },
         handleNewNotification
       )
@@ -156,7 +232,7 @@ export function useNotificationRealtime(
           event: 'UPDATE', // Notifications mises à jour (lecture)
           schema: 'public',
           table: 'notifications',
-          filter: `user_id=eq.${userId}`
+          filter: `user_id=eq.${userId}`,
         },
         handleNotificationUpdate
       )
@@ -197,7 +273,7 @@ export function useNotificationRealtime(
             event: '*', // Tous les événements
             schema: 'public',
             table: 'notifications',
-            filter: `user_id=eq.${userId}`
+            filter: `user_id=eq.${userId}`,
           },
           (payload) => {
             if (payload.eventType === 'INSERT') {
@@ -228,6 +304,16 @@ export function useNotificationRealtime(
      * Indique si le hook est actif (a un userId valide)
      */
     isActive: !!userId,
+
+    /**
+     * État actuel de l'application
+     */
+    currentAppState: currentAppState.current,
+
+    /**
+     * Indique si l'app est en foreground
+     */
+    isAppInForeground: (providedAppState || currentAppState.current) === 'active',
   };
 }
 

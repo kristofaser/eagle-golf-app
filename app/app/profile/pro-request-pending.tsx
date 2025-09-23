@@ -28,11 +28,11 @@ export default function ProRequestPendingScreen() {
 
   const loadRequestStatus = async () => {
     if (!user?.id) return;
-    
+
     try {
       setLoading(true);
       const result = await profileService.getProRequestStatus(user.id);
-      
+
       if (result.error) {
         setError(result.error);
         return;
@@ -55,9 +55,9 @@ export default function ProRequestPendingScreen() {
 
   const handleContactSupport = () => {
     Alert.alert(
-      "Contacter le support",
-      "Fonctionnalité à venir. En attendant, vous pouvez nous contacter par email.",
-      [{ text: "OK", style: "default" }]
+      'Contacter le support',
+      'Fonctionnalité à venir. En attendant, vous pouvez nous contacter par email.',
+      [{ text: 'OK', style: 'default' }]
     );
   };
 
@@ -70,17 +70,12 @@ export default function ProRequestPendingScreen() {
   }
 
   if (error) {
-    return (
-      <ErrorScreen 
-        error={error}
-        onRetry={loadRequestStatus}
-      />
-    );
+    return <ErrorScreen error={error} onRetry={loadRequestStatus} />;
   }
 
   if (!requestData || requestData.status === 'none') {
     return (
-      <ErrorScreen 
+      <ErrorScreen
         error="Aucune demande trouvée"
         message="Vous pouvez créer une nouvelle demande pour devenir professionnel."
         onRetry={() => router.replace('/become-pro')}
@@ -89,20 +84,21 @@ export default function ProRequestPendingScreen() {
   }
 
   // Calculer les jours depuis la demande
-  const daysSinceRequest = requestData.created_at 
+  const daysSinceRequest = requestData.created_at
     ? Math.floor((Date.now() - new Date(requestData.created_at).getTime()) / (1000 * 60 * 60 * 24))
     : 0;
-    
-  const estimatedDelay = daysSinceRequest < 2 
-    ? "Nous examinons généralement les demandes sous 24-48h. Votre dossier est en cours de traitement."
-    : "Votre demande prend un peu plus de temps que prévu. Notre équipe examine minutieusement votre dossier.";
+
+  const estimatedDelay =
+    daysSinceRequest < 2
+      ? 'Nous examinons généralement les demandes sous 24-48h. Votre dossier est en cours de traitement.'
+      : 'Votre demande prend un peu plus de temps que prévu. Notre équipe examine minutieusement votre dossier.';
 
   const formatRequestDate = (dateString?: string) => {
     if (!dateString) return 'Date inconnue';
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: 'numeric',
       month: 'long',
-      year: 'numeric'
+      year: 'numeric',
     });
   };
 
@@ -126,7 +122,7 @@ export default function ProRequestPendingScreen() {
           ),
         }}
       />
-      
+
       <SafeAreaView style={styles.container} edges={['bottom']}>
         {/* Header avec gradient */}
         <LinearGradient
@@ -146,69 +142,72 @@ export default function ProRequestPendingScreen() {
           </View>
         </LinearGradient>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Statut de la demande */}
-        <View style={[styles.card, styles.pendingCard]}>
-          <View style={styles.cardHeader}>
-            <View style={styles.statusDot} />
-            <Text variant="h4" color="charcoal" weight="semiBold">
-              Demande soumise
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Statut de la demande */}
+          <View style={[styles.card, styles.pendingCard]}>
+            <View style={styles.cardHeader}>
+              <View style={styles.statusDot} />
+              <Text variant="h4" color="charcoal" weight="semiBold">
+                Demande soumise
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text variant="body" color="iron">
+                Date de soumission :
+              </Text>
+              <Text variant="body" color="charcoal" weight="medium">
+                {formatRequestDate(requestData.created_at)}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text variant="body" color="iron">
+                Il y a :
+              </Text>
+              <Text variant="body" color="charcoal" weight="medium">
+                {daysSinceRequest} jour{daysSinceRequest > 1 ? 's' : ''}
+              </Text>
+            </View>
+          </View>
+
+          {/* Informations sur les délais */}
+          <View style={[styles.card, styles.infoCard]}>
+            <View style={styles.cardHeader}>
+              <Ionicons name="information-circle" size={24} color={Colors.primary.electric} />
+              <Text variant="h4" color="charcoal" weight="semiBold" style={styles.cardTitle}>
+                Délais de traitement
+              </Text>
+            </View>
+
+            <Text variant="body" color="iron" style={styles.delayText}>
+              {estimatedDelay}
+            </Text>
+
+            <Text variant="caption" color="course">
+              Nous examinons votre dossier avec attention pour garantir la qualité de notre
+              plateforme.
             </Text>
           </View>
-          
-          <View style={styles.infoRow}>
-            <Text variant="body" color="iron">Date de soumission :</Text>
-            <Text variant="body" color="charcoal" weight="medium">
-              {formatRequestDate(requestData.created_at)}
+        </ScrollView>
+
+        {/* Actions en bas */}
+        <View style={styles.actions}>
+          <TouchableOpacity onPress={handleContactSupport} style={styles.primaryButton}>
+            <Ionicons name="chatbubble-outline" size={20} color={Colors.neutral.white} />
+            <Text variant="body" color="white" weight="semiBold" style={styles.buttonText}>
+              Contacter le support
             </Text>
-          </View>
-          
-          <View style={styles.infoRow}>
-            <Text variant="body" color="iron">Il y a :</Text>
-            <Text variant="body" color="charcoal" weight="medium">
-              {daysSinceRequest} jour{daysSinceRequest > 1 ? 's' : ''}
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={handleBackToProfile} style={styles.secondaryButton}>
+            <Ionicons name="person-outline" size={20} color={Colors.neutral.charcoal} />
+            <Text variant="body" color="charcoal" weight="semiBold" style={styles.buttonText}>
+              Retour au profil
             </Text>
-          </View>
+          </TouchableOpacity>
         </View>
-
-        {/* Informations sur les délais */}
-        <View style={[styles.card, styles.infoCard]}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="information-circle" size={24} color={Colors.primary.electric} />
-            <Text variant="h4" color="charcoal" weight="semiBold" style={styles.cardTitle}>
-              Délais de traitement
-            </Text>
-          </View>
-          
-          <Text variant="body" color="iron" style={styles.delayText}>
-            {estimatedDelay}
-          </Text>
-          
-          <Text variant="caption" color="course">
-            Nous examinons votre dossier avec attention pour garantir la qualité de notre plateforme.
-          </Text>
-        </View>
-
-
-      </ScrollView>
-
-      {/* Actions en bas */}
-      <View style={styles.actions}>
-        <TouchableOpacity onPress={handleContactSupport} style={styles.primaryButton}>
-          <Ionicons name="chatbubble-outline" size={20} color={Colors.neutral.white} />
-          <Text variant="body" color="white" weight="semiBold" style={styles.buttonText}>
-            Contacter le support
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity onPress={handleBackToProfile} style={styles.secondaryButton}>
-          <Ionicons name="person-outline" size={20} color={Colors.neutral.charcoal} />
-          <Text variant="body" color="charcoal" weight="semiBold" style={styles.buttonText}>
-            Retour au profil
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
     </>
   );
 }

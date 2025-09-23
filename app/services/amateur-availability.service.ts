@@ -54,13 +54,15 @@ export const amateurAvailabilityService = {
     try {
       let query = supabase
         .from('pro_availabilities')
-        .select(`
+        .select(
+          `
           date,
           max_players,
           current_bookings,
           golf_course_id,
           golf_parcours:golf_parcours(name)
-        `)
+        `
+        )
         .eq('pro_id', proId)
         .gte('date', startDate)
         .lte('date', endDate)
@@ -79,8 +81,8 @@ export const amateurAvailabilityService = {
 
       // Transformer les données pour correspondre à l'ancien format
       const transformedData: DailyAvailabilityData[] = (data || [])
-        .filter(avail => avail.current_bookings < avail.max_players) // Disponible pour réservation
-        .map(avail => ({
+        .filter((avail) => avail.current_bookings < avail.max_players) // Disponible pour réservation
+        .map((avail) => ({
           date: avail.date,
           is_available: true,
           is_booked: avail.current_bookings >= avail.max_players,
@@ -112,8 +114,8 @@ export const amateurAvailabilityService = {
    * Vérifie si un pro a des réservations confirmées pour une date et parcours donnés
    */
   async hasBookingsForDate(
-    proId: string, 
-    dateString: string, 
+    proId: string,
+    dateString: string,
     golfCourseId?: string
   ): Promise<boolean> {
     try {
@@ -135,9 +137,11 @@ export const amateurAvailabilityService = {
         return false;
       }
 
-      const hasBookings = (data && data.length > 0);
-      logger.dev(`🔍 Vérification réservation ${dateString} (parcours: ${golfCourseId || 'tous'}): ${hasBookings ? 'RÉSERVÉ' : 'LIBRE'}`);
-      
+      const hasBookings = data && data.length > 0;
+      logger.dev(
+        `🔍 Vérification réservation ${dateString} (parcours: ${golfCourseId || 'tous'}): ${hasBookings ? 'RÉSERVÉ' : 'LIBRE'}`
+      );
+
       return hasBookings;
     } catch (err) {
       logger.error('Erreur vérification réservations pour date:', err);
@@ -222,8 +226,8 @@ export const amateurAvailabilityService = {
    * en tenant compte des réservations existantes - nouveau système
    */
   async getAvailableSlotsForDate(
-    proId: string, 
-    date: string, 
+    proId: string,
+    date: string,
     golfCourseId?: string
   ): Promise<TimeSlot[]> {
     // Si un parcours est spécifié, vérifier sa disponibilité
@@ -251,8 +255,8 @@ export const amateurAvailabilityService = {
    * Génère les créneaux disponibles pour un parcours spécifique
    */
   async getAvailableSlotsForCourseAndDate(
-    proId: string, 
-    golfCourseId: string, 
+    proId: string,
+    golfCourseId: string,
     date: string
   ): Promise<TimeSlot[]> {
     return this.getAvailableSlotsForDate(proId, date, golfCourseId);
@@ -263,9 +267,9 @@ export const amateurAvailabilityService = {
    * Utilise la fonction RPC pour une opération atomique
    */
   async incrementBookingCount(
-    proId: string, 
-    date: string, 
-    golfCourseId: string, 
+    proId: string,
+    date: string,
+    golfCourseId: string,
     bookingId: string
   ): Promise<boolean> {
     try {
@@ -286,7 +290,7 @@ export const amateurAvailabilityService = {
       // Appeler la fonction RPC pour incrémenter de manière atomique
       const { data, error } = await (supabase.rpc as any)('update_booking_count', {
         p_availability_id: availability.id,
-        p_delta: 1 // +1 pour incrémenter
+        p_delta: 1, // +1 pour incrémenter
       });
 
       if (error) {
@@ -313,9 +317,9 @@ export const amateurAvailabilityService = {
    * Utilise la fonction RPC pour une opération atomique
    */
   async decrementBookingCount(
-    proId: string, 
-    date: string, 
-    golfCourseId: string, 
+    proId: string,
+    date: string,
+    golfCourseId: string,
     bookingId: string
   ): Promise<boolean> {
     try {
@@ -336,7 +340,7 @@ export const amateurAvailabilityService = {
       // Appeler la fonction RPC pour décrémenter de manière atomique
       const { data, error } = await (supabase.rpc as any)('update_booking_count', {
         p_availability_id: availability.id,
-        p_delta: -1 // -1 pour décrémenter
+        p_delta: -1, // -1 pour décrémenter
       });
 
       if (error) {
@@ -374,7 +378,8 @@ export const amateurAvailabilityService = {
 
       const { data: availabilities, error } = await supabase
         .from('pro_availabilities')
-        .select(`
+        .select(
+          `
           golf_course_id,
           date,
           max_players,
@@ -386,7 +391,8 @@ export const amateurAvailabilityService = {
             latitude,
             longitude
           )
-        `)
+        `
+        )
         .eq('pro_id', proId)
         .gte('date', today.toISOString().split('T')[0])
         .lte('date', endDate.toISOString().split('T')[0]);
@@ -403,25 +409,27 @@ export const amateurAvailabilityService = {
       availabilities.forEach((avail) => {
         const courseId = avail.golf_course_id;
         const course = avail.golf_parcours as any;
-        
+
         if (!course) return;
-        
+
         // Vérifier que le créneau est disponible
         if (avail.current_bookings >= avail.max_players) return;
 
         if (!courseMap.has(courseId)) {
           let distance_km: number | undefined;
-          
+
           // Calculer la distance si on a la position de l'utilisateur
           if (userLatitude && userLongitude && course.latitude && course.longitude) {
             const R = 6371; // Rayon de la Terre en km
-            const dLat = (course.latitude - userLatitude) * Math.PI / 180;
-            const dLon = (course.longitude - userLongitude) * Math.PI / 180;
-            const a = 
-              Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(userLatitude * Math.PI / 180) * Math.cos(course.latitude * Math.PI / 180) *
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const dLat = ((course.latitude - userLatitude) * Math.PI) / 180;
+            const dLon = ((course.longitude - userLongitude) * Math.PI) / 180;
+            const a =
+              Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos((userLatitude * Math.PI) / 180) *
+                Math.cos((course.latitude * Math.PI) / 180) *
+                Math.sin(dLon / 2) *
+                Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             distance_km = Math.round(R * c);
           }
 
@@ -430,7 +438,7 @@ export const amateurAvailabilityService = {
             golf_course_name: course.name,
             city: course.city || '',
             distance_km,
-            available_slots_count: 0
+            available_slots_count: 0,
           });
         }
 
@@ -441,8 +449,8 @@ export const amateurAvailabilityService = {
       });
 
       // Convertir en array et trier par distance
-      let coursesArray = Array.from(courseMap.values());
-      
+      const coursesArray = Array.from(courseMap.values());
+
       // Trier par distance si disponible, sinon par nom
       coursesArray.sort((a, b) => {
         if (a.distance_km !== undefined && b.distance_km !== undefined) {
@@ -463,7 +471,9 @@ export const amateurAvailabilityService = {
    * @deprecated Utilisez incrementBookingCount à la place
    */
   async markDayAsBooked(proId: string, date: string, bookingId: string): Promise<boolean> {
-    logger.warn('⚠️ markDayAsBooked est déprécié. Utilisez incrementBookingCount avec golfCourseId.');
+    logger.warn(
+      '⚠️ markDayAsBooked est déprécié. Utilisez incrementBookingCount avec golfCourseId.'
+    );
     return true; // Retourne true pour éviter les erreurs dans l'ancien code
   },
 
@@ -471,7 +481,9 @@ export const amateurAvailabilityService = {
    * @deprecated Utilisez decrementBookingCount à la place
    */
   async markDayAsAvailable(proId: string, date: string): Promise<boolean> {
-    logger.warn('⚠️ markDayAsAvailable est déprécié. Utilisez decrementBookingCount avec golfCourseId.');
+    logger.warn(
+      '⚠️ markDayAsAvailable est déprécié. Utilisez decrementBookingCount avec golfCourseId.'
+    );
     return true; // Retourne true pour éviter les erreurs dans l'ancien code
   },
 
@@ -479,15 +491,12 @@ export const amateurAvailabilityService = {
    * Incrémente le compteur de réservations en utilisant directement l'availability_id
    * Version optimisée pour éviter une requête supplémentaire
    */
-  async incrementBookingCountById(
-    availabilityId: string,
-    bookingId: string
-  ): Promise<boolean> {
+  async incrementBookingCountById(availabilityId: string, bookingId: string): Promise<boolean> {
     try {
       // Appeler directement la fonction RPC avec l'availability_id
       const { data, error } = await (supabase.rpc as any)('update_booking_count', {
         p_availability_id: availabilityId,
-        p_delta: 1 // +1 pour incrémenter
+        p_delta: 1, // +1 pour incrémenter
       });
 
       if (error) {
@@ -529,24 +538,24 @@ export const amateurAvailabilityService = {
 
       if (error) {
         logger.error('❌ Erreur récupération availability_id:', error);
-        return { 
-          availability_id: null, 
-          error: `Aucune disponibilité trouvée pour cette date et ce parcours` 
+        return {
+          availability_id: null,
+          error: `Aucune disponibilité trouvée pour cette date et ce parcours`,
         };
       }
 
       if (!data) {
-        return { 
-          availability_id: null, 
-          error: 'Aucune disponibilité trouvée' 
+        return {
+          availability_id: null,
+          error: 'Aucune disponibilité trouvée',
         };
       }
 
       // Vérifier qu'il reste de la place
       if (data.current_bookings >= data.max_players) {
-        return { 
-          availability_id: null, 
-          error: 'Plus de place disponible pour ce créneau' 
+        return {
+          availability_id: null,
+          error: 'Plus de place disponible pour ce créneau',
         };
       }
 
@@ -554,11 +563,10 @@ export const amateurAvailabilityService = {
       return { availability_id: data.id };
     } catch (err) {
       logger.error('❌ Erreur getAvailabilityId:', err);
-      return { 
-        availability_id: null, 
-        error: err.message || 'Erreur lors de la récupération de la disponibilité' 
+      return {
+        availability_id: null,
+        error: err.message || 'Erreur lors de la récupération de la disponibilité',
       };
     }
   },
-
 };

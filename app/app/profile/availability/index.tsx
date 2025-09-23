@@ -53,7 +53,7 @@ export default function AvailabilityScreen() {
     console.log('🗑️ [handleDeleteGroup] Début suppression parcours:', {
       userId: user.id,
       courseId,
-      courseName
+      courseName,
     });
 
     Alert.alert(
@@ -69,12 +69,13 @@ export default function AvailabilityScreen() {
               console.log('🔍 [handleDeleteGroup] Vérification des réservations existantes...');
 
               // Vérifier s'il y a des réservations existantes
-              const { hasBookings, bookingsCount } = await proAvailabilityService.checkExistingBookingsForCourse(
-                user.id,
-                courseId
-              );
+              const { hasBookings, bookingsCount } =
+                await proAvailabilityService.checkExistingBookingsForCourse(user.id, courseId);
 
-              console.log('📋 [handleDeleteGroup] Résultat vérification:', { hasBookings, bookingsCount });
+              console.log('📋 [handleDeleteGroup] Résultat vérification:', {
+                hasBookings,
+                bookingsCount,
+              });
 
               if (hasBookings) {
                 console.log('🚫 [handleDeleteGroup] Suppression bloquée - réservations existantes');
@@ -84,8 +85,8 @@ export default function AvailabilityScreen() {
                   [
                     {
                       text: 'Compris',
-                      style: 'default'
-                    }
+                      style: 'default',
+                    },
                   ]
                 );
                 return;
@@ -101,7 +102,9 @@ export default function AvailabilityScreen() {
               console.log('📊 [handleDeleteGroup] Résultat suppression:', { success });
 
               if (success) {
-                console.log('✅ [handleDeleteGroup] Suppression réussie - rechargement des données');
+                console.log(
+                  '✅ [handleDeleteGroup] Suppression réussie - rechargement des données'
+                );
                 loadAvailabilities();
               } else {
                 console.log('❌ [handleDeleteGroup] Échec suppression');
@@ -120,11 +123,11 @@ export default function AvailabilityScreen() {
   const formatDateRange = (dates: string[]): string => {
     if (dates.length === 0) return '';
     if (dates.length === 1) return new Date(dates[0]).toLocaleDateString('fr-FR');
-    
+
     const sortedDates = [...dates].sort();
     const firstDate = new Date(sortedDates[0]).toLocaleDateString('fr-FR');
     const lastDate = new Date(sortedDates[sortedDates.length - 1]).toLocaleDateString('fr-FR');
-    
+
     return `${firstDate} - ${lastDate}`;
   };
 
@@ -145,7 +148,7 @@ export default function AvailabilityScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -153,19 +156,17 @@ export default function AvailabilityScreen() {
         {/* Instructions */}
         <View style={styles.instructionsContainer}>
           <Ionicons name="information-circle-outline" size={20} color={Colors.primary.accent} />
-          <Text style={styles.instructionsText}>
-            Gérez vos disponibilités par parcours de golf
-          </Text>
+          <Text style={styles.instructionsText}>Gérez vos disponibilités par parcours de golf</Text>
         </View>
 
         {/* Liste des disponibilités */}
         {availabilityGroups.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons 
-              name="calendar-outline" 
-              size={64} 
-              color={Colors.ui.subtleGray} 
-              style={styles.emptyIcon} 
+            <Ionicons
+              name="calendar-outline"
+              size={64}
+              color={Colors.ui.subtleGray}
+              style={styles.emptyIcon}
             />
             <Text style={styles.emptyTitle}>Aucune disponibilité</Text>
             <Text style={styles.emptySubtitle}>
@@ -192,14 +193,14 @@ export default function AvailabilityScreen() {
                 <View style={styles.actionButtons}>
                   <Link
                     href={{
-                      pathname: "/profile/availability/select-dates/[courseId]",
+                      pathname: '/profile/availability/select-dates/[courseId]',
                       params: {
                         courseId: group.course.id,
                         courseName: group.course.name,
                         courseCity: group.course.city,
                         mode: 'edit',
-                        existingDates: JSON.stringify(group.dates)
-                      }
+                        existingDates: JSON.stringify(group.dates),
+                      },
                     }}
                     asChild
                   >
@@ -215,7 +216,6 @@ export default function AvailabilityScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
-
             </View>
           ))
         )}

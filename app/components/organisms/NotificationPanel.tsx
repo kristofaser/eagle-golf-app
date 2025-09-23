@@ -16,7 +16,11 @@ import {
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { NotificationItem } from '@/components/molecules/NotificationItem';
-import { NotificationUIItem, useNotificationActions, useNotificationItems } from '@/stores/useUIStore';
+import {
+  NotificationUIItem,
+  useNotificationActions,
+  useNotificationItems,
+} from '@/stores/useUIStore';
 import { useNotificationList } from '@/hooks/useNotificationList';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -79,11 +83,11 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
 
   // Fusionner les notifications du store (temps réel) avec celles de la base
   const allNotifications = useMemo(() => {
-    const storeIds = new Set(notificationItems.map(n => n.id));
-    const dbOnly = dbNotifications.filter(db => !storeIds.has(db.id));
+    const storeIds = new Set(notificationItems.map((n) => n.id));
+    const dbOnly = dbNotifications.filter((db) => !storeIds.has(db.id));
 
     // Convertir les notifications DB au format UI
-    const dbUINotifications: NotificationUIItem[] = dbOnly.map(db => ({
+    const dbUINotifications: NotificationUIItem[] = dbOnly.map((db) => ({
       id: db.id,
       type: getUIType(db.type),
       title: db.title,
@@ -94,8 +98,9 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
     }));
 
     // Fusionner et trier par date
-    return [...notificationItems, ...dbUINotifications]
-      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    return [...notificationItems, ...dbUINotifications].sort(
+      (a, b) => b.timestamp.getTime() - a.timestamp.getTime()
+    );
   }, [notificationItems, dbNotifications]);
 
   const handleNotificationPress = async (notification: NotificationUIItem) => {
@@ -143,10 +148,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
 
       <View style={styles.headerActions}>
         {totalUnread > 0 && (
-          <TouchableOpacity
-            style={styles.markAllButton}
-            onPress={handleMarkAllAsRead}
-          >
+          <TouchableOpacity style={styles.markAllButton} onPress={handleMarkAllAsRead}>
             <Text style={styles.markAllButtonText}>Tout marquer comme lu</Text>
           </TouchableOpacity>
         )}

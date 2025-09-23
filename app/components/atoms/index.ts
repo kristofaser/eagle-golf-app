@@ -13,3 +13,5 @@ export { SkillTag } from './SkillTag';
 export { FavoriteBadge } from './FavoriteBadge';
 export { OptimizedImage } from './OptimizedImage';
 export { TouchableIcon } from './TouchableIcon';
+export { FAB } from './FAB';
+export { TravelNotificationFAB } from './TravelNotificationFAB';

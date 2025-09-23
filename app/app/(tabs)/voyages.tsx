@@ -10,10 +10,8 @@ import Animated, {
   Extrapolation,
 } from 'react-native-reanimated';
 import { Colors, Spacing } from '@/constants/theme';
-import { DURATIONS, EASING_CURVES, PARALLAX_CONFIG } from '@/constants/animations';
-import { Text } from '@/components/atoms';
+import { Text, TravelNotificationFAB } from '@/components/atoms';
 import { TripCard, TripData } from '@/components/molecules/TripCard';
-import { TravelNotificationToggle } from '@/components/molecules/TravelNotificationToggle';
 import { commonStyles } from '@/utils/commonStyles';
 import { useResponsiveCardSize } from '@/hooks/useResponsiveCardSize';
 import { useTravelNotifications } from '@/hooks/useTravelNotifications';
@@ -56,38 +54,13 @@ export default function VoyagesScreen() {
   // Header parallax animation
   const headerAnimatedStyle = useAnimatedStyle(() => {
     'worklet';
-    const opacity = interpolate(
-      scrollY.value,
-      [0, 100],
-      [1, 0.8],
-      Extrapolation.CLAMP
-    );
+    const opacity = interpolate(scrollY.value, [0, 100], [1, 0.8], Extrapolation.CLAMP);
 
-    const translateY = interpolate(
-      scrollY.value,
-      [0, 200],
-      [0, -50],
-      Extrapolation.CLAMP
-    );
+    const translateY = interpolate(scrollY.value, [0, 200], [0, -50], Extrapolation.CLAMP);
 
     return {
       opacity,
       transform: [{ translateY }],
-    };
-  }, []);
-
-  // Section fade-in animation
-  const sectionAnimatedStyle = useAnimatedStyle(() => {
-    'worklet';
-    const opacity = interpolate(
-      scrollY.value,
-      [0, 50],
-      [0.7, 1],
-      Extrapolation.CLAMP
-    );
-
-    return {
-      opacity,
     };
   }, []);
 
@@ -100,25 +73,25 @@ export default function VoyagesScreen() {
     logger.dev(`📦 Préchargement du voyage: ${tripId}`);
   }, []);
 
-  const handleNotificationToggle = useCallback(async (enabled: boolean) => {
-    const success = await toggleNotifications(enabled);
-    if (success) {
-      logger.dev(`📢 Alertes voyage ${enabled ? 'activées' : 'désactivées'}`);
-    } else {
-      logger.error('❌ Erreur lors de la mise à jour des alertes voyage');
-    }
-  }, [toggleNotifications]);
+  const handleNotificationToggle = useCallback(() => {
+    void (async () => {
+      const success = await toggleNotifications(!isEnabled);
+      if (success) {
+        logger.dev(`📢 Alertes voyage ${!isEnabled ? 'activées' : 'désactivées'}`);
+      } else {
+        logger.error('❌ Erreur lors de la mise à jour des alertes voyage');
+      }
+    })();
+  }, [toggleNotifications, isEnabled]);
+
+  const handleRefresh = useCallback(() => {
+    void refresh();
+  }, [refresh]);
 
   const renderTripCard = useCallback(
     ({ item }: { item: Trip }) => {
       const tripData = mapTripToTripData(item);
-      return (
-        <TripCard
-          data={tripData}
-          onPress={handleTripPress}
-          onHover={handleTripHover}
-        />
-      );
+      return <TripCard data={tripData} onPress={handleTripPress} onHover={handleTripHover} />;
     },
     [handleTripPress, handleTripHover]
   );
@@ -127,11 +100,14 @@ export default function VoyagesScreen() {
   const CARD_WIDTH = 280; // Largeur standard des cartes
   const CARD_SPACING = Spacing.m;
 
-  const getItemLayout = useCallback((data: any, index: number) => ({
-    length: CARD_WIDTH + CARD_SPACING,
-    offset: (CARD_WIDTH + CARD_SPACING) * index,
-    index,
-  }), []);
+  const getItemLayout = useCallback(
+    (data: unknown, index: number) => ({
+      length: CARD_WIDTH + CARD_SPACING,
+      offset: (CARD_WIDTH + CARD_SPACING) * index,
+      index,
+    }),
+    [CARD_WIDTH, CARD_SPACING]
+  );
 
   // Afficher le loader pendant le chargement
   if (isLoading) {
@@ -162,7 +138,7 @@ export default function VoyagesScreen() {
   return (
     <SafeAreaView style={styles.container} edges={[]}>
       <StatusBar style="dark" />
-      
+
       <View style={styles.contentContainer}>
         <Animated.ScrollView
           onScroll={scrollHandler}
@@ -173,12 +149,13 @@ export default function VoyagesScreen() {
           refreshControl={
             <RefreshControl
               refreshing={isLoading}
-              onRefresh={refresh}
+              onRefresh={handleRefresh}
               tintColor={Colors.primary.accent}
             />
-          }>
+          }
+        >
           {/* Section Voyages récents */}
-          <Animated.View style={[styles.sectionContainer, sectionAnimatedStyle]}>
+          <View style={styles.sectionContainer}>
             <Animated.View style={[styles.sectionHeader, headerAnimatedStyle]}>
               <Text variant="h3" color="charcoal" style={styles.sectionTitle}>
                 Voyages récents
@@ -203,11 +180,11 @@ export default function VoyagesScreen() {
               snapToInterval={CARD_WIDTH + CARD_SPACING}
               snapToAlignment="start"
             />
-          </Animated.View>
+          </View>
 
           {/* Section Voyages complets */}
           {fullTrips.length > 0 && (
-            <Animated.View style={[styles.sectionContainer, sectionAnimatedStyle]}>
+            <View style={styles.sectionContainer}>
               <Animated.View style={[styles.sectionHeader, headerAnimatedStyle]}>
                 <Text variant="h3" color="charcoal" style={styles.sectionTitle}>
                   Voyages complets
@@ -232,15 +209,12 @@ export default function VoyagesScreen() {
                 snapToInterval={CARD_WIDTH + CARD_SPACING}
                 snapToAlignment="start"
               />
-            </Animated.View>
+            </View>
           )}
         </Animated.ScrollView>
 
-        {/* Toggle sticky en bas */}
-        <TravelNotificationToggle
-          isEnabled={isEnabled}
-          onToggle={handleNotificationToggle}
-        />
+        {/* FAB pour les alertes voyage */}
+        <TravelNotificationFAB isEnabled={isEnabled} onPress={handleNotificationToggle} />
       </View>
     </SafeAreaView>
   );

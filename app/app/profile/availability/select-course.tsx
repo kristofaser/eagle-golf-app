@@ -31,10 +31,11 @@ export default function SelectCourseScreen() {
     if (searchTerm.trim() === '') {
       setFilteredCourses(golfCourses);
     } else {
-      const filtered = golfCourses.filter(course => 
-        course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        course.department?.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = golfCourses.filter(
+        (course) =>
+          course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          course.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          course.department?.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredCourses(filtered);
     }
@@ -62,11 +63,10 @@ export default function SelectCourseScreen() {
     }
   };
 
-
   const handleCourseSelect = (course: GolfParcours) => {
     router.push({
       pathname: '/profile/availability/select-dates/[courseId]',
-      params: { 
+      params: {
         courseId: course.id,
         courseName: course.name,
         courseCity: course.city,
@@ -105,10 +105,7 @@ export default function SelectCourseScreen() {
               autoCorrect={false}
             />
             {searchTerm.length > 0 && (
-              <TouchableOpacity
-                onPress={() => setSearchTerm('')}
-                style={styles.clearButton}
-              >
+              <TouchableOpacity onPress={() => setSearchTerm('')} style={styles.clearButton}>
                 <Ionicons name="close-circle" size={20} color={Colors.ui.subtleGray} />
               </TouchableOpacity>
             )}
@@ -122,7 +119,6 @@ export default function SelectCourseScreen() {
             Choisissez un parcours de golf pour définir vos disponibilités
           </Text>
         </View>
-
 
         {loading ? (
           <View style={styles.loadingContainer}>
@@ -155,9 +151,10 @@ export default function SelectCourseScreen() {
             ) : (
               <>
                 <Text style={styles.resultsCount}>
-                  {filteredCourses.length} parcours{filteredCourses.length > 1 ? '' : ''} trouvé{filteredCourses.length > 1 ? 's' : ''}
+                  {filteredCourses.length} parcours{filteredCourses.length > 1 ? '' : ''} trouvé
+                  {filteredCourses.length > 1 ? 's' : ''}
                 </Text>
-                
+
                 {filteredCourses.map((course) => (
                   <TouchableOpacity
                     key={course.id}
@@ -169,7 +166,11 @@ export default function SelectCourseScreen() {
                       <View style={styles.courseInfo}>
                         <Text style={styles.courseName}>{course.name}</Text>
                         <View style={styles.courseLocation}>
-                          <Ionicons name="location-outline" size={16} color={Colors.ui.subtleGray} />
+                          <Ionicons
+                            name="location-outline"
+                            size={16}
+                            color={Colors.ui.subtleGray}
+                          />
                           <Text style={styles.courseCity}>{course.city}</Text>
                           {course.department && (
                             <>

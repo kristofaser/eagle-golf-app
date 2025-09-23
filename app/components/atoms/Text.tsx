@@ -4,8 +4,25 @@ import { Colors, Typography } from '@/constants/theme';
 import { getFontStyle } from '@/utils/fontMapping';
 
 interface TextProps extends RNTextProps {
-  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'bodyLarge' | 'body' | 'bodySmall' | 'caption' | 'overline' | 'label' | 'small';
-  color?: keyof typeof Colors.neutral | keyof typeof Colors.primary | keyof typeof Colors.semantic | string;
+  variant?:
+    | 'h1'
+    | 'h2'
+    | 'h3'
+    | 'h4'
+    | 'h5'
+    | 'h6'
+    | 'bodyLarge'
+    | 'body'
+    | 'bodySmall'
+    | 'caption'
+    | 'overline'
+    | 'label'
+    | 'small';
+  color?:
+    | keyof typeof Colors.neutral
+    | keyof typeof Colors.primary
+    | keyof typeof Colors.semantic
+    | string;
   weight?: keyof typeof Typography.fontWeight;
   align?: 'left' | 'center' | 'right' | 'justify';
   children: React.ReactNode;

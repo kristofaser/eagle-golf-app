@@ -20,11 +20,9 @@ export const TravelNotificationToggle: React.FC<TravelNotificationToggleProps> =
 
   const handleToggle = useCallback(() => {
     if (!user) {
-      Alert.alert(
-        'Connexion requise',
-        'Connectez-vous pour être alerté des prochains voyages',
-        [{ text: 'OK' }]
-      );
+      Alert.alert('Connexion requise', 'Connectez-vous pour être alerté des prochains voyages', [
+        { text: 'OK' },
+      ]);
       return;
     }
 
@@ -43,9 +41,9 @@ export const TravelNotificationToggle: React.FC<TravelNotificationToggleProps> =
     // Feedback utilisateur
     Alert.alert(
       newValue ? 'Alertes activées !' : 'Alertes désactivées',
-      newValue 
-        ? 'Vous serez notifié dès qu\'un nouveau voyage sera disponible.'
-        : 'Vous ne recevrez plus d\'alertes pour les voyages.',
+      newValue
+        ? "Vous serez notifié dès qu'un nouveau voyage sera disponible."
+        : "Vous ne recevrez plus d'alertes pour les voyages.",
       [{ text: 'OK' }]
     );
   }, [enabled, user, onToggle, animatedValue]);
@@ -62,18 +60,9 @@ export const TravelNotificationToggle: React.FC<TravelNotificationToggleProps> =
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity 
-        style={styles.toggleContainer} 
-        onPress={handleToggle}
-        activeOpacity={0.8}
-      >
+      <TouchableOpacity style={styles.toggleContainer} onPress={handleToggle} activeOpacity={0.8}>
         <View style={styles.textContainer}>
-          <Text
-            variant="body"
-            color="charcoal"
-            weight="medium"
-            style={styles.toggleText}
-          >
+          <Text variant="body" color="charcoal" weight="medium" style={styles.toggleText}>
             M'alerter pour les prochains voyages
           </Text>
           {enabled && (
@@ -88,11 +77,8 @@ export const TravelNotificationToggle: React.FC<TravelNotificationToggleProps> =
 
         <View style={styles.switch}>
           <Animated.View style={[styles.switchTrack, { backgroundColor: toggleBackgroundColor }]}>
-            <Animated.View 
-              style={[
-                styles.switchThumb, 
-                { transform: [{ translateX: toggleTranslateX }] }
-              ]} 
+            <Animated.View
+              style={[styles.switchThumb, { transform: [{ translateX: toggleTranslateX }] }]}
             />
           </Animated.View>
         </View>

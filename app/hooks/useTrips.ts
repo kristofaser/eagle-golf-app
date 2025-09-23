@@ -27,9 +27,9 @@ export const useTrips = () => {
         setTrips(data);
 
         // Séparer par statut
-        const completed = data.filter(trip => trip.status === 'completed');
-        const full = data.filter(trip => trip.status === 'full');
-        const available = data.filter(trip => trip.status === 'available');
+        const completed = data.filter((trip) => trip.status === 'completed');
+        const full = data.filter((trip) => trip.status === 'full');
+        const available = data.filter((trip) => trip.status === 'available');
 
         setCompletedTrips(completed);
         setFullTrips(full);
@@ -85,7 +85,11 @@ export const useTrips = () => {
       logger.dev('Changement détecté sur les voyages:', payload);
 
       // Recharger les données lors d'un changement
-      if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE' || payload.eventType === 'DELETE') {
+      if (
+        payload.eventType === 'INSERT' ||
+        payload.eventType === 'UPDATE' ||
+        payload.eventType === 'DELETE'
+      ) {
         loadTrips();
       }
     });

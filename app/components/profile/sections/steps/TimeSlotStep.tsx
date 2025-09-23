@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 
@@ -45,7 +52,6 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
   availableSlots = DEFAULT_SLOTS,
   loading = false,
 }) => {
-
   return (
     <View style={styles.container}>
       {loading ? (
@@ -65,7 +71,7 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
 
           <ScrollView style={styles.slotsContainer} showsVerticalScrollIndicator={false}>
             <View style={styles.slotsGrid}>
-              {availableSlots.map(slot => (
+              {availableSlots.map((slot) => (
                 <TouchableOpacity
                   key={slot.id}
                   style={[
@@ -76,15 +82,15 @@ export const TimeSlotStep: React.FC<TimeSlotStepProps> = ({
                   onPress={() => slot.available && onSlotSelect(slot.start)}
                   disabled={!slot.available}
                 >
-                  <Text style={[
-                    styles.timeText,
-                    selectedSlot === slot.start && styles.timeTextSelected,
-                  ]}>
+                  <Text
+                    style={[
+                      styles.timeText,
+                      selectedSlot === slot.start && styles.timeTextSelected,
+                    ]}
+                  >
                     {slot.start.split(':')[0]}h
                   </Text>
-                  {!slot.available && (
-                    <Text style={styles.unavailableText}>Indisponible</Text>
-                  )}
+                  {!slot.available && <Text style={styles.unavailableText}>Indisponible</Text>}
                 </TouchableOpacity>
               ))}
             </View>

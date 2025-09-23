@@ -10,11 +10,7 @@ interface SkillTagProps {
   onVideoPress?: () => void;
 }
 
-const SkillTag: React.FC<SkillTagProps> = ({
-  skill,
-  hasVideo = false,
-  onVideoPress
-}) => {
+const SkillTag: React.FC<SkillTagProps> = ({ skill, hasVideo = false, onVideoPress }) => {
   return (
     <View style={styles.container}>
       <View style={styles.tag}>
@@ -32,11 +28,7 @@ const SkillTag: React.FC<SkillTagProps> = ({
           accessibilityLabel={`Voir la vidéo de ${skill}`}
           accessibilityHint={`Lecture de la vidéo démonstrative pour la compétence ${skill}`}
         >
-          <Ionicons
-            name="play-circle"
-            size={20}
-            color={Colors.primary.accent}
-          />
+          <Ionicons name="play-circle" size={20} color={Colors.primary.accent} />
         </TouchableOpacity>
       )}
     </View>

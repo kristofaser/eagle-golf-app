@@ -52,11 +52,7 @@ class TripService {
    */
   async getTripById(id: string) {
     try {
-      const { data, error } = await supabase
-        .from('trips')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const { data, error } = await supabase.from('trips').select('*').eq('id', id).single();
 
       if (error) {
         console.error(`Erreur récupération voyage ${id}:`, error);
@@ -81,7 +77,7 @@ class TripService {
         {
           event: '*',
           schema: 'public',
-          table: 'trips'
+          table: 'trips',
         },
         callback
       )

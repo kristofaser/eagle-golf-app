@@ -27,7 +27,7 @@ export interface UserProRequestResult {
 export async function checkUserProRequestStatus(userId: string): Promise<UserProRequestResult> {
   try {
     console.log('🔍 Vérification statut demande pro pour utilisateur:', userId);
-    
+
     // Récupérer la demande la plus récente de l'utilisateur
     const { data: request, error } = await supabase
       .from('pro_validation_requests')
@@ -36,50 +36,49 @@ export async function checkUserProRequestStatus(userId: string): Promise<UserPro
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle(); // Utiliser maybeSingle pour éviter l'erreur si pas de résultat
-    
+
     if (error) {
       console.error('❌ Erreur lors de la vérification de la demande pro:', error);
       return {
         hasRequest: false,
         request: null,
         canMakeNewRequest: true,
-        status: 'none'
+        status: 'none',
       };
     }
-    
+
     if (!request) {
       console.log('✅ Aucune demande pro trouvée - peut faire une nouvelle demande');
       return {
         hasRequest: false,
         request: null,
         canMakeNewRequest: true,
-        status: 'none'
+        status: 'none',
       };
     }
-    
-    console.log('📋 Demande pro trouvée:', { 
-      id: request.id, 
-      status: request.status, 
-      created_at: request.created_at 
+
+    console.log('📋 Demande pro trouvée:', {
+      id: request.id,
+      status: request.status,
+      created_at: request.created_at,
     });
-    
+
     // Déterminer si l'utilisateur peut faire une nouvelle demande
     const canMakeNewRequest = request.status === 'rejected';
-    
+
     return {
       hasRequest: true,
       request: request as ProRequestStatus,
       canMakeNewRequest,
-      status: request.status as 'pending' | 'approved' | 'rejected'
+      status: request.status as 'pending' | 'approved' | 'rejected',
     };
-    
   } catch (error) {
     console.error('❌ Erreur inattendue lors de la vérification:', error);
     return {
       hasRequest: false,
       request: null,
       canMakeNewRequest: true,
-      status: 'none'
+      status: 'none',
     };
   }
 }
@@ -92,7 +91,7 @@ export function formatRequestDate(dateString: string): string {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
-    year: 'numeric'
+    year: 'numeric',
   });
 }
 
@@ -112,7 +111,7 @@ export function getDaysSinceRequest(dateString: string): number {
  */
 export function getEstimatedDelay(daysSinceRequest: number): string {
   if (daysSinceRequest <= 2) {
-    return "Délai habituel : 2-5 jours ouvrés";
+    return 'Délai habituel : 2-5 jours ouvrés';
   } else if (daysSinceRequest <= 5) {
     return "Votre demande est en cours d'examen";
   } else {
@@ -129,25 +128,25 @@ export function getStatusColor(status: string): { bg: string; text: string; bord
       return {
         bg: 'bg-orange-50',
         text: 'text-orange-800',
-        border: 'border-orange-200'
+        border: 'border-orange-200',
       };
     case 'approved':
       return {
         bg: 'bg-green-50',
         text: 'text-green-800',
-        border: 'border-green-200'
+        border: 'border-green-200',
       };
     case 'rejected':
       return {
         bg: 'bg-red-50',
         text: 'text-red-800',
-        border: 'border-red-200'
+        border: 'border-red-200',
       };
     default:
       return {
         bg: 'bg-gray-50',
         text: 'text-gray-800',
-        border: 'border-gray-200'
+        border: 'border-gray-200',
       };
   }
 }

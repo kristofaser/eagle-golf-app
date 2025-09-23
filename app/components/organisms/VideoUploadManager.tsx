@@ -41,12 +41,15 @@ export const VideoUploadManager: React.FC<VideoUploadManagerProps> = ({
   const [uploadProgresses, setUploadProgresses] = useState<Record<string, UploadProgress>>({});
   const [selectedVideos, setSelectedVideos] = useState<Record<string, string>>({});
 
-  const updateUploadProgress = useCallback((skillKey: string, progress: number, isUploading: boolean) => {
-    setUploadProgresses(prev => ({
-      ...prev,
-      [skillKey]: { skillKey, progress, isUploading }
-    }));
-  }, []);
+  const updateUploadProgress = useCallback(
+    (skillKey: string, progress: number, isUploading: boolean) => {
+      setUploadProgresses((prev) => ({
+        ...prev,
+        [skillKey]: { skillKey, progress, isUploading },
+      }));
+    },
+    []
+  );
 
   const selectVideo = useCallback(async (skillKey: string) => {
     try {
@@ -65,9 +68,9 @@ export const VideoUploadManager: React.FC<VideoUploadManagerProps> = ({
           return;
         }
 
-        setSelectedVideos(prev => ({
+        setSelectedVideos((prev) => ({
           ...prev,
-          [skillKey]: asset.uri
+          [skillKey]: asset.uri,
         }));
       }
     } catch (error) {
@@ -76,62 +79,60 @@ export const VideoUploadManager: React.FC<VideoUploadManagerProps> = ({
     }
   }, []);
 
-  const uploadVideo = useCallback(async (skillKey: string) => {
-    if (!user || !selectedVideos[skillKey]) return;
+  const uploadVideo = useCallback(
+    async (skillKey: string) => {
+      if (!user || !selectedVideos[skillKey]) return;
 
-    try {
-      updateUploadProgress(skillKey, 0, true);
+      try {
+        updateUploadProgress(skillKey, 0, true);
 
-      // Lire le fichier
-      const response = await fetch(selectedVideos[skillKey]);
-      const blob = await response.blob();
+        // Lire le fichier
+        const response = await fetch(selectedVideos[skillKey]);
+        const blob = await response.blob();
 
-      // Nom du fichier: userId/skillKey.mp4
-      const fileName = `${user.id}/${skillKey}.mp4`;
+        // Nom du fichier: userId/skillKey.mp4
+        const fileName = `${user.id}/${skillKey}.mp4`;
 
-      // Upload vers Supabase Storage
-      const { data, error } = await supabase.storage
-        .from('video-skills')
-        .upload(fileName, blob, {
+        // Upload vers Supabase Storage
+        const { data, error } = await supabase.storage.from('video-skills').upload(fileName, blob, {
           contentType: 'video/mp4',
           upsert: true, // Remplacer si existe déjà
         });
 
-      if (error) {
-        throw error;
+        if (error) {
+          throw error;
+        }
+
+        // Obtenir l'URL publique
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from('video-skills').getPublicUrl(fileName);
+
+        updateUploadProgress(skillKey, 100, false);
+
+        // Nettoyer la sélection
+        setSelectedVideos((prev) => {
+          const newState = { ...prev };
+          delete newState[skillKey];
+          return newState;
+        });
+
+        onVideoUploaded?.(skillKey, publicUrl);
+        Alert.alert('Succès', 'Vidéo uploadée avec succès !');
+      } catch (error) {
+        console.error('Erreur upload:', error);
+        updateUploadProgress(skillKey, 0, false);
+        Alert.alert('Erreur', "Impossible d'uploader la vidéo");
       }
+    },
+    [user, selectedVideos, updateUploadProgress, onVideoUploaded]
+  );
 
-      // Obtenir l'URL publique
-      const { data: { publicUrl } } = supabase.storage
-        .from('video-skills')
-        .getPublicUrl(fileName);
+  const deleteVideo = useCallback(
+    async (skillKey: string) => {
+      if (!user) return;
 
-      updateUploadProgress(skillKey, 100, false);
-
-      // Nettoyer la sélection
-      setSelectedVideos(prev => {
-        const newState = { ...prev };
-        delete newState[skillKey];
-        return newState;
-      });
-
-      onVideoUploaded?.(skillKey, publicUrl);
-      Alert.alert('Succès', 'Vidéo uploadée avec succès !');
-
-    } catch (error) {
-      console.error('Erreur upload:', error);
-      updateUploadProgress(skillKey, 0, false);
-      Alert.alert('Erreur', 'Impossible d\'uploader la vidéo');
-    }
-  }, [user, selectedVideos, updateUploadProgress, onVideoUploaded]);
-
-  const deleteVideo = useCallback(async (skillKey: string) => {
-    if (!user) return;
-
-    Alert.alert(
-      'Supprimer la vidéo',
-      'Êtes-vous sûr de vouloir supprimer cette vidéo ?',
-      [
+      Alert.alert('Supprimer la vidéo', 'Êtes-vous sûr de vouloir supprimer cette vidéo ?', [
         { text: 'Annuler', style: 'cancel' },
         {
           text: 'Supprimer',
@@ -140,9 +141,7 @@ export const VideoUploadManager: React.FC<VideoUploadManagerProps> = ({
             try {
               const fileName = `${user.id}/${skillKey}.mp4`;
 
-              const { error } = await supabase.storage
-                .from('video-skills')
-                .remove([fileName]);
+              const { error } = await supabase.storage.from('video-skills').remove([fileName]);
 
               if (error) throw error;
 
@@ -154,9 +153,10 @@ export const VideoUploadManager: React.FC<VideoUploadManagerProps> = ({
             }
           },
         },
-      ]
-    );
-  }, [user, onVideoDeleted]);
+      ]);
+    },
+    [user, onVideoDeleted]
+  );
 
   const renderSkillVideo = (skill: { key: string; label: string; currentVideoUrl?: string }) => {
     const progress = uploadProgresses[skill.key];
@@ -189,12 +189,7 @@ export const VideoUploadManager: React.FC<VideoUploadManagerProps> = ({
               shouldPlay={false}
             />
             <View style={styles.videoOverlay}>
-              <HugeiconsIcon
-                icon={Video02Icon}
-                size={32}
-                color="white"
-                strokeWidth={1.5}
-              />
+              <HugeiconsIcon icon={Video02Icon} size={32} color="white" strokeWidth={1.5} />
             </View>
           </View>
         )}
@@ -214,10 +209,7 @@ export const VideoUploadManager: React.FC<VideoUploadManagerProps> = ({
         {/* Actions */}
         <View style={styles.actionButtons}>
           {!hasSelectedVideo && !progress?.isUploading && (
-            <TouchableOpacity
-              style={styles.selectButton}
-              onPress={() => selectVideo(skill.key)}
-            >
+            <TouchableOpacity style={styles.selectButton} onPress={() => selectVideo(skill.key)}>
               <HugeiconsIcon
                 icon={CloudUploadIcon}
                 size={16}
@@ -231,11 +223,7 @@ export const VideoUploadManager: React.FC<VideoUploadManagerProps> = ({
           )}
 
           {hasSelectedVideo && !progress?.isUploading && (
-            <Button
-              variant="primary"
-              size="small"
-              onPress={() => uploadVideo(skill.key)}
-            >
+            <Button variant="primary" size="small" onPress={() => uploadVideo(skill.key)}>
               Uploader
             </Button>
           )}
@@ -250,10 +238,7 @@ export const VideoUploadManager: React.FC<VideoUploadManagerProps> = ({
           )}
 
           {hasCurrentVideo && !progress?.isUploading && (
-            <TouchableOpacity
-              style={styles.deleteButton}
-              onPress={() => deleteVideo(skill.key)}
-            >
+            <TouchableOpacity style={styles.deleteButton} onPress={() => deleteVideo(skill.key)}>
               <HugeiconsIcon
                 icon={Delete02Icon}
                 size={16}

@@ -37,7 +37,10 @@ export const useCourseAlert = (golfCourseId: string) => {
       }
 
       // Essayer de charger depuis Supabase d'abord
-      const { data, error: dbError } = await courseAlertService.getPreferences(user.id, golfCourseId);
+      const { data, error: dbError } = await courseAlertService.getPreferences(
+        user.id,
+        golfCourseId
+      );
 
       if (data) {
         setIsEnabled(data.alerts_enabled);
@@ -48,7 +51,10 @@ export const useCourseAlert = (golfCourseId: string) => {
           golfCourseId,
           updatedAt: data.updated_at || new Date().toISOString(),
         };
-        await AsyncStorage.setItem(`${STORAGE_KEY}_${user.id}_${golfCourseId}`, JSON.stringify(preferences));
+        await AsyncStorage.setItem(
+          `${STORAGE_KEY}_${user.id}_${golfCourseId}`,
+          JSON.stringify(preferences)
+        );
         return;
       }
 
@@ -96,14 +102,20 @@ export const useCourseAlert = (golfCourseId: string) => {
       );
 
       // Sauvegarder en base Supabase
-      const { error: dbError } = await courseAlertService.updatePreferences(user.id, golfCourseId, enabled);
+      const { error: dbError } = await courseAlertService.updatePreferences(
+        user.id,
+        golfCourseId,
+        enabled
+      );
 
       if (dbError) {
         logger.warn('Erreur sauvegarde en base, conservé en local', dbError);
         // On continue malgré l'erreur DB, le cache local garde la préférence
       }
 
-      logger.dev(`✅ Préférences alerte parcours sauvegardées: ${enabled ? 'activées' : 'désactivées'}`);
+      logger.dev(
+        `✅ Préférences alerte parcours sauvegardées: ${enabled ? 'activées' : 'désactivées'}`
+      );
       return true;
     } catch (err) {
       logger.error('Erreur sauvegarde préférences alerte parcours', err);
@@ -112,20 +124,23 @@ export const useCourseAlert = (golfCourseId: string) => {
     }
   };
 
-  const toggleAlert = useCallback(async (newValue?: boolean) => {
-    const targetValue = newValue !== undefined ? newValue : !isEnabled;
+  const toggleAlert = useCallback(
+    async (newValue?: boolean) => {
+      const targetValue = newValue !== undefined ? newValue : !isEnabled;
 
-    setIsEnabled(targetValue);
+      setIsEnabled(targetValue);
 
-    const success = await savePreferences(targetValue);
+      const success = await savePreferences(targetValue);
 
-    if (!success) {
-      // Rollback en cas d'erreur
-      setIsEnabled(!targetValue);
-    }
+      if (!success) {
+        // Rollback en cas d'erreur
+        setIsEnabled(!targetValue);
+      }
 
-    return success;
-  }, [isEnabled, savePreferences]);
+      return success;
+    },
+    [isEnabled, savePreferences]
+  );
 
   const clearPreferences = async () => {
     try {

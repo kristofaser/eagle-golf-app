@@ -36,7 +36,7 @@ export function useFavorites() {
        */
       clearAllFavorites: () => {
         // Toggle tous les pros favoris pour les retirer
-        favoritePros.forEach(proId => toggleFavoritePro(proId));
+        favoritePros.forEach((proId) => toggleFavoritePro(proId));
       },
     },
   };

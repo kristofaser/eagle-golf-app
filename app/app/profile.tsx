@@ -102,7 +102,11 @@ export default function ProfileScreen() {
         {isPro ? (
           <ProProfile profile={fullProfile} onRefresh={handleRefresh} openSection={openSection} />
         ) : (
-          <AmateurProfile profile={fullProfile} onRefresh={handleRefresh} openSection={openSection} />
+          <AmateurProfile
+            profile={fullProfile}
+            onRefresh={handleRefresh}
+            openSection={openSection}
+          />
         )}
       </SafeAreaView>
     </>

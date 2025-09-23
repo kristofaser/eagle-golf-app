@@ -201,7 +201,11 @@ export const ANIMATION_HELPERS = {
   /**
    * Calcule la durée optimale basée sur la distance
    */
-  calculateDuration: (distance: number, minDuration = DURATIONS.FAST, maxDuration = DURATIONS.SLOW) => {
+  calculateDuration: (
+    distance: number,
+    minDuration = DURATIONS.FAST,
+    maxDuration = DURATIONS.SLOW
+  ) => {
     const ratio = Math.min(distance / 500, 1); // Normalize to 500px max
     return minDuration + (maxDuration - minDuration) * ratio;
   },

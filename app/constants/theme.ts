@@ -85,12 +85,12 @@ export const Colors = {
       text: '#7B1FA2', // Violet foncé
       border: '#CE93D8',
     },
-    'National': {
+    National: {
       background: '#E3F2FD', // Bleu clair
       text: '#1565C0', // Bleu foncé
       border: '#90CAF9',
     },
-    'Regional': {
+    Regional: {
       background: '#F1F8E9', // Vert très clair
       text: '#388E3C', // Vert foncé
       border: '#C8E6C9',
@@ -175,6 +175,7 @@ export const BorderRadius = {
   medium: 8,
   large: 12,
   xlarge: 16,
+  xxlarge: 20, // Pour le style moderne/épuré
   round: 999,
 };
 
@@ -191,6 +192,13 @@ export const Elevation = {
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.12,
     shadowRadius: 3,
+    elevation: 1,
+  },
+  minimal: {
+    shadowColor: Colors.shadows.dark,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04, // Ombre très subtile pour style épuré
+    shadowRadius: 2,
     elevation: 1,
   },
   medium: {

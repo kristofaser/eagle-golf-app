@@ -41,7 +41,7 @@ describe('useUser Hook', () => {
   });
 
   describe('État initial', () => {
-    it('devrait retourner null quand aucun utilisateur n\'est connecté', () => {
+    it("devrait retourner null quand aucun utilisateur n'est connecté", () => {
       const { result } = renderHook(() => useUser());
 
       expect(result.current.user).toBeNull();
@@ -200,7 +200,7 @@ describe('useUser Hook', () => {
       expect(result.current.loading).toBe(true);
     });
 
-    it('devrait gérer les erreurs d\'authentification', () => {
+    it("devrait gérer les erreurs d'authentification", () => {
       mockUseSessionContext.mockReturnValue({
         loading: false,
         error: new Error('Not authenticated'),
@@ -239,7 +239,7 @@ describe('useUser Hook', () => {
       expect(result.current.initials).toBe('JD');
     });
 
-    it('devrait retourner l\'URL de l\'avatar', () => {
+    it("devrait retourner l'URL de l'avatar", () => {
       const mockProfile = {
         first_name: 'John',
         last_name: 'Doe',

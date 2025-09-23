@@ -18,38 +18,35 @@ interface ProfileHeroImageProps {
   parallaxImageStyle: any;
 }
 
-export const ProfileHeroImage = memo<ProfileHeroImageProps>(({
-  imageUrl,
-  profileId,
-  profileName,
-  parallaxImageStyle,
-}) => {
-  const imageSource = imageUrl || DEFAULT_PRO_IMAGE;
+export const ProfileHeroImage = memo<ProfileHeroImageProps>(
+  ({ imageUrl, profileId, profileName, parallaxImageStyle }) => {
+    const imageSource = imageUrl || DEFAULT_PRO_IMAGE;
 
-  return (
-    <Animated.View
-      style={[profileStyles.imageContainer, parallaxImageStyle]}
-      pointerEvents="none"
-    >
-      <Image
-        source={{
-          uri: imageSource,
-          cacheKey: `hero-${profileId}`
-        }}
-        style={profileStyles.heroImage}
-        contentFit="cover"
-        priority="high"
-        cachePolicy="memory-disk"
-        transition={300}
-        recyclingKey={`hero-${profileId}`}
-        placeholder={PROFILE_BLURHASH}
-        placeholderContentFit="cover"
-        accessible={true}
-        accessibilityRole="image"
-        accessibilityLabel={`Photo de profil de ${profileName}`}
-      />
-    </Animated.View>
-  );
-});
+    return (
+      <Animated.View
+        style={[profileStyles.imageContainer, parallaxImageStyle]}
+        pointerEvents="none"
+      >
+        <Image
+          source={{
+            uri: imageSource,
+            cacheKey: `hero-${profileId}`,
+          }}
+          style={profileStyles.heroImage}
+          contentFit="cover"
+          priority="high"
+          cachePolicy="memory-disk"
+          transition={300}
+          recyclingKey={`hero-${profileId}`}
+          placeholder={PROFILE_BLURHASH}
+          placeholderContentFit="cover"
+          accessible={true}
+          accessibilityRole="image"
+          accessibilityLabel={`Photo de profil de ${profileName}`}
+        />
+      </Animated.View>
+    );
+  }
+);
 
 ProfileHeroImage.displayName = 'ProfileHeroImage';

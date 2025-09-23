@@ -11,12 +11,7 @@ interface BookingFABProps {
   isAuthenticated: boolean;
 }
 
-export const BookingFAB = memo<BookingFABProps>(({
-  price,
-  players,
-  onPress,
-  isAuthenticated,
-}) => {
+export const BookingFAB = memo<BookingFABProps>(({ price, players, onPress, isAuthenticated }) => {
   const insets = useSafeAreaInsets();
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const bounceAnim = useRef(new Animated.Value(0)).current;
@@ -65,10 +60,7 @@ export const BookingFAB = memo<BookingFABProps>(({
         styles.container,
         {
           bottom: insets.bottom + 20,
-          transform: [
-            { scale: scaleAnim },
-            { scale: pulseScale },
-          ],
+          transform: [{ scale: scaleAnim }, { scale: pulseScale }],
         },
       ]}
     >

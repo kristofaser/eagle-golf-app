@@ -52,23 +52,20 @@ export function useSearch({
   const debouncedQuery = useDebounce(query, debounceMs);
 
   // Paramètres de recherche optimisés
-  const searchParams: QuickSearchParams = useMemo(() => ({
-    query: debouncedQuery,
-    type: category === 'courses' ? 'courses' : category === 'pros' ? 'pros' : 'all',
-    limit: 20,
-  }), [debouncedQuery, category]);
+  const searchParams: QuickSearchParams = useMemo(
+    () => ({
+      query: debouncedQuery,
+      type: category === 'courses' ? 'courses' : category === 'pros' ? 'pros' : 'all',
+      limit: 20,
+    }),
+    [debouncedQuery, category]
+  );
 
   // Query React Query avec cache optimisé
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: queryKeys.search.results(searchParams.query, {
       type: searchParams.type,
-      limit: searchParams.limit
+      limit: searchParams.limit,
     }),
     queryFn: () => searchService.quickSearch(searchParams),
     enabled: enabled && debouncedQuery.length >= 2,
@@ -103,7 +100,7 @@ export function useSearch({
     data,
     isLoading,
     isError,
-    error: error as Error | null,
+    error: error,
 
     // Statistiques
     prosCount,
@@ -129,7 +126,6 @@ export function useSearchSuggestions(query: string, type: 'pros' | 'courses' | '
   });
 }
 
-
 /**
  * Hook pour la recherche par mode (pros ou parcours)
  */
@@ -139,11 +135,12 @@ export function useSearchByMode(mode: 'by-pro' | 'by-course') {
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: [`search-${mode}`, debouncedQuery],
-    queryFn: () => searchService.searchDual({
-      query: debouncedQuery,
-      mode,
-      limit: 15,
-    }),
+    queryFn: () =>
+      searchService.searchDual({
+        query: debouncedQuery,
+        mode,
+        limit: 15,
+      }),
     enabled: debouncedQuery.length >= 2,
     select: (response) => response.data || [],
   });
@@ -154,7 +151,7 @@ export function useSearchByMode(mode: 'by-pro' | 'by-course') {
     data,
     isLoading,
     isError,
-    error: error as Error | null,
+    error: error,
     refetch,
   };
 }

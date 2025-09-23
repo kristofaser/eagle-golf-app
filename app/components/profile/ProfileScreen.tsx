@@ -156,15 +156,9 @@ export default function ProfileScreen() {
           {/* Spacer pour le contenu scrollable */}
           <View style={{ height: IMAGE_HEIGHT }} />
 
-          <Animated.View
-            style={[profileStyles.content, contentAnimatedStyle]}
-            accessible={false}
-          >
+          <Animated.View style={[profileStyles.content, contentAnimatedStyle]} accessible={false}>
             {/* Informations du profil */}
-            <ProfileInfo
-              profile={profile}
-              isProAvailable={isProAvailable}
-            />
+            <ProfileInfo profile={profile} isProAvailable={isProAvailable} />
 
             {/* Section Disponibilités */}
             {proCourses.length > 0 && (
@@ -177,17 +171,10 @@ export default function ProfileScreen() {
             )}
 
             {/* Section Compétences */}
-            <SkillsSection
-              skills={proDetails}
-              profileId={profileId || ''}
-            />
+            <SkillsSection skills={proDetails} profileId={profileId || ''} />
 
             {/* Section Expérience */}
-            {proDetails?.experience && (
-              <ExperienceSection
-                experience={proDetails.experience}
-              />
-            )}
+            {proDetails?.experience && <ExperienceSection experience={proDetails.experience} />}
           </Animated.View>
         </Animated.ScrollView>
 
@@ -216,7 +203,7 @@ export default function ProfileScreen() {
                 proName: `${profile.first_name} ${profile.last_name}`,
                 selectedCourseId: selectedCourseId || '',
                 selectedCourseName: selectedCourseName || 'Golf sélectionné',
-              }
+              },
             });
           }}
           isAuthenticated={isAuthenticated}

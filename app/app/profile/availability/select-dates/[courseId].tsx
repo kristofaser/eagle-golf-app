@@ -20,16 +20,36 @@ import { proAvailabilityService } from '@/services/pro-availability.service';
 // Configuration du calendrier en français
 LocaleConfig.locales['fr'] = {
   monthNames: [
-    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+    'Janvier',
+    'Février',
+    'Mars',
+    'Avril',
+    'Mai',
+    'Juin',
+    'Juillet',
+    'Août',
+    'Septembre',
+    'Octobre',
+    'Novembre',
+    'Décembre',
   ],
   monthNamesShort: [
-    'Janv.', 'Févr.', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'
+    'Janv.',
+    'Févr.',
+    'Mars',
+    'Avril',
+    'Mai',
+    'Juin',
+    'Juil.',
+    'Août',
+    'Sept.',
+    'Oct.',
+    'Nov.',
+    'Déc.',
   ],
   dayNames: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
   dayNamesShort: ['Dim.', 'Lun.', 'Mar.', 'Mer.', 'Jeu.', 'Ven.', 'Sam.'],
-  today: "Aujourd'hui"
+  today: "Aujourd'hui",
 };
 LocaleConfig.defaultLocale = 'fr';
 
@@ -57,7 +77,7 @@ export default function SelectDatesScreen() {
   useEffect(() => {
     loadGolfCourse();
     loadConflictDates();
-    
+
     // Pré-remplir les dates existantes si en mode édition
     if (isEditMode && existingDates.length > 0) {
       setSelectedDates(existingDates);
@@ -70,7 +90,7 @@ export default function SelectDatesScreen() {
     try {
       setLoading(true);
       const response = await golfParcoursService.getGolfCourse(params.courseId);
-      
+
       if (response.error) {
         throw response.error;
       }
@@ -103,7 +123,7 @@ export default function SelectDatesScreen() {
     const today = new Date().toISOString().split('T')[0];
 
     // Marquer les dates sélectionnées
-    selectedDates.forEach(date => {
+    selectedDates.forEach((date) => {
       marked[date] = {
         selected: true,
         selectedColor: Colors.primary.accent,
@@ -112,7 +132,7 @@ export default function SelectDatesScreen() {
     });
 
     // Marquer les dates en conflit (occupées ailleurs)
-    conflictDates.forEach(date => {
+    conflictDates.forEach((date) => {
       if (!marked[date]) {
         marked[date] = {
           disabled: true,
@@ -153,24 +173,24 @@ export default function SelectDatesScreen() {
     if (!isEditMode || existingDates.length === 0) return [];
 
     // Grouper les dates par mois
-    const monthGroups = new Map<string, { month: string, count: number, dates: string[] }>();
-    
+    const monthGroups = new Map<string, { month: string; count: number; dates: string[] }>();
+
     existingDates.forEach((dateString: string) => {
       const monthKey = dateString.substring(0, 7); // "2025-03"
       const date = new Date(dateString);
-      const monthLabel = date.toLocaleDateString('fr-FR', { 
-        month: 'long', 
-        year: 'numeric' 
+      const monthLabel = date.toLocaleDateString('fr-FR', {
+        month: 'long',
+        year: 'numeric',
       });
-      
+
       if (!monthGroups.has(monthKey)) {
         monthGroups.set(monthKey, {
           month: monthLabel,
           count: 0,
-          dates: []
+          dates: [],
         });
       }
-      
+
       const group = monthGroups.get(monthKey)!;
       group.count += 1;
       group.dates.push(dateString);
@@ -194,13 +214,13 @@ export default function SelectDatesScreen() {
 
     // Ne pas permettre la sélection des dates passées
     if (dateString < today) return;
-    
+
     // Ne pas permettre la sélection des dates en conflit
     if (conflictDates.includes(dateString)) return;
 
-    setSelectedDates(prev => {
+    setSelectedDates((prev) => {
       if (prev.includes(dateString)) {
-        return prev.filter(d => d !== dateString);
+        return prev.filter((d) => d !== dateString);
       } else {
         return [...prev, dateString].sort();
       }
@@ -209,10 +229,10 @@ export default function SelectDatesScreen() {
 
   const handleSave = async () => {
     if (!user?.id || !params.courseId) return;
-    
+
     // En mode édition avec 0 dates = suppression intelligente
     const isDeleteAction = isEditMode && selectedDates.length === 0;
-    
+
     if (!isEditMode && selectedDates.length === 0) {
       Alert.alert('Attention', 'Veuillez sélectionner au moins une date');
       return;
@@ -240,23 +260,24 @@ export default function SelectDatesScreen() {
 
   const performDelete = async () => {
     if (!user?.id || !params.courseId) {
-      console.log('❌ [performDelete] Paramètres manquants:', { userId: user?.id, courseId: params.courseId });
+      console.log('❌ [performDelete] Paramètres manquants:', {
+        userId: user?.id,
+        courseId: params.courseId,
+      });
       return;
     }
 
     console.log('🗑️ [performDelete] Début suppression disponibilités:', {
       userId: user.id,
-      courseId: params.courseId
+      courseId: params.courseId,
     });
 
     setSaving(true);
     try {
       // Vérifier s'il y a des réservations existantes
       console.log('🔍 [performDelete] Vérification des réservations existantes...');
-      const { hasBookings, bookingsCount } = await proAvailabilityService.checkExistingBookingsForCourse(
-        user.id,
-        params.courseId
-      );
+      const { hasBookings, bookingsCount } =
+        await proAvailabilityService.checkExistingBookingsForCourse(user.id, params.courseId);
 
       console.log('📋 [performDelete] Résultat vérification:', { hasBookings, bookingsCount });
 
@@ -268,8 +289,8 @@ export default function SelectDatesScreen() {
           [
             {
               text: 'Compris',
-              style: 'default'
-            }
+              style: 'default',
+            },
           ]
         );
         return;
@@ -286,16 +307,12 @@ export default function SelectDatesScreen() {
 
       if (success) {
         console.log('✅ [performDelete] Suppression réussie');
-        Alert.alert(
-          'Succès',
-          'Disponibilités supprimées avec succès',
-          [
-            {
-              text: 'OK',
-              onPress: () => router.navigate('/profile/availability/'),
-            },
-          ]
-        );
+        Alert.alert('Succès', 'Disponibilités supprimées avec succès', [
+          {
+            text: 'OK',
+            onPress: () => router.navigate('/profile/availability/'),
+          },
+        ]);
       } else {
         console.log('❌ [performDelete] Échec suppression');
         Alert.alert('Erreur', 'Impossible de supprimer les disponibilités');
@@ -313,7 +330,7 @@ export default function SelectDatesScreen() {
 
     setSaving(true);
     try {
-      const success = isEditMode 
+      const success = isEditMode
         ? await proAvailabilityService.updateProAvailabilities(
             user.id,
             params.courseId,
@@ -348,7 +365,6 @@ export default function SelectDatesScreen() {
       setSaving(false);
     }
   };
-
 
   if (!user) {
     return null;
@@ -387,15 +403,11 @@ export default function SelectDatesScreen() {
         >
           {/* Informations du parcours */}
           <View style={styles.courseInfoContainer}>
-            <Text style={styles.courseName}>
-              {params.courseName || golfCourse?.name}
-            </Text>
+            <Text style={styles.courseName}>{params.courseName || golfCourse?.name}</Text>
             {(params.courseCity || golfCourse?.city) && (
               <View style={styles.courseLocation}>
                 <Ionicons name="location-outline" size={16} color={Colors.ui.subtleGray} />
-                <Text style={styles.courseCity}>
-                  {params.courseCity || golfCourse?.city}
-                </Text>
+                <Text style={styles.courseCity}>{params.courseCity || golfCourse?.city}</Text>
               </View>
             )}
           </View>
@@ -404,10 +416,9 @@ export default function SelectDatesScreen() {
           <View style={styles.instructionsContainer}>
             <Ionicons name="information-circle-outline" size={20} color={Colors.primary.accent} />
             <Text style={styles.instructionsText}>
-              {isEditMode 
+              {isEditMode
                 ? 'Modifiez les dates où vous serez disponible sur ce parcours'
-                : 'Sélectionnez les dates où vous serez disponible sur ce parcours'
-              }
+                : 'Sélectionnez les dates où vous serez disponible sur ce parcours'}
             </Text>
           </View>
 
@@ -467,7 +478,6 @@ export default function SelectDatesScreen() {
               ))}
             </View>
           )}
-
         </ScrollView>
 
         {/* Bouton de sauvegarde */}
@@ -477,7 +487,7 @@ export default function SelectDatesScreen() {
               styles.saveButton,
               isEditMode && selectedDates.length === 0 ? styles.deleteButton : null,
               saving && styles.saveButtonDisabled,
-              !isEditMode && selectedDates.length === 0 && styles.saveButtonDisabled
+              !isEditMode && selectedDates.length === 0 && styles.saveButtonDisabled,
             ]}
             onPress={handleSave}
             disabled={saving || (!isEditMode && selectedDates.length === 0)}
@@ -486,18 +496,17 @@ export default function SelectDatesScreen() {
               <ActivityIndicator color="white" />
             ) : (
               <>
-                <Ionicons 
-                  name={isEditMode && selectedDates.length === 0 ? "trash-outline" : "checkmark"} 
-                  size={20} 
-                  color="white" 
+                <Ionicons
+                  name={isEditMode && selectedDates.length === 0 ? 'trash-outline' : 'checkmark'}
+                  size={20}
+                  color="white"
                 />
                 <Text style={styles.saveButtonText}>
-                  {isEditMode && selectedDates.length === 0 
+                  {isEditMode && selectedDates.length === 0
                     ? 'Supprimer les disponibilités'
-                    : isEditMode 
+                    : isEditMode
                       ? `Mettre à jour${selectedDates.length > 0 ? ` (${selectedDates.length})` : ''}`
-                      : `Confirmer${selectedDates.length > 0 ? ` (${selectedDates.length})` : ''}`
-                  }
+                      : `Confirmer${selectedDates.length > 0 ? ` (${selectedDates.length})` : ''}`}
                 </Text>
               </>
             )}

@@ -37,7 +37,7 @@ export const Input: React.FC<InputProps> = ({
         accessibilityHint={helper || undefined}
         accessibilityState={{
           disabled: props.editable === false,
-          invalid: !!error
+          invalid: !!error,
         }}
         accessibilityValue={props.value ? { text: props.value } : undefined}
         {...props}

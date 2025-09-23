@@ -41,14 +41,17 @@ class CourseAlertService {
     try {
       const { data, error } = await supabase
         .from('user_course_alerts')
-        .upsert({
-          user_id: userId,
-          golf_course_id: golfCourseId,
-          alerts_enabled: enabled,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id,golf_course_id'
-        })
+        .upsert(
+          {
+            user_id: userId,
+            golf_course_id: golfCourseId,
+            alerts_enabled: enabled,
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: 'user_id,golf_course_id',
+          }
+        )
         .select()
         .single();
 
@@ -57,7 +60,11 @@ class CourseAlertService {
         return { data: null, error };
       }
 
-      logger.dev('✅ Préférences alerte parcours mises à jour en base:', { userId, golfCourseId, enabled });
+      logger.dev('✅ Préférences alerte parcours mises à jour en base:', {
+        userId,
+        golfCourseId,
+        enabled,
+      });
       return { data, error: null };
     } catch (err) {
       logger.error('Erreur service mise à jour préférences alerte parcours:', err);
@@ -97,7 +104,8 @@ class CourseAlertService {
     try {
       const { data, error } = await supabase
         .from('user_course_alerts')
-        .select(`
+        .select(
+          `
           user_id,
           golf_course_id,
           profiles!inner(
@@ -106,7 +114,8 @@ class CourseAlertService {
             first_name,
             last_name
           )
-        `)
+        `
+        )
         .eq('golf_course_id', golfCourseId)
         .eq('alerts_enabled', true);
 

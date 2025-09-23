@@ -74,7 +74,7 @@ describe('ProfileService', () => {
       expect(result.error).toBeNull();
     });
 
-    it('devrait gérer le cas où le profil n\'existe pas', async () => {
+    it("devrait gérer le cas où le profil n'existe pas", async () => {
       const mockQuery = {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
@@ -257,7 +257,7 @@ describe('ProfileService', () => {
       expect(result.error).toBeNull();
     });
 
-    it('devrait gérer le cas où le profil principal n\'existe pas', async () => {
+    it("devrait gérer le cas où le profil principal n'existe pas", async () => {
       const mockProfileQuery = {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
@@ -277,7 +277,7 @@ describe('ProfileService', () => {
       expect(result.error).toBeDefined();
     });
 
-    it('devrait gérer l\'échec de récupération de l\'email utilisateur', async () => {
+    it("devrait gérer l'échec de récupération de l'email utilisateur", async () => {
       const mockProfile = {
         id: 'user_123',
         first_name: 'John',
@@ -337,7 +337,7 @@ describe('ProfileService', () => {
           id: 'pro_456',
           user_id: 'user_456',
           handicap: 3,
-            specialties: ['putting', 'chipping'],
+          specialties: ['putting', 'chipping'],
           bio: 'Professeur de golf expérimenté',
         },
       };
@@ -369,7 +369,7 @@ describe('ProfileService', () => {
       expect(result.error).toBeNull();
     });
 
-    it('devrait retourner null si l\'utilisateur n\'est pas un pro', async () => {
+    it("devrait retourner null si l'utilisateur n'est pas un pro", async () => {
       const mockQuery = {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
@@ -436,7 +436,7 @@ describe('ProfileService', () => {
       expect(result.error).toBeNull();
     });
 
-    it('devrait retourner null si l\'utilisateur n\'est pas un amateur', async () => {
+    it("devrait retourner null si l'utilisateur n'est pas un amateur", async () => {
       const mockQuery = {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
@@ -545,7 +545,7 @@ describe('ProfileService', () => {
         },
         proProfile: {
           handicap: 1,
-            bio: 'Champion de golf professionnel',
+          bio: 'Champion de golf professionnel',
         },
       };
 
@@ -693,7 +693,7 @@ describe('ProfileService', () => {
         },
         proProfile: {
           handicap: 0,
-            bio: 'Professeur expert',
+          bio: 'Professeur expert',
         },
         amateurProfile: {
           handicap: 15,
@@ -757,7 +757,7 @@ describe('ProfileService', () => {
       expect(result.error).toBeNull();
     });
 
-    it('devrait gérer l\'erreur lors de la mise à jour du profil principal', async () => {
+    it("devrait gérer l'erreur lors de la mise à jour du profil principal", async () => {
       const userId = 'user_error';
       const updateData = {
         profile: {
@@ -784,7 +784,7 @@ describe('ProfileService', () => {
       expect(result.error?.message).toContain('Profile update failed');
     });
 
-    it('devrait gérer l\'erreur lors de la mise à jour du profil pro', async () => {
+    it("devrait gérer l'erreur lors de la mise à jour du profil pro", async () => {
       const userId = 'user_pro_error';
       const updateData = {
         profile: {
@@ -823,7 +823,7 @@ describe('ProfileService', () => {
       expect(result.error?.message).toContain('Invalid handicap value');
     });
 
-    it('devrait gérer l\'erreur lors de la récupération du profil mis à jour', async () => {
+    it("devrait gérer l'erreur lors de la récupération du profil mis à jour", async () => {
       const userId = 'user_get_error';
       const updateData = {
         profile: {
@@ -860,7 +860,7 @@ describe('ProfileService', () => {
       expect(result.error).toBeDefined();
     });
 
-    it('ne devrait rien faire si aucune donnée n\'est fournie', async () => {
+    it("ne devrait rien faire si aucune donnée n'est fournie", async () => {
       const userId = 'user_empty';
       const updateData = {}; // Aucune donnée
 
@@ -905,7 +905,7 @@ describe('ProfileService', () => {
             id: 'pro_profile_001',
             user_id: 'pro_001',
             handicap: 2,
-                bio: 'Expert en putting',
+            bio: 'Expert en putting',
           },
         },
         {
@@ -918,7 +918,7 @@ describe('ProfileService', () => {
             id: 'pro_profile_002',
             user_id: 'pro_002',
             handicap: 1,
-                bio: 'Spécialiste du drive',
+            bio: 'Spécialiste du drive',
           },
         },
       ];
@@ -940,16 +940,18 @@ describe('ProfileService', () => {
       const result = await profileService.listProProfiles();
 
       expect(supabase.from).toHaveBeenCalledWith('profiles');
-      expect(mockQuery.select).toHaveBeenCalledWith(`
+      expect(mockQuery.select).toHaveBeenCalledWith(
+        `
         *,
         pro_profiles!inner(*)
-      `, { count: 'exact' });
+      `,
+        { count: 'exact' }
+      );
       expect(mockQuery.select().eq).toHaveBeenCalledWith('user_type', 'pro');
       expect(result.data).toEqual(mockProProfiles);
       expect(result.data?.length).toBe(2);
       expect(result.error).toBeNull();
     });
-
 
     it('devrait appliquer le filtre city avec recherche partielle', async () => {
       const mockParisianPros = [
@@ -988,7 +990,6 @@ describe('ProfileService', () => {
       expect(result.data).toEqual(mockParisianPros);
       expect(result.error).toBeNull();
     });
-
 
     it('devrait appliquer la pagination', async () => {
       const mockPagedPros = [
@@ -1043,7 +1044,9 @@ describe('ProfileService', () => {
       const sort = { sortBy: 'handicap', sortOrder: 'asc' as const };
       const result = await profileService.listProProfiles(undefined, undefined, sort);
 
-      expect(mockQuery.select().eq().order).toHaveBeenCalledWith('pro_profiles.handicap', { ascending: true });
+      expect(mockQuery.select().eq().order).toHaveBeenCalledWith('pro_profiles.handicap', {
+        ascending: true,
+      });
       expect(result.data).toEqual(mockSortedPros);
       expect(result.error).toBeNull();
     });
@@ -1070,7 +1073,9 @@ describe('ProfileService', () => {
 
       const result = await profileService.listProProfiles();
 
-      expect(mockQuery.select().eq().order).toHaveBeenCalledWith('created_at', { ascending: false });
+      expect(mockQuery.select().eq().order).toHaveBeenCalledWith('created_at', {
+        ascending: false,
+      });
       expect(result.data).toEqual(mockDefaultSortedPros);
       expect(result.error).toBeNull();
     });
@@ -1139,7 +1144,7 @@ describe('ProfileService', () => {
       expect(result.error?.message).toContain('Database connection failed');
     });
 
-    it('devrait retourner une liste vide si aucun pro n\'est trouvé', async () => {
+    it("devrait retourner une liste vide si aucun pro n'est trouvé", async () => {
       const mockQuery = {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
@@ -1184,7 +1189,7 @@ describe('ProfileService', () => {
             id: 'pro_profile_001',
             user_id: 'pro_001',
             handicap: 2,
-              },
+          },
         },
         {
           id: 'pro_002',
@@ -1195,7 +1200,7 @@ describe('ProfileService', () => {
             id: 'pro_profile_002',
             user_id: 'pro_002',
             handicap: 1,
-              },
+          },
         },
       ];
 
@@ -1234,7 +1239,10 @@ describe('ProfileService', () => {
       // Vérifier appel pro_availabilities
       expect(supabase.from).toHaveBeenNthCalledWith(1, 'pro_availabilities');
       expect(mockAvailabilityQuery.select).toHaveBeenCalledWith('pro_id');
-      expect(mockAvailabilityQuery.select().eq).toHaveBeenCalledWith('golf_course_id', golfCourseId);
+      expect(mockAvailabilityQuery.select().eq).toHaveBeenCalledWith(
+        'golf_course_id',
+        golfCourseId
+      );
       expect(mockAvailabilityQuery.select().eq().gte).toHaveBeenCalledWith('date', today);
 
       // Vérifier appel profiles
@@ -1250,9 +1258,7 @@ describe('ProfileService', () => {
       const golfCourseId = 'golf_456';
       const options = { onlyAvailable: true };
 
-      const mockAvailabilities = [
-        { pro_id: 'pro_available' },
-      ];
+      const mockAvailabilities = [{ pro_id: 'pro_available' }];
 
       const mockProProfiles = [
         {
@@ -1262,7 +1268,7 @@ describe('ProfileService', () => {
           user_type: 'pro',
           pro_profiles: {
             handicap: 3,
-              },
+          },
         },
       ];
 
@@ -1300,7 +1306,10 @@ describe('ProfileService', () => {
       const result = await profileService.getProsByGolfCourse(golfCourseId, options);
 
       // Vérifier filtre availability
-      expect(mockAvailabilityQuery.select().eq().gte().gt).toHaveBeenCalledWith('max_players', 'current_bookings');
+      expect(mockAvailabilityQuery.select().eq().gte().gt).toHaveBeenCalledWith(
+        'max_players',
+        'current_bookings'
+      );
       expect(result.data).toEqual(mockProProfiles);
       expect(result.error).toBeNull();
     });
@@ -1356,7 +1365,7 @@ describe('ProfileService', () => {
       expect(result.error).toBeNull();
     });
 
-    it('devrait retourner une liste vide si aucune disponibilité n\'existe', async () => {
+    it("devrait retourner une liste vide si aucune disponibilité n'existe", async () => {
       const golfCourseId = 'golf_empty';
 
       const mockAvailabilityQuery = {
@@ -1380,7 +1389,7 @@ describe('ProfileService', () => {
       expect(supabase.from).toHaveBeenCalledTimes(1);
     });
 
-    it('devrait retourner une liste vide si aucune disponibilité n\'est trouvée', async () => {
+    it("devrait retourner une liste vide si aucune disponibilité n'est trouvée", async () => {
       const golfCourseId = 'golf_null';
 
       const mockAvailabilityQuery = {
@@ -1469,10 +1478,7 @@ describe('ProfileService', () => {
       const golfCourseId = 'golf_combined';
       const options = { onlyAvailable: true, limit: 3 };
 
-      const mockAvailabilities = [
-        { pro_id: 'pro_available_1' },
-        { pro_id: 'pro_available_2' },
-      ];
+      const mockAvailabilities = [{ pro_id: 'pro_available_1' }, { pro_id: 'pro_available_2' }];
 
       const mockProProfiles = [
         { id: 'pro_available_1', first_name: 'Available1' },
@@ -1512,7 +1518,10 @@ describe('ProfileService', () => {
       const result = await profileService.getProsByGolfCourse(golfCourseId, options);
 
       // Vérifier les deux options appliquées
-      expect(mockAvailabilityQuery.select().eq().gte().gt).toHaveBeenCalledWith('max_players', 'current_bookings');
+      expect(mockAvailabilityQuery.select().eq().gte().gt).toHaveBeenCalledWith(
+        'max_players',
+        'current_bookings'
+      );
       expect(mockProfileQuery.select().in().eq().limit).toHaveBeenCalledWith(3);
       expect(result.data).toEqual(mockProProfiles);
       expect(result.error).toBeNull();
@@ -1615,7 +1624,10 @@ describe('ProfileService', () => {
       expect(supabase.from).toHaveBeenNthCalledWith(1, 'pro_validation_requests');
       expect(mockExistingQuery.select).toHaveBeenCalledWith('id, status');
       expect(mockExistingQuery.select().eq).toHaveBeenCalledWith('user_id', userId);
-      expect(mockExistingQuery.select().eq().in).toHaveBeenCalledWith('status', ['pending', 'approved']);
+      expect(mockExistingQuery.select().eq().in).toHaveBeenCalledWith('status', [
+        'pending',
+        'approved',
+      ]);
 
       // Vérifier insertion nouvelle demande
       expect(supabase.from).toHaveBeenNthCalledWith(2, 'pro_validation_requests');
@@ -1790,7 +1802,7 @@ describe('ProfileService', () => {
       expect(result.error).toBeNull();
     });
 
-    it('devrait continuer l\'insertion même si la vérification échoue', async () => {
+    it("devrait continuer l'insertion même si la vérification échoue", async () => {
       const userId = 'user_check_error';
 
       // Simuler : vérification échoue mais insertion réussit
@@ -1825,7 +1837,7 @@ describe('ProfileService', () => {
       expect(result.error).toBeNull();
     });
 
-    it('devrait gérer les erreurs lors de l\'insertion de la demande', async () => {
+    it("devrait gérer les erreurs lors de l'insertion de la demande", async () => {
       const userId = 'user_insert_error';
 
       const mockExistingQuery = {
@@ -1950,9 +1962,13 @@ describe('ProfileService', () => {
       expect(result.error).toBeNull();
 
       expect(supabase.from).toHaveBeenCalledWith('pro_validation_requests');
-      expect(mockQuery.select).toHaveBeenCalledWith('id, status, admin_notes, created_at, validated_at');
+      expect(mockQuery.select).toHaveBeenCalledWith(
+        'id, status, admin_notes, created_at, validated_at'
+      );
       expect(mockQuery.select().eq).toHaveBeenCalledWith('user_id', userId);
-      expect(mockQuery.select().eq().order).toHaveBeenCalledWith('created_at', { ascending: false });
+      expect(mockQuery.select().eq().order).toHaveBeenCalledWith('created_at', {
+        ascending: false,
+      });
       expect(mockQuery.select().eq().order().limit).toHaveBeenCalledWith(1);
     });
 
@@ -2109,7 +2125,9 @@ describe('ProfileService', () => {
       expect(result.error).toBeNull();
 
       // Vérifier que l'ordre est correct (desc = plus récent d'abord)
-      expect(mockQuery.select().eq().order).toHaveBeenCalledWith('created_at', { ascending: false });
+      expect(mockQuery.select().eq().order).toHaveBeenCalledWith('created_at', {
+        ascending: false,
+      });
       expect(mockQuery.select().eq().order().limit).toHaveBeenCalledWith(1);
     });
 
@@ -2155,7 +2173,10 @@ describe('ProfileService', () => {
           error: null,
         }),
         getPublicUrl: jest.fn().mockReturnValue({
-          data: { publicUrl: 'https://storage.supabase.co/profiles/avatars/user_upload_file-1234567890.jpg' },
+          data: {
+            publicUrl:
+              'https://storage.supabase.co/profiles/avatars/user_upload_file-1234567890.jpg',
+          },
         }),
       };
 
@@ -2169,7 +2190,9 @@ describe('ProfileService', () => {
 
       const result = await profileService.uploadAvatar(userId, mockFile);
 
-      expect(result.data).toBe('https://storage.supabase.co/profiles/avatars/user_upload_file-1234567890.jpg');
+      expect(result.data).toBe(
+        'https://storage.supabase.co/profiles/avatars/user_upload_file-1234567890.jpg'
+      );
       expect(result.error).toBeNull();
 
       expect(mockStorageFrom).toHaveBeenCalledWith('profiles');
@@ -2181,7 +2204,9 @@ describe('ProfileService', () => {
           cacheControl: '3600',
         }
       );
-      expect(mockStorage.getPublicUrl).toHaveBeenCalledWith('avatars/user_upload_file-1234567890.jpg');
+      expect(mockStorage.getPublicUrl).toHaveBeenCalledWith(
+        'avatars/user_upload_file-1234567890.jpg'
+      );
 
       mockDateNow.mockRestore();
     });
@@ -2196,7 +2221,10 @@ describe('ProfileService', () => {
           error: null,
         }),
         getPublicUrl: jest.fn().mockReturnValue({
-          data: { publicUrl: 'https://storage.supabase.co/profiles/avatars/user_upload_blob-9876543210.jpg' },
+          data: {
+            publicUrl:
+              'https://storage.supabase.co/profiles/avatars/user_upload_blob-9876543210.jpg',
+          },
         }),
       };
 
@@ -2207,7 +2235,9 @@ describe('ProfileService', () => {
 
       const result = await profileService.uploadAvatar(userId, mockBlob);
 
-      expect(result.data).toBe('https://storage.supabase.co/profiles/avatars/user_upload_blob-9876543210.jpg');
+      expect(result.data).toBe(
+        'https://storage.supabase.co/profiles/avatars/user_upload_blob-9876543210.jpg'
+      );
       expect(result.error).toBeNull();
 
       // Pour un Blob, l'extension par défaut est jpg
@@ -2223,7 +2253,7 @@ describe('ProfileService', () => {
       mockDateNow.mockRestore();
     });
 
-    it('devrait gérer les erreurs d\'upload storage', async () => {
+    it("devrait gérer les erreurs d'upload storage", async () => {
       const userId = 'user_upload_error';
       const mockFile = new File(['content'], 'profile.jpg', { type: 'image/jpeg' });
 
@@ -2244,7 +2274,7 @@ describe('ProfileService', () => {
       expect(result.error?.message).toContain('Storage quota exceeded');
     });
 
-    it('devrait gérer les exceptions durant l\'upload', async () => {
+    it("devrait gérer les exceptions durant l'upload", async () => {
       const userId = 'user_exception';
       const mockFile = new File(['content'], 'profile.jpg', { type: 'image/jpeg' });
 
@@ -2319,7 +2349,7 @@ describe('ProfileService', () => {
         onerror: null as any,
         readAsDataURL: jest.fn().mockImplementation(function (this: any) {
           // Appel synchrone pour les tests
-          (this as any).result = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD//2Q==';
+          this.result = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD//2Q==';
           if (this.onloadend) this.onloadend();
         }),
         result: null,
@@ -2339,7 +2369,10 @@ describe('ProfileService', () => {
           error: null,
         }),
         getPublicUrl: jest.fn().mockReturnValue({
-          data: { publicUrl: 'https://storage.supabase.co/profiles/avatars/user_formdata_upload-1234567890.jpg' },
+          data: {
+            publicUrl:
+              'https://storage.supabase.co/profiles/avatars/user_formdata_upload-1234567890.jpg',
+          },
         }),
       };
 
@@ -2347,9 +2380,15 @@ describe('ProfileService', () => {
 
       const mockDateNow = jest.spyOn(Date, 'now').mockReturnValue(1234567890);
 
-      const result = await profileService.uploadAvatarWithFormData(userId, mockFormData as any, fileName);
+      const result = await profileService.uploadAvatarWithFormData(
+        userId,
+        mockFormData as any,
+        fileName
+      );
 
-      expect(result.data).toBe('https://storage.supabase.co/profiles/avatars/user_formdata_upload-1234567890.jpg');
+      expect(result.data).toBe(
+        'https://storage.supabase.co/profiles/avatars/user_formdata_upload-1234567890.jpg'
+      );
       expect(result.error).toBeNull();
 
       expect(global.fetch).toHaveBeenCalledWith('file:///path/to/image.jpg');
@@ -2377,7 +2416,11 @@ describe('ProfileService', () => {
         append: jest.fn(),
       };
 
-      const result = await profileService.uploadAvatarWithFormData(userId, mockFormData as any, fileName);
+      const result = await profileService.uploadAvatarWithFormData(
+        userId,
+        mockFormData as any,
+        fileName
+      );
 
       expect(result.data).toBeNull();
       expect(result.error).toBeDefined();
@@ -2400,7 +2443,11 @@ describe('ProfileService', () => {
       // Mock fetch qui échoue
       (global.fetch as jest.Mock).mockRejectedValue(new Error('File not found'));
 
-      const result = await profileService.uploadAvatarWithFormData(userId, mockFormData as any, fileName);
+      const result = await profileService.uploadAvatarWithFormData(
+        userId,
+        mockFormData as any,
+        fileName
+      );
 
       expect(result.data).toBeNull();
       expect(result.error).toBeDefined();
@@ -2436,14 +2483,18 @@ describe('ProfileService', () => {
       };
       (global.FileReader as jest.Mock).mockImplementation(() => mockFileReader);
 
-      const result = await profileService.uploadAvatarWithFormData(userId, mockFormData as any, fileName);
+      const result = await profileService.uploadAvatarWithFormData(
+        userId,
+        mockFormData as any,
+        fileName
+      );
 
       expect(result.data).toBeNull();
       expect(result.error).toBeDefined();
       expect(result.error?.message).toContain('FileReader failed');
     });
 
-    it('devrait gérer les erreurs d\'upload vers Supabase', async () => {
+    it("devrait gérer les erreurs d'upload vers Supabase", async () => {
       const userId = 'user_supabase_error';
       const fileName = 'avatar.jpg';
 
@@ -2467,7 +2518,7 @@ describe('ProfileService', () => {
         onerror: null as any,
         readAsDataURL: jest.fn().mockImplementation(function (this: any) {
           // Appel synchrone pour tests
-          (this as any).result = 'data:image/jpeg;base64,validBase64Data';
+          this.result = 'data:image/jpeg;base64,validBase64Data';
           if (this.onloadend) this.onloadend();
         }),
       };
@@ -2485,7 +2536,11 @@ describe('ProfileService', () => {
 
       (supabase.storage as any) = { from: jest.fn().mockReturnValue(mockStorage) };
 
-      const result = await profileService.uploadAvatarWithFormData(userId, mockFormData as any, fileName);
+      const result = await profileService.uploadAvatarWithFormData(
+        userId,
+        mockFormData as any,
+        fileName
+      );
 
       expect(result.data).toBeNull();
       expect(result.error).toBeDefined();
@@ -2543,7 +2598,7 @@ describe('ProfileService', () => {
       expect(mockQuery.insert().select().single).toHaveBeenCalled();
     });
 
-    it('devrait gérer les erreurs d\'insertion', async () => {
+    it("devrait gérer les erreurs d'insertion", async () => {
       const golfCourseData = {
         name: 'Golf Invalid',
         address: 'Invalid Address',
@@ -2592,12 +2647,14 @@ describe('ProfileService', () => {
       (supabase.from as jest.Mock).mockReturnValue(mockQuery);
 
       // Le service submitGolfCourse n'a pas de try/catch, l'exception remonte
-      await expect(profileService.submitGolfCourse(golfCourseData)).rejects.toThrow('Network timeout');
+      await expect(profileService.submitGolfCourse(golfCourseData)).rejects.toThrow(
+        'Network timeout'
+      );
     });
   });
 
   describe('getProStats', () => {
-    it('devrait calculer les statistiques complètes d\'un pro', async () => {
+    it("devrait calculer les statistiques complètes d'un pro", async () => {
       const proId = 'pro_stats_complete';
 
       // Mock pour totalBookings count
@@ -2616,12 +2673,7 @@ describe('ProfileService', () => {
       const mockReviewsQuery = {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockResolvedValue({
-            data: [
-              { rating: 4.5 },
-              { rating: 5.0 },
-              { rating: 4.0 },
-              { rating: 4.8 },
-            ],
+            data: [{ rating: 4.5 }, { rating: 5.0 }, { rating: 4.0 }, { rating: 4.8 }],
             error: null,
           }),
         }),

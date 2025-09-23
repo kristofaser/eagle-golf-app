@@ -50,7 +50,7 @@ interface UseBookingStateReturn {
   setBookingConfirmed: (confirmed: boolean) => void;
   bookingId: string | null;
   setBookingId: (id: string | null) => void;
-  
+
   // Availability
   availabilityId: string | null;
   setAvailabilityId: (id: string | null) => void;
@@ -164,7 +164,7 @@ export function useBookingState(initialPlayers: number = 1): UseBookingStateRetu
     setBookingConfirmed,
     bookingId,
     setBookingId,
-    
+
     // Availability
     availabilityId,
     setAvailabilityId,

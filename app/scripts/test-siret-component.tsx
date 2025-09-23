@@ -24,7 +24,7 @@ export function SiretTestComponent() {
     try {
       console.log('🔍 Test validation SIRET:', siret);
       const response = await siretValidationService.validateSiret(siret.trim());
-      
+
       console.log('📋 Résultat:', response);
       setResult(response.data);
 
@@ -34,15 +34,17 @@ export function SiretTestComponent() {
           `✅ SIRET valide`,
           response.data.companyName && `🏢 ${response.data.companyName}`,
           response.data.address && `📍 ${response.data.address}`,
-          response.data.isActive !== undefined && `📊 ${response.data.isActive ? 'Actif' : 'Fermé'}`,
-          response.data.error && `⚠️ ${response.data.error}`
-        ].filter(Boolean).join('\n');
+          response.data.isActive !== undefined &&
+            `📊 ${response.data.isActive ? 'Actif' : 'Fermé'}`,
+          response.data.error && `⚠️ ${response.data.error}`,
+        ]
+          .filter(Boolean)
+          .join('\n');
 
         Alert.alert('SIRET Valide', message);
       } else {
         Alert.alert('SIRET Invalide', response.data?.error || 'Erreur inconnue');
       }
-
     } catch (error: any) {
       console.error('💥 Erreur test SIRET:', error);
       Alert.alert('Erreur', `Erreur lors du test: ${error.message}`);
@@ -55,18 +57,18 @@ export function SiretTestComponent() {
     const testCases = [
       { name: 'SNCF Connect', siret: '55208426800039' },
       { name: 'Format invalide', siret: '123456789' },
-      { name: 'Inexistant', siret: '12345678901234' }
+      { name: 'Inexistant', siret: '12345678901234' },
     ];
 
     for (const testCase of testCases) {
       setSiret(testCase.siret);
-      await new Promise(resolve => setTimeout(resolve, 100)); // Petit délai visuel
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Petit délai visuel
       console.log(`🧪 Test automatique: ${testCase.name}`);
-      
+
       const response = await siretValidationService.validateSiret(testCase.siret);
       console.log(`📋 ${testCase.name}:`, response.data?.isValid ? '✅ Valide' : '❌ Invalide');
-      
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Délai entre tests
+
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Délai entre tests
     }
 
     Alert.alert('Tests automatiques', 'Tests terminés ! Voir la console pour les résultats.');
@@ -75,7 +77,7 @@ export function SiretTestComponent() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>🧪 Test Validation SIRET</Text>
-      
+
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Numéro SIRET (14 chiffres) :</Text>
         <TextInput
@@ -93,9 +95,7 @@ export function SiretTestComponent() {
         onPress={testSiret}
         disabled={isLoading}
       >
-        <Text style={styles.buttonText}>
-          {isLoading ? '⏳ Validation...' : '🔍 Valider SIRET'}
-        </Text>
+        <Text style={styles.buttonText}>{isLoading ? '⏳ Validation...' : '🔍 Valider SIRET'}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -103,37 +103,29 @@ export function SiretTestComponent() {
         onPress={testPresetSirets}
         disabled={isLoading}
       >
-        <Text style={styles.buttonTextSecondary}>
-          🧪 Tests automatiques
-        </Text>
+        <Text style={styles.buttonTextSecondary}>🧪 Tests automatiques</Text>
       </TouchableOpacity>
 
       {result && (
         <View style={styles.resultContainer}>
           <Text style={styles.resultTitle}>Résultat :</Text>
-          
-          <View style={[styles.resultCard, result.isValid ? styles.resultValid : styles.resultInvalid]}>
-            <Text style={styles.resultStatus}>
-              {result.isValid ? '✅ VALIDE' : '❌ INVALIDE'}
-            </Text>
-            
-            {result.companyName && (
-              <Text style={styles.resultDetail}>🏢 {result.companyName}</Text>
-            )}
-            
-            {result.address && (
-              <Text style={styles.resultDetail}>📍 {result.address}</Text>
-            )}
-            
+
+          <View
+            style={[styles.resultCard, result.isValid ? styles.resultValid : styles.resultInvalid]}
+          >
+            <Text style={styles.resultStatus}>{result.isValid ? '✅ VALIDE' : '❌ INVALIDE'}</Text>
+
+            {result.companyName && <Text style={styles.resultDetail}>🏢 {result.companyName}</Text>}
+
+            {result.address && <Text style={styles.resultDetail}>📍 {result.address}</Text>}
+
             {result.isActive !== undefined && (
               <Text style={styles.resultDetail}>
                 📊 {result.isActive ? 'Établissement actif' : 'Établissement fermé'}
               </Text>
             )}
-            
-            {result.error && (
-              <Text style={styles.resultError}>⚠️ {result.error}</Text>
-            )}
+
+            {result.error && <Text style={styles.resultError}>⚠️ {result.error}</Text>}
           </View>
         </View>
       )}

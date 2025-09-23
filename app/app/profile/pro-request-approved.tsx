@@ -20,10 +20,10 @@ interface ProRequestApprovedScreenProps {
   onBackToProfile: () => void;
 }
 
-export default function ProRequestApprovedScreen({ 
-  request, 
-  onRefreshProfile, 
-  onBackToProfile 
+export default function ProRequestApprovedScreen({
+  request,
+  onRefreshProfile,
+  onBackToProfile,
 }: ProRequestApprovedScreenProps) {
   const [isRefreshing, setIsRefreshing] = React.useState(false);
 
@@ -47,7 +47,7 @@ export default function ProRequestApprovedScreen({
           <TouchableOpacity onPress={onBackToProfile} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color={Colors.neutral.white} />
           </TouchableOpacity>
-          
+
           <View style={styles.headerContent}>
             <View style={styles.headerIcon}>
               <Ionicons name="checkmark-circle" size={48} color={Colors.neutral.white} />
@@ -73,11 +73,12 @@ export default function ProRequestApprovedScreen({
                 </View>
                 <Text style={styles.cardTitle}>Demande validée</Text>
               </View>
-              
+
               <Text style={styles.cardDescription}>
-                Excellente nouvelle ! Votre demande pour rejoindre la communauté des professionnels Eagle a été approuvée par notre équipe.
+                Excellente nouvelle ! Votre demande pour rejoindre la communauté des professionnels
+                Eagle a été approuvée par notre équipe.
               </Text>
-              
+
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Date d'approbation</Text>
                 <Text style={styles.infoValue}>
@@ -96,11 +97,12 @@ export default function ProRequestApprovedScreen({
                 </View>
                 <Text style={styles.cardTitle}>Synchronisation en cours</Text>
               </View>
-              
+
               <Text style={styles.cardDescription}>
-                Votre profil professionnel est en cours de finalisation. Cette opération peut prendre quelques instants.
+                Votre profil professionnel est en cours de finalisation. Cette opération peut
+                prendre quelques instants.
               </Text>
-              
+
               <View style={styles.statusRow}>
                 <Ionicons name="hourglass-outline" size={16} color={Colors.primary.accent} />
                 <Text style={styles.statusText}>Synchronisation automatique en cours...</Text>
@@ -117,22 +119,22 @@ export default function ProRequestApprovedScreen({
                 </View>
                 <Text style={styles.cardTitle}>Prochaines étapes</Text>
               </View>
-              
+
               <Text style={styles.cardDescription}>
                 Une fois votre profil professionnel activé, vous pourrez :
               </Text>
-              
+
               <View style={styles.stepsList}>
                 <View style={styles.stepItem}>
                   <Ionicons name="checkmark-circle" size={16} color={Colors.semantic.warning} />
                   <Text style={styles.stepText}>Configurer vos disponibilités</Text>
                 </View>
-                
+
                 <View style={styles.stepItem}>
                   <Ionicons name="checkmark-circle" size={16} color={Colors.semantic.warning} />
                   <Text style={styles.stepText}>Définir vos tarifs personnalisés</Text>
                 </View>
-                
+
                 <View style={styles.stepItem}>
                   <Ionicons name="checkmark-circle" size={16} color={Colors.semantic.warning} />
                   <Text style={styles.stepText}>Recevoir vos premières réservations</Text>
@@ -150,10 +152,10 @@ export default function ProRequestApprovedScreen({
                 </View>
                 <Text style={styles.cardTitle}>Bienvenue chez Eagle Pro</Text>
               </View>
-              
+
               <Text style={styles.cardDescription}>
-                Vous rejoignez une communauté de professionnels passionnés. 
-                Nous sommes ravis de vous compter parmi nous !
+                Vous rejoignez une communauté de professionnels passionnés. Nous sommes ravis de
+                vous compter parmi nous !
               </Text>
             </View>
           </Animated.View>
@@ -165,7 +167,7 @@ export default function ProRequestApprovedScreen({
             style={[
               styles.footerButton,
               styles.primaryButton,
-              isRefreshing && styles.disabledButton
+              isRefreshing && styles.disabledButton,
             ]}
             onPress={handleRefreshProfile}
             disabled={isRefreshing}
@@ -179,7 +181,7 @@ export default function ProRequestApprovedScreen({
               {isRefreshing ? 'Synchronisation...' : 'Actualiser le profil'}
             </Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={[styles.footerButton, styles.secondaryButton]}
             onPress={onBackToProfile}

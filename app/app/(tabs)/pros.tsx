@@ -1,4 +1,11 @@
-import { StyleSheet, View, ScrollView, RefreshControl, ActivityIndicator, FlatList } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  RefreshControl,
+  ActivityIndicator,
+  FlatList,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { JoueurData } from '@/components/molecules/ContentCard';
@@ -271,11 +278,14 @@ function ProsScreen() {
   const CARD_WIDTH = 280;
   const CARD_SPACING = Spacing.m;
 
-  const getItemLayout = useCallback((data: any, index: number) => ({
-    length: CARD_WIDTH + CARD_SPACING,
-    offset: (CARD_WIDTH + CARD_SPACING) * index,
-    index,
-  }), []);
+  const getItemLayout = useCallback(
+    (data: any, index: number) => ({
+      length: CARD_WIDTH + CARD_SPACING,
+      offset: (CARD_WIDTH + CARD_SPACING) * index,
+      index,
+    }),
+    []
+  );
 
   if (isLoading && !isRefetching) {
     return <LoadingScreen message="Chargement des professionnels..." />;

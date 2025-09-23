@@ -29,12 +29,7 @@ interface TripCardProps {
   onHover?: (tripId: string) => void;
 }
 
-const TripCardComponent: React.FC<TripCardProps> = ({
-  data,
-  onPress,
-  isHidden,
-  onHover,
-}) => {
+const TripCardComponent: React.FC<TripCardProps> = ({ data, onPress, isHidden, onHover }) => {
   const viewRef = useRef<View>(null);
   const { cardWidth, cardHeight } = useResponsiveCardSize();
   const [hasHovered, setHasHovered] = useState(false);
@@ -75,10 +70,12 @@ const TripCardComponent: React.FC<TripCardProps> = ({
           />
 
           {/* Badge Status */}
-          <View style={[
-            styles.statusBadge, 
-            data.status === 'completed' ? styles.completedBadge : styles.fullBadge
-          ]}>
+          <View
+            style={[
+              styles.statusBadge,
+              data.status === 'completed' ? styles.completedBadge : styles.fullBadge,
+            ]}
+          >
             <Text variant="caption" color="ball" weight="medium" style={styles.statusText}>
               {data.status === 'completed' ? 'Voyage terminé' : 'Complet'}
             </Text>

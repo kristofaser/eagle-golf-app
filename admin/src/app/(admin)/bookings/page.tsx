@@ -21,6 +21,10 @@ export default async function BookingsPage() {
       golf_course_id,
       special_requests,
       number_of_players,
+      player2_first_name,
+      player2_last_name,
+      player3_first_name,
+      player3_last_name,
       admin_booking_validations (
         status,
         admin_notes,
@@ -74,6 +78,10 @@ export default async function BookingsPage() {
         golf_course_id: booking.golf_course_id,
         special_requests: booking.special_requests,
         number_of_players: booking.number_of_players,
+        player2_first_name: booking.player2_first_name,
+        player2_last_name: booking.player2_last_name,
+        player3_first_name: booking.player3_first_name,
+        player3_last_name: booking.player3_last_name,
         amateur: amateur ? {
           first_name: amateur.first_name,
           last_name: amateur.last_name,

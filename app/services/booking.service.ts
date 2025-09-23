@@ -40,6 +40,10 @@ export interface CreateBookingData {
   platform_fee: number;
   special_requests?: string;
   status?: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  player2_first_name?: string;
+  player2_last_name?: string;
+  player3_first_name?: string;
+  player3_last_name?: string;
 }
 
 // Type pour les filtres de disponibilité
@@ -362,6 +366,13 @@ class BookingService extends BaseService {
   }
 
   /**
+   * Annule une réservation
+   */
+  async cancelBooking(bookingId: string, reason?: string): Promise<ServiceResponse<Booking>> {
+    return this.updateBookingStatus(bookingId, 'cancelled', reason);
+  }
+
+  /**
    * Met à jour le statut d'une réservation
    */
   async updateBookingStatus(
@@ -581,9 +592,7 @@ class BookingService extends BaseService {
    * Calcule le prix total d'une réservation
    * @param basePriceInCents - Prix de base en centimes depuis pro_pricing
    */
-  calculateBookingPrice(
-    basePriceInCents: number
-  ): {
+  calculateBookingPrice(basePriceInCents: number): {
     proFee: number;
     platformFee: number;
     totalAmount: number;
@@ -597,6 +606,49 @@ class BookingService extends BaseService {
       proFee,
       platformFee,
       totalAmount,
+    };
+  }
+
+  /**
+   * Calcule le montant de remboursement selon la politique d'annulation
+   * - 48h+ avant : 100% remboursé
+   * - 24-48h avant : 50% remboursé
+   * - <24h avant : 0% remboursé
+   */
+  calculateRefundInfo(bookingDate: string, bookingTime: string, totalAmount: number) {
+    // Créer la date/heure complète de la réservation
+    const bookingDateTime = new Date(`${bookingDate}T${bookingTime}`);
+    const now = new Date();
+
+    // Calculer la différence en heures
+    const hoursUntilBooking = (bookingDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+    let refundPercentage = 0;
+    let refundMessage = '';
+    let refundStatus: 'full' | 'partial' | 'none' = 'none';
+
+    if (hoursUntilBooking >= 48) {
+      refundPercentage = 100;
+      refundMessage = 'Remboursement intégral';
+      refundStatus = 'full';
+    } else if (hoursUntilBooking >= 24) {
+      refundPercentage = 50;
+      refundMessage = 'Remboursement partiel (50%)';
+      refundStatus = 'partial';
+    } else {
+      refundPercentage = 0;
+      refundMessage = 'Non remboursable';
+      refundStatus = 'none';
+    }
+
+    const refundAmount = Math.round((totalAmount * refundPercentage) / 100);
+
+    return {
+      refundPercentage,
+      refundAmount,
+      refundMessage,
+      refundStatus,
+      hoursUntilBooking: Math.round(hoursUntilBooking),
     };
   }
 }

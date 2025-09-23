@@ -10,16 +10,36 @@ import { MonthPills } from '@/components/molecules/MonthPills';
 // Configuration du calendrier en français
 LocaleConfig.locales['fr'] = {
   monthNames: [
-    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+    'Janvier',
+    'Février',
+    'Mars',
+    'Avril',
+    'Mai',
+    'Juin',
+    'Juillet',
+    'Août',
+    'Septembre',
+    'Octobre',
+    'Novembre',
+    'Décembre',
   ],
   monthNamesShort: [
-    'Janv.', 'Févr.', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'
+    'Janv.',
+    'Févr.',
+    'Mars',
+    'Avril',
+    'Mai',
+    'Juin',
+    'Juil.',
+    'Août',
+    'Sept.',
+    'Oct.',
+    'Nov.',
+    'Déc.',
   ],
   dayNames: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'],
   dayNamesShort: ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'],
-  today: "Aujourd'hui"
+  today: "Aujourd'hui",
 };
 LocaleConfig.defaultLocale = 'fr';
 
@@ -47,7 +67,7 @@ export const CalendarStep: React.FC<CalendarStepProps> = ({
     // Sinon, utiliser le premier mois avec des disponibilités
     if (availableDates.length > 0) {
       const firstAvailableDate = availableDates
-        .map(dateStr => new Date(dateStr))
+        .map((dateStr) => new Date(dateStr))
         .sort((a, b) => a.getTime() - b.getTime())[0];
       return new Date(firstAvailableDate.getFullYear(), firstAvailableDate.getMonth(), 1);
     }
@@ -60,9 +80,13 @@ export const CalendarStep: React.FC<CalendarStepProps> = ({
   useEffect(() => {
     if (availableDates.length > 0 && !selectedDate) {
       const firstAvailableDate = availableDates
-        .map(dateStr => new Date(dateStr))
+        .map((dateStr) => new Date(dateStr))
         .sort((a, b) => a.getTime() - b.getTime())[0];
-      const firstAvailableMonth = new Date(firstAvailableDate.getFullYear(), firstAvailableDate.getMonth(), 1);
+      const firstAvailableMonth = new Date(
+        firstAvailableDate.getFullYear(),
+        firstAvailableDate.getMonth(),
+        1
+      );
       setCurrentDisplayedMonth(firstAvailableMonth);
     }
   }, [availableDates, selectedDate]);
@@ -74,7 +98,7 @@ export const CalendarStep: React.FC<CalendarStepProps> = ({
     today.setHours(0, 0, 0, 0);
 
     // Marquer les dates disponibles
-    availableDates.forEach(dateStr => {
+    availableDates.forEach((dateStr) => {
       marks[dateStr] = {
         marked: true,
         dotColor: Colors.primary.electric,
@@ -120,13 +144,11 @@ export const CalendarStep: React.FC<CalendarStepProps> = ({
       <View style={styles.content}>
         <View style={styles.infoBox}>
           <Ionicons name="information-circle-outline" size={20} color={Colors.primary.electric} />
-          <Text style={styles.infoText}>
-            Sélectionnez une date pour votre partie
-          </Text>
+          <Text style={styles.infoText}>Sélectionnez une date pour votre partie</Text>
         </View>
 
         <View style={styles.calendarWrapper}>
-            <Calendar
+          <Calendar
             key={format(currentDisplayedMonth, 'yyyy-MM')}
             current={format(currentDisplayedMonth, 'yyyy-MM-dd')}
             minDate={format(new Date(), 'yyyy-MM-dd')}
@@ -202,9 +224,7 @@ export const CalendarStep: React.FC<CalendarStepProps> = ({
 
         {availableDates.length > 0 && (
           <View style={styles.availabilityHeader}>
-            <Text style={styles.availabilityText}>
-              Disponibilités de {proName}
-            </Text>
+            <Text style={styles.availabilityText}>Disponibilités de {proName}</Text>
           </View>
         )}
 

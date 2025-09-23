@@ -71,9 +71,7 @@ describe('PaymentSheet Component', () => {
     });
 
     it('devrait désactiver le bouton si disabled est true', () => {
-      const { getByTestId } = render(
-        <PaymentSheet {...defaultProps} disabled={true} />
-      );
+      const { getByTestId } = render(<PaymentSheet {...defaultProps} disabled={true} />);
 
       const button = getByTestId('payment-button');
       expect(button.props.accessibilityState?.disabled).toBe(true);
@@ -140,7 +138,7 @@ describe('PaymentSheet Component', () => {
       });
     });
 
-    it('devrait gérer les erreurs d\'initialisation du Payment Sheet', async () => {
+    it("devrait gérer les erreurs d'initialisation du Payment Sheet", async () => {
       const mockPaymentIntent = {
         client_secret: 'pi_test_secret_123',
         payment_intent_id: 'pi_test_123',
@@ -148,7 +146,7 @@ describe('PaymentSheet Component', () => {
 
       (paymentService.createPaymentIntent as jest.Mock).mockResolvedValue(mockPaymentIntent);
       mockInitPaymentSheet.mockResolvedValue({
-        error: { message: 'Erreur d\'initialisation' }
+        error: { message: "Erreur d'initialisation" },
       });
 
       const { getByTestId } = render(<PaymentSheet {...defaultProps} />);
@@ -157,11 +155,11 @@ describe('PaymentSheet Component', () => {
       fireEvent.press(button);
 
       await waitFor(() => {
-        expect(mockOnPaymentError).toHaveBeenCalledWith('Erreur d\'initialisation');
+        expect(mockOnPaymentError).toHaveBeenCalledWith("Erreur d'initialisation");
       });
     });
 
-    it('devrait gérer l\'annulation du paiement par l\'utilisateur', async () => {
+    it("devrait gérer l'annulation du paiement par l'utilisateur", async () => {
       const mockPaymentIntent = {
         client_secret: 'pi_test_secret_123',
         payment_intent_id: 'pi_test_123',
@@ -170,7 +168,7 @@ describe('PaymentSheet Component', () => {
       (paymentService.createPaymentIntent as jest.Mock).mockResolvedValue(mockPaymentIntent);
       mockInitPaymentSheet.mockResolvedValue({ error: null });
       mockPresentPaymentSheet.mockResolvedValue({
-        error: { code: 'Canceled' }
+        error: { code: 'Canceled' },
       });
 
       const { getByTestId } = render(<PaymentSheet {...defaultProps} />);

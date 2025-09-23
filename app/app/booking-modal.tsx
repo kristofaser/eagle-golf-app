@@ -1,10 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+  TextInput,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import { UserIcon, UserMultipleIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/theme';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence, withDelay } from 'react-native-reanimated';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withSequence,
+  withDelay,
+} from 'react-native-reanimated';
 import { CalendarStep } from '@/components/profile/sections/steps/CalendarStep';
 import { TimeSlotStep } from '@/components/profile/sections/steps/TimeSlotStep';
 import { SummaryStep } from '@/components/profile/sections/steps/SummaryStep';
@@ -26,7 +43,7 @@ export default function BookingModal() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   // Récupération des paramètres
   const proId = params.proId as string;
@@ -46,6 +63,14 @@ export default function BookingModal() {
     timeSlot: null as string | null,
     specialRequests: '',
     totalPrice: null as number | null,
+    player2: {
+      firstName: '',
+      lastName: '',
+    },
+    player3: {
+      firstName: '',
+      lastName: '',
+    },
   });
 
   // États pour le loading et les erreurs
@@ -69,10 +94,7 @@ export default function BookingModal() {
   // Styles d'animation FAB
   const fabAnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [
-        { scale: fabScale.value },
-        { translateY: fabTranslateY.value },
-      ],
+      transform: [{ scale: fabScale.value }, { translateY: fabTranslateY.value }],
     };
   });
 
@@ -94,6 +116,33 @@ export default function BookingModal() {
 
   // Navigation entre étapes
   const goToNextStep = () => {
+    // Vérifier l'authentification avant de passer à l'étape de récapitulatif/paiement
+    if (currentStep === 3 && !isAuthenticated) {
+      Alert.alert(
+        'Connexion requise',
+        'Créez un compte Eagle pour finaliser votre réservation',
+        [
+          { text: 'Continuer à explorer', style: 'cancel' },
+          {
+            text: 'Se connecter',
+            onPress: () => router.push({
+              pathname: '/(auth)/login' as any,
+              params: { returnTo: `/booking-modal` }
+            })
+          },
+          {
+            text: "S'inscrire",
+            onPress: () => router.push({
+              pathname: '/(auth)/register' as any,
+              params: { returnTo: `/booking-modal` }
+            }),
+            style: 'default'
+          }
+        ]
+      );
+      return;
+    }
+
     if (currentStep < BOOKING_STEPS.length) {
       setCurrentStep(currentStep + 1);
     }
@@ -127,7 +176,7 @@ export default function BookingModal() {
       // Le prix est en euros par personne depuis la base de données
       // Multiplier par le nombre de joueurs puis ajouter la commission Eagle (20%)
       const totalForAllPlayers = price * players;
-      const totalWithCommission = totalForAllPlayers + (totalForAllPlayers * 0.2);
+      const totalWithCommission = totalForAllPlayers + totalForAllPlayers * 0.2;
       return totalWithCommission;
     } catch (error) {
       console.error('Erreur calcul prix:', error);
@@ -180,17 +229,17 @@ export default function BookingModal() {
       }
 
       // 3. Filtrer les réservations bloquantes (pending ou confirmed)
-      const blockingBookings = existingBookings?.filter(booking =>
-        ['pending', 'confirmed'].includes(booking.status)
-      ) || [];
+      const blockingBookings =
+        existingBookings?.filter((booking) => ['pending', 'confirmed'].includes(booking.status)) ||
+        [];
 
       // 4. Extraire les dates déjà réservées
-      const bookedDates = new Set(blockingBookings.map(booking => booking.booking_date));
+      const bookedDates = new Set(blockingBookings.map((booking) => booking.booking_date));
 
       // 5. Filtrer les disponibilités pour exclure les dates déjà réservées
-      const availableDatesFromPro = availabilities?.map(avail => avail.date) || [];
+      const availableDatesFromPro = availabilities?.map((avail) => avail.date) || [];
       const uniqueAvailableDates = [...new Set(availableDatesFromPro)];
-      const freeDates = uniqueAvailableDates.filter(date => !bookedDates.has(date));
+      const freeDates = uniqueAvailableDates.filter((date) => !bookedDates.has(date));
 
       setAvailableDates(freeDates);
     } catch (error) {
@@ -222,14 +271,15 @@ export default function BookingModal() {
       }
 
       // Transformer les données pour le TimeSlotStep
-      const slots = availabilities?.map(avail => ({
-        id: avail.id,
-        start: avail.start_time,
-        end: avail.end_time,
-        period: getTimePeriod(avail.start_time),
-        available: avail.current_bookings < avail.max_players,
-        availableSlots: avail.max_players - avail.current_bookings,
-      })) || [];
+      const slots =
+        availabilities?.map((avail) => ({
+          id: avail.id,
+          start: avail.start_time,
+          end: avail.end_time,
+          period: getTimePeriod(avail.start_time),
+          available: avail.current_bookings < avail.max_players,
+          availableSlots: avail.max_players - avail.current_bookings,
+        })) || [];
 
       setAvailableSlots(slots);
     } catch (error) {
@@ -248,6 +298,19 @@ export default function BookingModal() {
     return 'evening';
   };
 
+  // Fonction pour obtenir l'icône selon le nombre de joueurs
+  const getPlayerIcon = (numberOfPlayers: number) => {
+    switch (numberOfPlayers) {
+      case 1:
+        return UserIcon;
+      case 2:
+        return UserMultipleIcon;
+      case 3:
+      default:
+        return UserGroupIcon;
+    }
+  };
+
   // Charger les créneaux quand la date change
   useEffect(() => {
     if (bookingData.date) {
@@ -264,9 +327,9 @@ export default function BookingModal() {
     const updatePrice = async () => {
       const newPrice = await calculatePrice(bookingData.players, bookingData.holes);
       if (newPrice !== bookingData.totalPrice) {
-        setBookingData(prev => ({
+        setBookingData((prev) => ({
           ...prev,
-          totalPrice: newPrice
+          totalPrice: newPrice,
         }));
       }
     };
@@ -277,7 +340,24 @@ export default function BookingModal() {
   useEffect(() => {
     switch (currentStep) {
       case 1:
-        setCanGoNext(bookingData.totalPrice !== null);
+        // Vérifier le prix ET les infos des joueurs supplémentaires
+        let canProceed = bookingData.totalPrice !== null;
+
+        // Si 2 joueurs ou plus, vérifier que le joueur 2 est renseigné
+        if (bookingData.players >= 2) {
+          canProceed = canProceed &&
+            bookingData.player2.firstName.trim() !== '' &&
+            bookingData.player2.lastName.trim() !== '';
+        }
+
+        // Si 3 joueurs, vérifier que le joueur 3 est renseigné
+        if (bookingData.players === 3) {
+          canProceed = canProceed &&
+            bookingData.player3.firstName.trim() !== '' &&
+            bookingData.player3.lastName.trim() !== '';
+        }
+
+        setCanGoNext(canProceed);
         break;
       case 2:
         setCanGoNext(bookingData.date !== null);
@@ -308,7 +388,8 @@ export default function BookingModal() {
 
       if (currentStep === 5) {
         // Animation Victory pour l'étape finale
-        fabScale.value = withDelay(animationDelay,
+        fabScale.value = withDelay(
+          animationDelay,
           withSequence(
             withSpring(1.2, { duration: 300 }),
             withSpring(0.95, { duration: 200 }),
@@ -317,16 +398,22 @@ export default function BookingModal() {
         );
       } else {
         // Animation Pop-in normale
-        fabScale.value = withDelay(animationDelay, withSpring(1, {
-          tension: 100,
-          friction: 8
-        }));
+        fabScale.value = withDelay(
+          animationDelay,
+          withSpring(1, {
+            tension: 100,
+            friction: 8,
+          })
+        );
       }
 
-      fabTranslateY.value = withDelay(animationDelay, withSpring(0, {
-        tension: 80,
-        friction: 10
-      }));
+      fabTranslateY.value = withDelay(
+        animationDelay,
+        withSpring(0, {
+          tension: 80,
+          friction: 10,
+        })
+      );
 
       previousStep.current = currentStep;
     }
@@ -353,9 +440,10 @@ export default function BookingModal() {
     router.dismissAll();
     router.replace({
       pathname: '/profile',
-      params: { openSection: 'mes-parties' }
+      params: { openSection: 'mes-parties' },
     });
   };
+
 
   return (
     <>
@@ -387,10 +475,7 @@ export default function BookingModal() {
             ))}
           </View>
 
-          <TouchableOpacity
-            onPress={handleClose}
-            style={styles.navButton}
-          >
+          <TouchableOpacity onPress={handleClose} style={styles.navButton}>
             <Ionicons name="close" size={24} color={Colors.neutral.charcoal} />
           </TouchableOpacity>
         </View>
@@ -411,8 +496,26 @@ export default function BookingModal() {
             <Text style={styles.sectionTitle}>Nombre de joueurs</Text>
             <View style={styles.playersSelector}>
               <TouchableOpacity
-                style={[styles.playerButton, bookingData.players <= 1 && styles.playerButtonDisabled]}
-                onPress={() => setBookingData(prev => ({ ...prev, players: Math.max(1, prev.players - 1) }))}
+                style={[
+                  styles.playerButton,
+                  bookingData.players <= 1 && styles.playerButtonDisabled,
+                ]}
+                onPress={() =>
+                  setBookingData((prev) => {
+                    const newPlayers = Math.max(1, prev.players - 1);
+                    const updatedData = { ...prev, players: newPlayers };
+
+                    // Réinitialiser les données des joueurs supplémentaires si nécessaire
+                    if (newPlayers < 3) {
+                      updatedData.player3 = { firstName: '', lastName: '' };
+                    }
+                    if (newPlayers < 2) {
+                      updatedData.player2 = { firstName: '', lastName: '' };
+                    }
+
+                    return updatedData;
+                  })
+                }
                 disabled={bookingData.players <= 1}
                 activeOpacity={0.7}
               >
@@ -424,15 +527,21 @@ export default function BookingModal() {
               </TouchableOpacity>
 
               <View style={styles.playersDisplay}>
-                <Text style={styles.playersNumber}>{bookingData.players}</Text>
-                <Text style={styles.playersLabel}>
-                  {bookingData.players === 1 ? 'joueur' : 'joueurs'}
-                </Text>
+                <HugeiconsIcon
+                  icon={getPlayerIcon(bookingData.players)}
+                  size={40}
+                  color={Colors.neutral.slate}
+                />
               </View>
 
               <TouchableOpacity
-                style={[styles.playerButton, bookingData.players >= 3 && styles.playerButtonDisabled]}
-                onPress={() => setBookingData(prev => ({ ...prev, players: Math.min(3, prev.players + 1) }))}
+                style={[
+                  styles.playerButton,
+                  bookingData.players >= 3 && styles.playerButtonDisabled,
+                ]}
+                onPress={() =>
+                  setBookingData((prev) => ({ ...prev, players: Math.min(3, prev.players + 1) }))
+                }
                 disabled={bookingData.players >= 3}
                 activeOpacity={0.7}
               >
@@ -448,7 +557,7 @@ export default function BookingModal() {
             <View style={styles.holesSelector}>
               <TouchableOpacity
                 style={[styles.playerButton, bookingData.holes <= 9 && styles.playerButtonDisabled]}
-                onPress={() => setBookingData(prev => ({ ...prev, holes: 9 }))}
+                onPress={() => setBookingData((prev) => ({ ...prev, holes: 9 }))}
                 disabled={bookingData.holes <= 9}
                 activeOpacity={0.7}
               >
@@ -465,8 +574,11 @@ export default function BookingModal() {
               </View>
 
               <TouchableOpacity
-                style={[styles.playerButton, bookingData.holes >= 18 && styles.playerButtonDisabled]}
-                onPress={() => setBookingData(prev => ({ ...prev, holes: 18 }))}
+                style={[
+                  styles.playerButton,
+                  bookingData.holes >= 18 && styles.playerButtonDisabled,
+                ]}
+                onPress={() => setBookingData((prev) => ({ ...prev, holes: 18 }))}
                 disabled={bookingData.holes >= 18}
                 activeOpacity={0.7}
               >
@@ -478,18 +590,83 @@ export default function BookingModal() {
               </TouchableOpacity>
             </View>
 
+            {/* Informations des joueurs supplémentaires */}
+            {bookingData.players >= 2 && (
+              <View style={styles.playersInfoSection}>
+                <View style={styles.playerInputRow}>
+                  <TextInput
+                    style={[styles.playerInput, styles.playerInputLeft]}
+                    placeholder="Prénom joueur 2"
+                    value={bookingData.player2.firstName}
+                    onChangeText={(text) =>
+                      setBookingData((prev) => ({
+                        ...prev,
+                        player2: { ...prev.player2, firstName: text },
+                      }))
+                    }
+                    placeholderTextColor={Colors.neutral.slate}
+                  />
+                  <TextInput
+                    style={[styles.playerInput, styles.playerInputRight]}
+                    placeholder="Nom joueur 2"
+                    value={bookingData.player2.lastName}
+                    onChangeText={(text) =>
+                      setBookingData((prev) => ({
+                        ...prev,
+                        player2: { ...prev.player2, lastName: text },
+                      }))
+                    }
+                    placeholderTextColor={Colors.neutral.slate}
+                  />
+                </View>
+              </View>
+            )}
+
+            {bookingData.players === 3 && (
+              <View style={styles.playersInfoSection}>
+                <View style={styles.playerInputRow}>
+                  <TextInput
+                    style={[styles.playerInput, styles.playerInputLeft]}
+                    placeholder="Prénom joueur 3"
+                    value={bookingData.player3.firstName}
+                    onChangeText={(text) =>
+                      setBookingData((prev) => ({
+                        ...prev,
+                        player3: { ...prev.player3, firstName: text },
+                      }))
+                    }
+                    placeholderTextColor={Colors.neutral.slate}
+                  />
+                  <TextInput
+                    style={[styles.playerInput, styles.playerInputRight]}
+                    placeholder="Nom joueur 3"
+                    value={bookingData.player3.lastName}
+                    onChangeText={(text) =>
+                      setBookingData((prev) => ({
+                        ...prev,
+                        player3: { ...prev.player3, lastName: text },
+                      }))
+                    }
+                    placeholderTextColor={Colors.neutral.slate}
+                  />
+                </View>
+              </View>
+            )}
+
             {/* Affichage du prix dynamique */}
             <View style={styles.pricePreview}>
-              <Text style={styles.priceLabel}>Prix total</Text>
-              {loadingPrice ? (
-                <ActivityIndicator size="small" color={Colors.primary.navy} />
-              ) : priceError ? (
-                <Text style={styles.priceError}>Erreur</Text>
-              ) : bookingData.totalPrice === null ? (
-                <Text style={styles.priceValue}>Prix non configuré</Text>
-              ) : (
-                <Text style={styles.priceValue}>{bookingData.totalPrice.toFixed(0)}€</Text>
-              )}
+              <View style={styles.priceRow}>
+                <Text style={styles.priceLabel}>Prix total</Text>
+                {loadingPrice ? (
+                  <ActivityIndicator size="small" color={Colors.primary.navy} />
+                ) : priceError ? (
+                  <Text style={styles.priceError}>Erreur</Text>
+                ) : bookingData.totalPrice === null ? (
+                  <Text style={styles.priceValue}>Prix non configuré</Text>
+                ) : (
+                  <Text style={styles.priceValue}>{bookingData.totalPrice.toFixed(0)}€</Text>
+                )}
+              </View>
             </View>
           </View>
         )}
@@ -498,7 +675,7 @@ export default function BookingModal() {
         {currentStep === 2 && (
           <CalendarStep
             selectedDate={bookingData.date}
-            onDateSelect={(date) => setBookingData(prev => ({ ...prev, date }))}
+            onDateSelect={(date) => setBookingData((prev) => ({ ...prev, date }))}
             availableDates={availableDates}
             proId={proId}
             proName={proName}
@@ -509,7 +686,7 @@ export default function BookingModal() {
         {currentStep === 3 && (
           <TimeSlotStep
             selectedSlot={bookingData.timeSlot}
-            onSlotSelect={(slotId) => setBookingData(prev => ({ ...prev, timeSlot: slotId }))}
+            onSlotSelect={(slotId) => setBookingData((prev) => ({ ...prev, timeSlot: slotId }))}
             selectedDate={bookingData.date}
             proId={proId}
           />
@@ -528,7 +705,6 @@ export default function BookingModal() {
           />
         )}
 
-
         {/* Étape 5: Confirmation */}
         {currentStep === 5 && (
           <SuccessStep
@@ -540,7 +716,6 @@ export default function BookingModal() {
         {/* Bouton d'action principal - Déplacé dans le ScrollView */}
         <View style={styles.buttonContainer}>
           {/* Bouton continuer pour les étapes 1-3 seulement */}
-
         </View>
 
         {/* Affichage de l'erreur globale */}
@@ -600,6 +775,19 @@ export default function BookingModal() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.neutral.cloud,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: Colors.neutral.course,
+  },
   header: {
     backgroundColor: Colors.neutral.white,
     paddingHorizontal: 20,
@@ -758,17 +946,22 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.neutral.pearl,
   },
+  priceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
   priceLabel: {
     fontSize: 14,
     color: Colors.neutral.slate,
-    marginBottom: 8,
-    textAlign: 'center',
+    textAlign: 'left',
   },
   priceValue: {
-    fontSize: 32,
+    fontSize: 18,
     fontWeight: '700',
     color: Colors.primary.navy,
-    textAlign: 'center',
+    textAlign: 'right',
   },
   priceError: {
     fontSize: 16,
@@ -849,9 +1042,8 @@ const styles = StyleSheet.create({
   // Styles FAB étendu (vrai FAB avec icône + texte)
   fabExtended: {
     position: 'absolute',
-    bottom: 24,
-    left: '50%',
-    marginLeft: -60, // Centre horizontalement (minWidth/2)
+    bottom: 80,
+    alignSelf: 'center',
     backgroundColor: Colors.primary.navy,
     paddingHorizontal: 20,
     paddingVertical: 12,
@@ -879,9 +1071,8 @@ const styles = StyleSheet.create({
   // Styles FAB rond (action finale)
   fab: {
     position: 'absolute',
-    bottom: 24,
-    left: '50%',
-    marginLeft: -50, // Centre horizontalement (minWidth/2)
+    bottom: 80,
+    alignSelf: 'center',
     backgroundColor: Colors.primary.electric,
     paddingHorizontal: 18,
     paddingVertical: 12,
@@ -898,5 +1089,30 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: Colors.neutral.white,
+  },
+  // Styles pour les champs de saisie des joueurs supplémentaires
+  playersInfoSection: {
+    marginBottom: 24,
+  },
+  playerInputRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  playerInput: {
+    flex: 1,
+    backgroundColor: Colors.neutral.white,
+    borderWidth: 1,
+    borderColor: Colors.neutral.pearl,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: Colors.neutral.charcoal,
+  },
+  playerInputLeft: {
+    marginRight: 6,
+  },
+  playerInputRight: {
+    marginLeft: 6,
   },
 });

@@ -266,7 +266,7 @@ describe('Flux Complet de Réservation avec Paiement', () => {
       expect(updatedBooking?.status).toBe('confirmed');
     });
 
-    it('devrait gérer l\'annulation d\'une réservation', async () => {
+    it("devrait gérer l'annulation d'une réservation", async () => {
       const bookingId = 'booking_001';
       const paymentIntentId = 'pi_test_123';
 
@@ -327,7 +327,7 @@ describe('Flux Complet de Réservation avec Paiement', () => {
     });
   });
 
-  describe('Cas d\'erreur et edge cases', () => {
+  describe("Cas d'erreur et edge cases", () => {
     it('devrait empêcher le double booking sur le même créneau', async () => {
       // Premier utilisateur réserve
       const firstBooking = {
@@ -366,7 +366,8 @@ describe('Flux Complet de Réservation avec Paiement', () => {
 
       // Simuler la vérification du nombre de places
       const hasEnoughSlots =
-        mockAvailability.current_bookings + secondBooking.number_of_players <= mockAvailability.max_players;
+        mockAvailability.current_bookings + secondBooking.number_of_players <=
+        mockAvailability.max_players;
 
       expect(hasEnoughSlots).toBe(false);
       expect(mockAvailability.max_players - mockAvailability.current_bookings).toBe(1);
@@ -423,9 +424,7 @@ describe('Flux Complet de Réservation avec Paiement', () => {
 
     it('devrait gérer les erreurs réseau lors du paiement', async () => {
       // Mock erreur réseau
-      (supabase.functions.invoke as jest.Mock).mockRejectedValueOnce(
-        new Error('Network error')
-      );
+      (supabase.functions.invoke as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
 
       const result = await paymentService.createPaymentIntent({
         amount: 11500,

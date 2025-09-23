@@ -1,29 +1,24 @@
 import { GolfParcours } from './golf-parcours.service';
-import { 
-  DepartmentCluster, 
-  ClusteringOptions, 
+import {
+  DepartmentCluster,
+  ClusteringOptions,
   ClusteringResult,
   MapData,
-  MapDisplayMode 
+  MapDisplayMode,
 } from '@/types/clustering';
 import { Region } from 'react-native-maps';
-import { 
-  getDisplayForZoomLevel, 
+import {
+  getDisplayForZoomLevel,
   ZoomBasedDisplay,
   getVisibleBounds,
-  isInVisibleBounds 
+  isInVisibleBounds,
 } from '@/utils/zoom-levels';
 
 class ClusteringService {
   /**
    * Calcule la distance entre deux points en kilomètres (Haversine)
    */
-  private calculateDistance(
-    lat1: number,
-    lng1: number,
-    lat2: number,
-    lng2: number
-  ): number {
+  private calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
     const R = 6371; // Rayon de la Terre en km
     const dLat = this.toRad(lat2 - lat1);
     const dLng = this.toRad(lng2 - lng1);
@@ -49,19 +44,20 @@ class ClusteringService {
       return { latitude: 46.603354, longitude: 1.888334 }; // Centre de la France
     }
 
-    const validGolfs = golfs.filter(g => 
-      g.latitude && 
-      g.longitude && 
-      typeof g.latitude === 'number' && 
-      typeof g.longitude === 'number' &&
-      !isNaN(g.latitude) && 
-      !isNaN(g.longitude) &&
-      g.latitude >= -90 && 
-      g.latitude <= 90 && 
-      g.longitude >= -180 && 
-      g.longitude <= 180
+    const validGolfs = golfs.filter(
+      (g) =>
+        g.latitude &&
+        g.longitude &&
+        typeof g.latitude === 'number' &&
+        typeof g.longitude === 'number' &&
+        !isNaN(g.latitude) &&
+        !isNaN(g.longitude) &&
+        g.latitude >= -90 &&
+        g.latitude <= 90 &&
+        g.longitude >= -180 &&
+        g.longitude <= 180
     );
-    
+
     if (validGolfs.length === 0) {
       return { latitude: 46.603354, longitude: 1.888334 };
     }
@@ -92,16 +88,19 @@ class ClusteringService {
    */
   private createDepartmentClusters(golfs: GolfParcours[]): DepartmentCluster[] {
     // Grouper par département
-    const golfsByDepartment = golfs.reduce((acc, golf) => {
-      const dept = golf.department;
-      if (!dept) return acc;
-      
-      if (!acc[dept]) {
-        acc[dept] = [];
-      }
-      acc[dept].push(golf);
-      return acc;
-    }, {} as Record<string, GolfParcours[]>);
+    const golfsByDepartment = golfs.reduce(
+      (acc, golf) => {
+        const dept = golf.department;
+        if (!dept) return acc;
+
+        if (!acc[dept]) {
+          acc[dept] = [];
+        }
+        acc[dept].push(golf);
+        return acc;
+      },
+      {} as Record<string, GolfParcours[]>
+    );
 
     // Créer les clusters
     return Object.entries(golfsByDepartment).map(([department, deptGolfs]) => ({
@@ -122,10 +121,11 @@ class ClusteringService {
     maxDistance: number
   ): GolfParcours[] {
     return golfs
-      .filter(golf => 
-        golf.latitude && 
-        golf.longitude && 
-        this.calculateDistance(userLat, userLng, golf.latitude, golf.longitude) <= maxDistance
+      .filter(
+        (golf) =>
+          golf.latitude &&
+          golf.longitude &&
+          this.calculateDistance(userLat, userLng, golf.latitude, golf.longitude) <= maxDistance
       )
       .sort((a, b) => {
         const distA = this.calculateDistance(userLat, userLng, a.latitude!, a.longitude!);
@@ -138,7 +138,7 @@ class ClusteringService {
    * Génère les données de clustering pour la carte
    */
   public generateClusteringData(
-    golfs: GolfParcours[], 
+    golfs: GolfParcours[],
     options: ClusteringOptions = {}
   ): ClusteringResult {
     const {
@@ -150,9 +150,9 @@ class ClusteringService {
 
     // Créer tous les clusters départementaux
     const allClusters = this.createDepartmentClusters(golfs);
-    
+
     // Filtrer les clusters qui ont assez de golfs
-    const clusters = allClusters.filter(cluster => cluster.count >= minGolfsForCluster);
+    const clusters = allClusters.filter((cluster) => cluster.count >= minGolfsForCluster);
 
     // Si on a une position utilisateur, trouver les golfs proches
     let nearbyIndividualGolfs: GolfParcours[] = [];
@@ -176,13 +176,13 @@ class ClusteringService {
    * Calcule les bounds (limites) géographiques d'un département
    */
   public calculateDepartmentBounds(golfs: GolfParcours[]) {
-    const validGolfs = golfs.filter(g => g.latitude && g.longitude);
+    const validGolfs = golfs.filter((g) => g.latitude && g.longitude);
     if (validGolfs.length === 0) {
       return null;
     }
 
-    const lats = validGolfs.map(g => g.latitude!);
-    const lngs = validGolfs.map(g => g.longitude!);
+    const lats = validGolfs.map((g) => g.latitude!);
+    const lngs = validGolfs.map((g) => g.longitude!);
 
     const minLat = Math.min(...lats);
     const maxLat = Math.max(...lats);
@@ -191,7 +191,7 @@ class ClusteringService {
 
     // Ajouter un petit padding pour un meilleur affichage
     const padding = 0.05; // ~5km
-    
+
     return {
       latitude: (minLat + maxLat) / 2,
       longitude: (minLng + maxLng) / 2,
@@ -211,7 +211,7 @@ class ClusteringService {
     if (userLocation && clusteringResult.nearbyIndividualGolfs.length > 0) {
       return 'hybrid';
     }
-    
+
     // Si on a beaucoup de golfs individuels (ex: utilisateur dans une région dense)
     if (clusteringResult.nearbyIndividualGolfs.length > 20) {
       return 'individual';
@@ -224,15 +224,15 @@ class ClusteringService {
   /**
    * Génère les données complètes pour la carte
    */
-  public generateMapData(
-    golfs: GolfParcours[],
-    options: ClusteringOptions = {}
-  ): MapData {
+  public generateMapData(golfs: GolfParcours[], options: ClusteringOptions = {}): MapData {
     const clusteringResult = this.generateClusteringData(golfs, options);
-    const userLocation = options.userLatitude && options.userLongitude ? {
-      latitude: options.userLatitude,
-      longitude: options.userLongitude,
-    } : undefined;
+    const userLocation =
+      options.userLatitude && options.userLongitude
+        ? {
+            latitude: options.userLatitude,
+            longitude: options.userLongitude,
+          }
+        : undefined;
 
     const mode = this.determineDisplayMode(clusteringResult, userLocation);
 
@@ -258,7 +258,7 @@ class ClusteringService {
     });
 
     const display = getDisplayForZoomLevel(region, allClusters, allGolfs);
-    
+
     console.log('📊 Affichage calculé:', {
       zoomLevel: display.zoomLevel,
       clusters: display.clustersToShow.length,
@@ -279,7 +279,7 @@ class ClusteringService {
     totalGolfs: number;
   } {
     const allClusters = this.createDepartmentClusters(golfs);
-    
+
     return {
       allClusters,
       allGolfs: golfs,
@@ -290,13 +290,17 @@ class ClusteringService {
   /**
    * Filtre les golfs dans une région visible avec un padding
    */
-  public filterGolfsInRegion(golfs: GolfParcours[], region: Region, paddingFactor = 1.2): GolfParcours[] {
+  public filterGolfsInRegion(
+    golfs: GolfParcours[],
+    region: Region,
+    paddingFactor = 1.2
+  ): GolfParcours[] {
     const bounds = getVisibleBounds(region);
-    
+
     // Ajouter du padding pour précharger les golfs proches
-    const latPadding = (bounds.north - bounds.south) * (paddingFactor - 1) / 2;
-    const lngPadding = (bounds.east - bounds.west) * (paddingFactor - 1) / 2;
-    
+    const latPadding = ((bounds.north - bounds.south) * (paddingFactor - 1)) / 2;
+    const lngPadding = ((bounds.east - bounds.west) * (paddingFactor - 1)) / 2;
+
     const expandedBounds = {
       north: bounds.north + latPadding,
       south: bounds.south - latPadding,
@@ -304,10 +308,11 @@ class ClusteringService {
       west: bounds.west - lngPadding,
     };
 
-    return golfs.filter(golf => 
-      golf.latitude && 
-      golf.longitude && 
-      isInVisibleBounds(golf.latitude, golf.longitude, expandedBounds)
+    return golfs.filter(
+      (golf) =>
+        golf.latitude &&
+        golf.longitude &&
+        isInVisibleBounds(golf.latitude, golf.longitude, expandedBounds)
     );
   }
 }

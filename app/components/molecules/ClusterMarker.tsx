@@ -11,14 +11,16 @@ interface ClusterMarkerProps {
 
 export function ClusterMarker({ cluster, onPress }: ClusterMarkerProps) {
   // Validation complète du cluster
-  if (!cluster || 
-      !cluster.center || 
-      typeof cluster.center.latitude !== 'number' || 
-      typeof cluster.center.longitude !== 'number' ||
-      isNaN(cluster.center.latitude) || 
-      isNaN(cluster.center.longitude) ||
-      !cluster.department ||
-      typeof cluster.count !== 'number') {
+  if (
+    !cluster ||
+    !cluster.center ||
+    typeof cluster.center.latitude !== 'number' ||
+    typeof cluster.center.longitude !== 'number' ||
+    isNaN(cluster.center.latitude) ||
+    isNaN(cluster.center.longitude) ||
+    !cluster.department ||
+    typeof cluster.count !== 'number'
+  ) {
     console.warn('❌ ClusterMarker: cluster invalide', cluster);
     return null;
   }
@@ -27,9 +29,14 @@ export function ClusterMarker({ cluster, onPress }: ClusterMarkerProps) {
   const latitude = Number(cluster.center.latitude);
   const longitude = Number(cluster.center.longitude);
 
-  if (latitude < -90 || latitude > 90 ||
-      longitude < -180 || longitude > 180 ||
-      isNaN(latitude) || isNaN(longitude)) {
+  if (
+    latitude < -90 ||
+    latitude > 90 ||
+    longitude < -180 ||
+    longitude > 180 ||
+    isNaN(latitude) ||
+    isNaN(longitude)
+  ) {
     console.warn('❌ ClusterMarker: coordonnées hors limites', { latitude, longitude });
     return null;
   }
@@ -45,8 +52,12 @@ export function ClusterMarker({ cluster, onPress }: ClusterMarkerProps) {
   // Rendu simplifié avec valeurs garanties
   const coordinate = { latitude, longitude };
   const size = count >= 15 ? 'large' : count >= 8 ? 'medium' : 'small';
-  const backgroundColor = count >= 15 ? Colors.primary.accent : 
-                         count >= 8 ? Colors.secondary.electric : Colors.neutral.iron;
+  const backgroundColor =
+    count >= 15
+      ? Colors.primary.accent
+      : count >= 8
+        ? Colors.secondary.electric
+        : Colors.neutral.iron;
 
   return (
     <Marker
@@ -56,17 +67,11 @@ export function ClusterMarker({ cluster, onPress }: ClusterMarkerProps) {
       tracksViewChanges={false}
       stopPropagation={true}
     >
-      <View style={[
-        styles.clusterContainer,
-        styles[size],
-        { backgroundColor }
-      ]}>
+      <View style={[styles.clusterContainer, styles[size], { backgroundColor }]}>
         <Text style={[styles.clusterText, { color: 'white', fontWeight: 'bold' }]}>
           {department}
         </Text>
-        <Text style={[styles.countText, { color: 'white' }]}>
-          {count}
-        </Text>
+        <Text style={[styles.countText, { color: 'white' }]}>{count}</Text>
       </View>
     </Marker>
   );

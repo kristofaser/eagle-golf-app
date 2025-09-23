@@ -268,7 +268,7 @@ class SearchService extends BaseService {
           const { data: courses } = await this.supabase
             .from('golf_parcours')
             .select('name')
-              .ilike('name', searchQuery)
+            .ilike('name', searchQuery)
             .limit(5);
 
           suggestions = courses?.map((c) => c.name) || [];
@@ -278,7 +278,7 @@ class SearchService extends BaseService {
           const { data: cities } = await this.supabase
             .from('golf_parcours')
             .select('city')
-              .ilike('city', searchQuery)
+            .ilike('city', searchQuery)
             .limit(5);
 
           // Dédupliquer les villes

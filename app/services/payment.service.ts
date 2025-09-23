@@ -91,9 +91,7 @@ export const paymentService = {
   /**
    * Vérifier qu'une availability existe et a de la place
    */
-  async verifyAvailability(
-    availabilityId: string
-  ): Promise<{ valid: boolean; error?: string }> {
+  async verifyAvailability(availabilityId: string): Promise<{ valid: boolean; error?: string }> {
     try {
       const { data, error } = await supabase
         .from('pro_availabilities')
@@ -103,16 +101,16 @@ export const paymentService = {
 
       if (error || !data) {
         console.error('❌ Availability non trouvée:', error);
-        return { 
-          valid: false, 
-          error: 'Disponibilité non trouvée' 
+        return {
+          valid: false,
+          error: 'Disponibilité non trouvée',
         };
       }
 
       if (data.current_bookings >= data.max_players) {
-        return { 
-          valid: false, 
-          error: 'Plus de place disponible pour ce créneau' 
+        return {
+          valid: false,
+          error: 'Plus de place disponible pour ce créneau',
         };
       }
 
@@ -120,9 +118,9 @@ export const paymentService = {
       return { valid: true };
     } catch (error: any) {
       console.error('❌ Error in verifyAvailability:', error);
-      return { 
-        valid: false, 
-        error: error.message || 'Erreur lors de la vérification' 
+      return {
+        valid: false,
+        error: error.message || 'Erreur lors de la vérification',
       };
     }
   },

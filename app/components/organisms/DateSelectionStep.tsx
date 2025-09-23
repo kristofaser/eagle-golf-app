@@ -29,25 +29,38 @@ export const DateSelectionStep = memo(function DateSelectionStep({
   // Calculer les mois avec des disponibilités
   const monthsWithAvailability = useMemo(() => {
     const months = new Map<string, { month: number; year: number; name: string }>();
-    
+
     // Parcourir toutes les dates marquées
-    Object.keys(markedDates || {}).forEach(dateString => {
+    Object.keys(markedDates || {}).forEach((dateString) => {
       // Vérifier que la date a bien une disponibilité (customStyles défini)
       if (markedDates[dateString]?.customStyles) {
         const date = new Date(dateString);
         const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
-        
+
         if (!months.has(monthKey)) {
-          const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+          const monthNames = [
+            'Jan',
+            'Fév',
+            'Mar',
+            'Avr',
+            'Mai',
+            'Juin',
+            'Juil',
+            'Août',
+            'Sep',
+            'Oct',
+            'Nov',
+            'Déc',
+          ];
           months.set(monthKey, {
             month: date.getMonth(),
             year: date.getFullYear(),
-            name: `${monthNames[date.getMonth()]} ${date.getFullYear()}`
+            name: `${monthNames[date.getMonth()]} ${date.getFullYear()}`,
           });
         }
       }
     });
-    
+
     // Convertir en array et trier par date
     return Array.from(months.values()).sort((a, b) => {
       if (a.year !== b.year) return a.year - b.year;
@@ -122,33 +135,31 @@ export const DateSelectionStep = memo(function DateSelectionStep({
             textDayHeaderFontSize: 12,
           }}
         />
-        
+
         {/* Badges de navigation par mois */}
         {monthsWithAvailability.length > 0 && (
           <View style={styles.monthBadgesContainer}>
-            <ScrollView 
-              horizontal 
+            <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.monthBadgesScroll}
             >
               {monthsWithAvailability.map((monthInfo) => {
                 const monthKey = `${monthInfo.year}-${monthInfo.month}`;
-                const isCurrentMonth = currentMonth && 
-                  new Date(currentMonth).getMonth() === monthInfo.month && 
+                const isCurrentMonth =
+                  currentMonth &&
+                  new Date(currentMonth).getMonth() === monthInfo.month &&
                   new Date(currentMonth).getFullYear() === monthInfo.year;
-                
+
                 return (
                   <TouchableOpacity
                     key={monthKey}
-                    style={[
-                      styles.monthBadge,
-                      isCurrentMonth && styles.monthBadgeActive
-                    ]}
+                    style={[styles.monthBadge, isCurrentMonth && styles.monthBadgeActive]}
                     onPress={() => navigateToMonth(monthInfo.month, monthInfo.year)}
                     activeOpacity={0.7}
                   >
-                    <Text 
-                      variant="caption" 
+                    <Text
+                      variant="caption"
                       weight={isCurrentMonth ? 'semiBold' : 'medium'}
                       color={isCurrentMonth ? 'white' : 'accent'}
                     >

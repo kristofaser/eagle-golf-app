@@ -13,38 +13,39 @@ interface AvailabilitySectionProps {
   isLoadingCourses: boolean;
 }
 
-export const AvailabilitySection = memo<AvailabilitySectionProps>(({
-  courses,
-  selectedCourseId,
-  onCourseSelect,
-  isLoadingCourses,
-}) => {
-  if (courses.length === 0 && !isLoadingCourses) {
-    return null;
+export const AvailabilitySection = memo<AvailabilitySectionProps>(
+  ({ courses, selectedCourseId, onCourseSelect, isLoadingCourses }) => {
+    if (courses.length === 0 && !isLoadingCourses) {
+      return null;
+    }
+
+    return (
+      <Animated.View
+        entering={FadeIn.delay(300).duration(DURATIONS.NORMAL)}
+        style={[profileStyles.card, { backgroundColor: sectionColors.availability.background }]}
+        accessible={true}
+        accessibilityRole="region"
+        accessibilityLabel="Section disponibilités"
+      >
+        <View style={profileStyles.cardHeader}>
+          <Text style={profileStyles.cardTitle} accessibilityRole="header">
+            Disponibilités
+          </Text>
+        </View>
+        <View
+          style={[profileStyles.accentLine, { backgroundColor: sectionColors.availability.accent }]}
+        />
+
+        {/* Cards des parcours disponibles */}
+        <ProAvailabilityCards
+          availabilities={courses}
+          selectedCourseId={selectedCourseId}
+          onCourseSelect={onCourseSelect}
+          loading={isLoadingCourses}
+        />
+      </Animated.View>
+    );
   }
-
-  return (
-    <Animated.View
-      entering={FadeIn.delay(300).duration(DURATIONS.NORMAL)}
-      style={[profileStyles.card, { backgroundColor: sectionColors.availability.background }]}
-      accessible={true}
-      accessibilityRole="region"
-      accessibilityLabel="Section disponibilités"
-    >
-      <View style={profileStyles.cardHeader}>
-        <Text style={profileStyles.cardTitle} accessibilityRole="header">Disponibilités</Text>
-      </View>
-      <View style={[profileStyles.accentLine, { backgroundColor: sectionColors.availability.accent }]} />
-
-      {/* Cards des parcours disponibles */}
-      <ProAvailabilityCards
-        availabilities={courses}
-        selectedCourseId={selectedCourseId}
-        onCourseSelect={onCourseSelect}
-        loading={isLoadingCourses}
-      />
-    </Animated.View>
-  );
-});
+);
 
 AvailabilitySection.displayName = 'AvailabilitySection';

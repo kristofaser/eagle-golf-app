@@ -1,10 +1,15 @@
-import { validateDateOfBirth, applyDateMask, formatDateForDisplay, validateBusinessLeaderAge } from '@/utils/date-validation';
+import {
+  validateDateOfBirth,
+  applyDateMask,
+  formatDateForDisplay,
+  validateBusinessLeaderAge,
+} from '@/utils/date-validation';
 
 describe('Date Validation Utils', () => {
   describe('validateDateOfBirth', () => {
     it('should validate correct date format', () => {
       const result = validateDateOfBirth('15/03/1985');
-      
+
       expect(result.isValid).toBe(true);
       expect(result.formattedDate).toBe('1985-03-15');
       expect(result.age).toBeGreaterThan(30);
@@ -13,28 +18,28 @@ describe('Date Validation Utils', () => {
 
     it('should reject empty date', () => {
       const result = validateDateOfBirth('');
-      
+
       expect(result.isValid).toBe(false);
       expect(result.error).toBe('Date de naissance requise');
     });
 
     it('should reject invalid format', () => {
       const result = validateDateOfBirth('15-03-1985');
-      
+
       expect(result.isValid).toBe(false);
       expect(result.error).toContain('Format invalide');
     });
 
     it('should reject invalid day', () => {
       const result = validateDateOfBirth('32/03/1985');
-      
+
       expect(result.isValid).toBe(false);
       expect(result.error).toContain('Jour invalide');
     });
 
     it('should reject invalid month', () => {
       const result = validateDateOfBirth('15/13/1985');
-      
+
       expect(result.isValid).toBe(false);
       expect(result.error).toContain('Mois invalide');
     });
@@ -42,21 +47,21 @@ describe('Date Validation Utils', () => {
     it('should reject future year', () => {
       const futureYear = new Date().getFullYear() + 1;
       const result = validateDateOfBirth(`15/03/${futureYear}`);
-      
+
       expect(result.isValid).toBe(false);
       expect(result.error).toContain('Année invalide');
     });
 
     it('should reject too old year', () => {
       const result = validateDateOfBirth('15/03/1800');
-      
+
       expect(result.isValid).toBe(false);
       expect(result.error).toContain('Année invalide');
     });
 
     it('should reject impossible date', () => {
       const result = validateDateOfBirth('31/02/2023');
-      
+
       expect(result.isValid).toBe(false);
       expect(result.error).toContain('Date inexistante');
     });
@@ -64,28 +69,28 @@ describe('Date Validation Utils', () => {
     it('should reject under 18 years old', () => {
       const recentYear = new Date().getFullYear() - 10; // 10 ans
       const result = validateDateOfBirth(`15/03/${recentYear}`);
-      
+
       expect(result.isValid).toBe(false);
       expect(result.error).toContain('au moins 18 ans');
     });
 
     it('should reject unrealistic age', () => {
       const result = validateDateOfBirth('15/03/1900');
-      
+
       expect(result.isValid).toBe(false);
       expect(result.error).toContain('Âge trop élevé');
     });
 
     it('should handle leap year correctly', () => {
       const result = validateDateOfBirth('29/02/2000'); // 2000 est bissextile
-      
+
       expect(result.isValid).toBe(true);
       expect(result.formattedDate).toBe('2000-02-29');
     });
 
     it('should reject non-leap year Feb 29', () => {
       const result = validateDateOfBirth('29/02/1999'); // 1999 n'est pas bissextile
-      
+
       expect(result.isValid).toBe(false);
       expect(result.error).toContain('Date inexistante');
     });
@@ -131,7 +136,7 @@ describe('Date Validation Utils', () => {
   describe('validateBusinessLeaderAge', () => {
     it('should use same validation as validateDateOfBirth for valid adult', () => {
       const result = validateBusinessLeaderAge('15/03/1985');
-      
+
       expect(result.isValid).toBe(true);
       expect(result.formattedDate).toBe('1985-03-15');
     });
@@ -139,7 +144,7 @@ describe('Date Validation Utils', () => {
     it('should reject under 16 for business leader', () => {
       const recentYear = new Date().getFullYear() - 15; // 15 ans
       const result = validateBusinessLeaderAge(`15/03/${recentYear}`);
-      
+
       expect(result.isValid).toBe(false);
       expect(result.error).toContain('au moins 16 ans');
     });
@@ -147,14 +152,14 @@ describe('Date Validation Utils', () => {
     it('should accept 17 years old for business leader', () => {
       const recentYear = new Date().getFullYear() - 17; // 17 ans
       const result = validateBusinessLeaderAge(`15/03/${recentYear}`);
-      
+
       expect(result.isValid).toBe(true);
       expect(result.age).toBe(17);
     });
 
     it('should still reject invalid format', () => {
       const result = validateBusinessLeaderAge('invalid');
-      
+
       expect(result.isValid).toBe(false);
       expect(result.error).toContain('Format invalide');
     });

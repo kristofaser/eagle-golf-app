@@ -1,10 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ViewStyle,
-  TouchableOpacity,
-} from 'react-native';
+import { View, StyleSheet, ViewStyle, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { Colors, BorderRadius, Typography, Elevation } from '@/constants/theme';
 import { Text } from './Text';
@@ -174,7 +169,7 @@ export const Avatar: React.FC<AvatarProps> = ({
             <Image
               source={{
                 uri: avatarSource.uri,
-                cacheKey: `avatar-${avatarSource.uri}`
+                cacheKey: `avatar-${avatarSource.uri}`,
               }}
               style={[
                 styles.image,
@@ -245,7 +240,7 @@ export const Avatar: React.FC<AvatarProps> = ({
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         accessibilityRole="button"
-        accessibilityLabel={displayName ? `Photo de profil de ${displayName}` : "Photo de profil"}
+        accessibilityLabel={displayName ? `Photo de profil de ${displayName}` : 'Photo de profil'}
         accessibilityHint="Appuyez pour voir le profil complet"
       >
         {AvatarContent}

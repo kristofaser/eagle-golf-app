@@ -116,7 +116,8 @@ export const queryKeys = {
   // Search
   search: {
     all: ['search'] as const,
-    results: (query: string, filters?: Record<string, unknown>) => [...queryKeys.search.all, query, filters] as const,
+    results: (query: string, filters?: Record<string, unknown>) =>
+      [...queryKeys.search.all, query, filters] as const,
     suggestions: (query: string) => [...queryKeys.search.all, 'suggestions', query] as const,
   },
 };

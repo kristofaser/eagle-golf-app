@@ -13,7 +13,7 @@ interface GolfCoursesMapExpoProps {
   // Version ultra-simplifiée
   allGolfs: GolfParcours[];
   userLocation?: { latitude: number; longitude: number };
-  
+
   // Callbacks essentiels
   onCoursePress: (course: GolfParcours) => void;
   selectedCourseId?: string | undefined;
@@ -70,7 +70,7 @@ export function GolfCoursesMapExpo({
 
         logger.dev('✅ Position trouvée:', location.coords.latitude, location.coords.longitude);
         setUserLocation(location);
-        
+
         setRegion({
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
@@ -91,65 +91,75 @@ export function GolfCoursesMapExpo({
       center: `${newRegion.latitude.toFixed(4)}, ${newRegion.longitude.toFixed(4)}`,
       delta: `${newRegion.latitudeDelta.toFixed(4)}°`,
     });
-    
+
     setRegion(newRegion);
   }, []);
 
   // Gérer le clic sur un golf individuel
-  const handleMarkerPress = useCallback((course: GolfParcours) => {
-    onCoursePress(course);
+  const handleMarkerPress = useCallback(
+    (course: GolfParcours) => {
+      onCoursePress(course);
 
-    // Centrer la carte sur le parcours sélectionné avec un zoom adapté
-    if (course.location && mapRef.current) {
-      const location = course.location as PostGISPoint;
-      const [longitude, latitude] = location.coordinates;
-      
-      mapRef.current.animateToRegion(
-        {
-          latitude,
-          longitude,
-          latitudeDelta: 0.05, // Zoom détaillé
-          longitudeDelta: 0.05,
-        },
-        500
-      );
-    }
-  }, [onCoursePress]);
+      // Centrer la carte sur le parcours sélectionné avec un zoom adapté
+      if (course.location && mapRef.current) {
+        const location = course.location;
+        const [longitude, latitude] = location.coordinates;
+
+        mapRef.current.animateToRegion(
+          {
+            latitude,
+            longitude,
+            latitudeDelta: 0.05, // Zoom détaillé
+            longitudeDelta: 0.05,
+          },
+          500
+        );
+      }
+    },
+    [onCoursePress]
+  );
 
   // Plus de gestion de clusters - version simplifiée
 
   // Version simplifiée - pas de clustering
-  
+
   // Génération simple des marqueurs de golf
   const generateSimpleGolfMarkers = () => {
     const markers = [];
-    
+
     // Filtrer les golfs valides - tous les golfs disponibles
-    const validGolfs = allGolfs.filter(golf => 
-      golf && 
-      golf.id && 
-      golf.location &&
-      typeof golf.location === 'object' &&
-      golf.location.coordinates &&
-      Array.isArray(golf.location.coordinates) &&
-      golf.location.coordinates.length === 2
+    const validGolfs = allGolfs.filter(
+      (golf) =>
+        golf &&
+        golf.id &&
+        golf.location &&
+        typeof golf.location === 'object' &&
+        golf.location.coordinates &&
+        Array.isArray(golf.location.coordinates) &&
+        golf.location.coordinates.length === 2
     ); // Plus de limitation - tous les golfs
-    
+
     for (let i = 0; i < validGolfs.length; i++) {
       const golf = validGolfs[i];
       const location = golf.location as PostGISPoint;
       const [longitude, latitude] = location.coordinates;
-      
+
       // Validation finale des coordonnées
-      if (typeof latitude !== 'number' || typeof longitude !== 'number' ||
-          isNaN(latitude) || isNaN(longitude) ||
-          latitude < -90 || latitude > 90 ||
-          longitude < -180 || longitude > 180) {
+      if (
+        typeof latitude !== 'number' ||
+        typeof longitude !== 'number' ||
+        isNaN(latitude) ||
+        isNaN(longitude) ||
+        latitude < -90 ||
+        latitude > 90 ||
+        longitude < -180 ||
+        longitude > 180
+      ) {
         continue;
       }
-      
+
       const isSelected = selectedCourseId === golf.id;
-      
+
       markers.push(
         <Marker
           key={`golf-${golf.id}-${i}`}
@@ -159,7 +169,7 @@ export function GolfCoursesMapExpo({
         />
       );
     }
-    
+
     return markers;
   };
 

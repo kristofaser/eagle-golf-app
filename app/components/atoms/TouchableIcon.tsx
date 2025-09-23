@@ -55,11 +55,7 @@ export const TouchableIcon: React.FC<TouchableIconProps> = ({
       accessibilityRole="button"
       {...touchableProps}
     >
-      <IconComponent
-        name={name as any}
-        size={iconSize}
-        color={color}
-      />
+      <IconComponent name={name as any} size={iconSize} color={color} />
     </TouchableOpacity>
   );
 };

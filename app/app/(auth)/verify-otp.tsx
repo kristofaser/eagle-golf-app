@@ -65,23 +65,24 @@ export default function VerifyOtpScreen() {
     if (value.length > 1) {
       // Extraire tous les chiffres collés
       const digits = value.replace(/[^0-9]/g, '').slice(0, 6);
-      
+
       if (digits.length > 0) {
         // Distribuer les chiffres dans tous les champs
         const newCode = [...code];
         const digitsArray = digits.split('');
-        
+
         // Remplir à partir de l'index actuel
-        for (let i = 0; i < digitsArray.length && (index + i) < 6; i++) {
+        for (let i = 0; i < digitsArray.length && index + i < 6; i++) {
           newCode[index + i] = digitsArray[i];
         }
-        
+
         setCode(newCode);
         setError(''); // Effacer l'erreur
-        
+
         // Focus sur le prochain champ vide ou le dernier
         const nextEmptyIndex = newCode.findIndex((digit, idx) => idx > index && !digit);
-        const focusIndex = nextEmptyIndex !== -1 ? nextEmptyIndex : Math.min(index + digits.length, 5);
+        const focusIndex =
+          nextEmptyIndex !== -1 ? nextEmptyIndex : Math.min(index + digits.length, 5);
         inputRefs.current[focusIndex]?.focus();
       }
       return;

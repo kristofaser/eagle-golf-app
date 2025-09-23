@@ -82,7 +82,7 @@ const STEPS = [
 export default function BookProScreen() {
   const { proId, proName, players: initialPlayers, courseId, courseName } = useLocalSearchParams();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { initPaymentSheet, presentPaymentSheet, retrievePaymentIntent } = useStripe();
   const insets = useSafeAreaInsets();
 
@@ -125,14 +125,14 @@ export default function BookProScreen() {
 
       // Utiliser courseId passé en paramètre ou selectedCourse de bookingState
       const golfCourseId = bookingState.selectedCourse || (courseId as string) || undefined;
-      
+
       const { data: availabilities } = await amateurAvailabilityService.getProAvailableDays(
         proId as string,
         startDate.toISOString().split('T')[0],
         endDate.toISOString().split('T')[0],
         golfCourseId // Filtrer par parcours sélectionné
       );
-      
+
       return availabilities || [];
     },
     enabled: !!proId && !!(bookingState.selectedCourse || courseId),
@@ -242,7 +242,7 @@ export default function BookProScreen() {
         proId as string,
         bookingState.selectedDate
       );
-      
+
       // Récupérer l'availability_id pour cette date et ce parcours
       if (bookingState.selectedCourse && availableSlots.length > 0) {
         const { availability_id } = await amateurAvailabilityService.getAvailabilityId(
@@ -250,7 +250,7 @@ export default function BookProScreen() {
           bookingState.selectedCourse,
           bookingState.selectedDate
         );
-        
+
         if (availability_id) {
           bookingState.setAvailabilityId(availability_id);
           console.log('🎯 Availability ID récupéré:', availability_id);
@@ -259,7 +259,7 @@ export default function BookProScreen() {
           bookingState.setAvailabilityId(null);
         }
       }
-      
+
       return availableSlots;
     });
 
@@ -310,7 +310,7 @@ export default function BookProScreen() {
     if (exactPrice && exactPrice.price > 0) {
       // Prix exact trouvé - le prix est PAR JOUEUR
       const totalProFee = exactPrice.price * bookingState.numberOfPlayers;
-      
+
       // Appliquer la commission de 20%
       const totalWithCommission = Math.round(totalProFee * 1.2);
       const commission = totalWithCommission - totalProFee;
@@ -346,7 +346,7 @@ export default function BookProScreen() {
   const handlePaymentSuccess = async (paymentIntentId: string) => {
     console.log('🎯 handlePaymentSuccess appelé avec Payment Intent:', paymentIntentId);
     console.log('🎯 État actuel - Étape:', bookingState.currentStep);
-    
+
     if (!user) {
       console.error('❌ Aucun utilisateur connecté');
       Alert.alert('Erreur', 'Vous devez être connecté pour réserver');
@@ -454,19 +454,19 @@ export default function BookProScreen() {
         );
 
         if (!bookingIncremented) {
-          console.warn('Impossible d\'incrémenter le compteur de réservations');
+          console.warn("Impossible d'incrémenter le compteur de réservations");
           // On continue quand même car la réservation est créée
         }
       } else {
         console.warn('⚠️ Aucun availability_id pour incrémenter le compteur');
       }
-      
+
       // Mettre à jour l'état immédiatement
-      console.log('🎯 Mise à jour de l\'état - Booking ID:', newBookingId);
+      console.log("🎯 Mise à jour de l'état - Booking ID:", newBookingId);
       bookingState.setBookingId(newBookingId);
       bookingState.setBookingConfirmed(false); // En attente de confirmation webhook
 
-      console.log('🎯 Passage à l\'étape 5');
+      console.log("🎯 Passage à l'étape 5");
       bookingState.setCurrentStep(5);
 
       // Afficher le message de succès avec un délai pour s'assurer que l'état est mis à jour
@@ -480,16 +480,15 @@ export default function BookProScreen() {
               onPress: () => {
                 console.log('🎯 Alert OK pressé');
                 // Ne pas référencer bookingState.currentStep ici car c'est une closure
-              }
-            }
+              },
+            },
           ]
         );
       }, 100); // Petit délai pour s'assurer que l'état React est mis à jour
-      
+
       // Return pour éviter toute exécution supplémentaire
       console.log('✅ Fin de handlePaymentSuccess - succès complet');
       return;
-
     } catch (error: any) {
       console.error('❌ Erreur dans handlePaymentSuccess:', error);
       Alert.alert(
@@ -505,8 +504,30 @@ export default function BookProScreen() {
 
   // Nouvelle fonction handlePayment pour Option 2
   const handlePayment = async () => {
-    if (!user) {
-      Alert.alert('Erreur', 'Vous devez être connecté pour réserver');
+    // Vérification de connexion au moment du paiement
+    if (!isAuthenticated || !user) {
+      Alert.alert(
+        'Connexion requise',
+        'Créez un compte Eagle pour finaliser votre réservation',
+        [
+          { text: 'Continuer à explorer', style: 'cancel' },
+          {
+            text: 'Se connecter',
+            onPress: () => router.push({
+              pathname: '/(auth)/login' as any,
+              params: { returnTo: `/book-pro/${proId}` }
+            })
+          },
+          {
+            text: "S'inscrire",
+            onPress: () => router.push({
+              pathname: '/(auth)/register' as any,
+              params: { returnTo: `/book-pro/${proId}` }
+            }),
+            style: 'default'
+          }
+        ]
+      );
       return;
     }
 
@@ -568,7 +589,7 @@ export default function BookProScreen() {
 
       if (paymentError) {
         if (paymentError.code === 'Canceled') {
-          console.log('⚠️ Paiement annulé explicitement par l\'utilisateur');
+          console.log("⚠️ Paiement annulé explicitement par l'utilisateur");
           return; // Annulé par l'utilisateur, ne pas montrer d'erreur
         } else {
           console.error('❌ Erreur Payment Sheet:', paymentError.message);
@@ -586,13 +607,17 @@ export default function BookProScreen() {
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         console.log(`🔄 Tentative ${attempt}/${maxRetries} - vérification du statut...`);
 
-        const { paymentIntent, error: retrieveError } = await retrievePaymentIntent(response.client_secret);
+        const { paymentIntent, error: retrieveError } = await retrievePaymentIntent(
+          response.client_secret
+        );
 
         if (retrieveError) {
           console.error('❌ Erreur lors de la récupération:', retrieveError.message);
           // Continuer les tentatives même en cas d'erreur
           if (attempt === maxRetries) {
-            throw new Error('Impossible de vérifier le statut du paiement après plusieurs tentatives');
+            throw new Error(
+              'Impossible de vérifier le statut du paiement après plusieurs tentatives'
+            );
           }
         } else {
           console.log(`📊 Tentative ${attempt} - Statut:`, paymentIntent?.status);
@@ -601,10 +626,16 @@ export default function BookProScreen() {
             console.log('✅ Paiement confirmé - statut succeeded détecté');
             paymentConfirmed = true;
             break;
-          } else if (paymentIntent?.status === 'Processing' || paymentIntent?.status === 'processing') {
+          } else if (
+            paymentIntent?.status === 'Processing' ||
+            paymentIntent?.status === 'processing'
+          ) {
             console.log('⏳ Paiement en cours de traitement...');
             // Continuer à attendre
-          } else if (paymentIntent?.status === 'RequiresPaymentMethod' || paymentIntent?.status === 'requires_payment_method') {
+          } else if (
+            paymentIntent?.status === 'RequiresPaymentMethod' ||
+            paymentIntent?.status === 'requires_payment_method'
+          ) {
             if (attempt >= 3) {
               // Après 3 tentatives (6 secondes), considérer comme annulation
               console.log('⚠️ Aucun paiement détecté après 6 secondes - annulation confirmée');
@@ -615,7 +646,7 @@ export default function BookProScreen() {
 
         // Attendre avant la prochaine tentative (sauf pour la dernière)
         if (attempt < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          await new Promise((resolve) => setTimeout(resolve, retryDelay));
         }
       }
 
@@ -629,7 +660,6 @@ export default function BookProScreen() {
         console.log('⚠️ Aucun paiement confirmé après toutes les tentatives - annulation détectée');
         return; // Traiter comme annulation silencieuse
       }
-      
     } catch (error: any) {
       console.error('❌ Erreur pendant le paiement:', error);
       handlePaymentError(error.message || 'Erreur lors du paiement');
@@ -673,7 +703,8 @@ export default function BookProScreen() {
     if (existingBookings && existingBookings.length > 0) {
       const currentCourseId = bookingState.selectedCourse || (courseId as string);
       const hasBooking = existingBookings.some(
-        (booking) => booking.booking_date === dateString && booking.golf_course_id === currentCourseId
+        (booking) =>
+          booking.booking_date === dateString && booking.golf_course_id === currentCourseId
       );
       return !hasBooking; // Libre si pas de réservation sur ce parcours
     }
@@ -929,7 +960,8 @@ export default function BookProScreen() {
           Paiement réussi !
         </Text>
         <Text variant="body" color="iron" style={styles.successText}>
-          Votre réservation sera automatiquement confirmée dans quelques secondes. Vous recevrez une confirmation par email.
+          Votre réservation sera automatiquement confirmée dans quelques secondes. Vous recevrez une
+          confirmation par email.
         </Text>
 
         <View style={styles.confirmationDetails}>
@@ -1009,6 +1041,7 @@ export default function BookProScreen() {
       router.back();
     }
   };
+
 
   return (
     <>
@@ -1117,7 +1150,7 @@ export default function BookProScreen() {
               </TouchableOpacity>
             ) : (
               // Bouton de paiement dans le système standard
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.nextButton}
                 onPress={handlePayment}
                 disabled={paymentOperation.loading}
@@ -1144,6 +1177,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.neutral.background,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     backgroundColor: Colors.neutral.ball,

@@ -36,11 +36,17 @@ export const useBookingFlow = ({
 
   // Sélectionner automatiquement le parcours le plus proche quand les données sont chargées
   useEffect(() => {
-    const hasGeolocation = proCourses && proCourses.length > 0 && proCourses[0].distance_km !== undefined;
-
+    const hasGeolocation =
+      proCourses && proCourses.length > 0 && proCourses[0].distance_km !== undefined;
 
     // Attendre d'avoir la géolocalisation pour faire une sélection intelligente
-    if (proCourses && proCourses.length > 0 && !selectedCourseId && !isLoadingCourses && hasGeolocation) {
+    if (
+      proCourses &&
+      proCourses.length > 0 &&
+      !selectedCourseId &&
+      !isLoadingCourses &&
+      hasGeolocation
+    ) {
       // Sélectionner le premier parcours (le plus proche grâce au tri par distance)
       const closestCourse = proCourses[0];
       handleCourseSelect(closestCourse.golf_course_id, closestCourse.golf_course_name);

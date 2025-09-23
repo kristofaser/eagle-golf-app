@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+  TouchableOpacity,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { format } from 'date-fns';
@@ -25,6 +32,14 @@ interface SummaryStepProps {
     date: Date | null;
     timeSlot: string | null;
     totalPrice: number;
+    player2: {
+      firstName: string;
+      lastName: string;
+    };
+    player3: {
+      firstName: string;
+      lastName: string;
+    };
   };
   proId: string;
   courseId: string;
@@ -91,7 +106,7 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
   }, [loading]);
 
   // Trouver le créneau sélectionné
-  const selectedSlot = availableSlots.find(slot => slot.id === bookingData.timeSlot);
+  const selectedSlot = availableSlots.find((slot) => slot.id === bookingData.timeSlot);
 
   const initializePayment = async () => {
     try {
@@ -147,7 +162,7 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
       setIsProcessing(false);
     } catch (error: any) {
       setIsProcessing(false);
-      onPaymentError(error.message || 'Erreur d\'initialisation du paiement');
+      onPaymentError(error.message || "Erreur d'initialisation du paiement");
     }
   };
 
@@ -180,7 +195,6 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
       } else {
         throw new Error(bookingResult.error || 'Erreur lors de la création de la réservation');
       }
-
     } catch (error: any) {
       setIsProcessing(false);
       onPaymentError(error.message || 'Le paiement a échoué');
@@ -222,6 +236,11 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
         total_amount: Math.round(bookingData.totalPrice * 100), // en centimes
         pro_fee: Math.round(bookingData.totalPrice * 0.8 * 100), // 80% pour le pro
         platform_fee: Math.round(bookingData.totalPrice * 0.2 * 100), // 20% pour la plateforme
+        // Ajouter les informations des joueurs supplémentaires
+        player2_first_name: bookingData.players >= 2 ? bookingData.player2.firstName : undefined,
+        player2_last_name: bookingData.players >= 2 ? bookingData.player2.lastName : undefined,
+        player3_first_name: bookingData.players === 3 ? bookingData.player3.firstName : undefined,
+        player3_last_name: bookingData.players === 3 ? bookingData.player3.lastName : undefined,
       };
 
       return await paymentService.confirmPaymentAndBooking(paymentIntentId, bookingRequest);
@@ -244,7 +263,6 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-
       {/* Détails de la réservation */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Détails de la partie</Text>
@@ -267,14 +285,8 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
           </View>
           <View style={styles.detailContent}>
             <Text style={styles.detailLabel}>Parcours</Text>
-            <Text style={styles.detailValue}>
-              {golfCourse ? golfCourse.name : 'Chargement...'}
-            </Text>
-            {golfCourse?.city && (
-              <Text style={styles.detailSubValue}>
-                {golfCourse.city}
-              </Text>
-            )}
+            <Text style={styles.detailValue}>{golfCourse ? golfCourse.name : 'Chargement...'}</Text>
+            {golfCourse?.city && <Text style={styles.detailSubValue}>{golfCourse.city}</Text>}
           </View>
         </View>
 
@@ -285,7 +297,9 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
           <View style={styles.detailContent}>
             <Text style={styles.detailLabel}>Date</Text>
             <Text style={styles.detailValue}>
-              {bookingData.date ? format(bookingData.date, 'EEEE d MMMM yyyy', { locale: fr }) : '-'}
+              {bookingData.date
+                ? format(bookingData.date, 'EEEE d MMMM yyyy', { locale: fr })
+                : '-'}
             </Text>
           </View>
         </View>
@@ -297,17 +311,18 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
           <View style={styles.detailContent}>
             <Text style={styles.detailLabel}>Heure de départ souhaitée</Text>
             <Text style={styles.detailValue}>
-              {selectedSlot ? `À partir de ${selectedSlot.start.split(':')[0]}h${selectedSlot.start.split(':')[1]}` :
-               bookingData.timeSlot ?
-                 (() => {
-                   const slotId = bookingData.timeSlot;
-                   if (slotId.startsWith('slot-')) {
-                     const hour = parseInt(slotId.replace('slot-', ''));
-                     return `À partir de ${hour.toString().padStart(2, '0')}h00`;
-                   }
-                   return slotId;
-                 })() :
-                 'Non sélectionné'}
+              {selectedSlot
+                ? `À partir de ${selectedSlot.start.split(':')[0]}h${selectedSlot.start.split(':')[1]}`
+                : bookingData.timeSlot
+                  ? (() => {
+                      const slotId = bookingData.timeSlot;
+                      if (slotId.startsWith('slot-')) {
+                        const hour = parseInt(slotId.replace('slot-', ''));
+                        return `À partir de ${hour.toString().padStart(2, '0')}h00`;
+                      }
+                      return slotId;
+                    })()
+                  : 'Non sélectionné'}
             </Text>
           </View>
         </View>
@@ -317,10 +332,21 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
             <Ionicons name="people" size={20} color={Colors.primary.navy} />
           </View>
           <View style={styles.detailContent}>
-            <Text style={styles.detailLabel}>Nombre de joueurs</Text>
+            <Text style={styles.detailLabel}>Joueurs</Text>
             <Text style={styles.detailValue}>
               {bookingData.players} {bookingData.players === 1 ? 'joueur' : 'joueurs'}
             </Text>
+            {/* Affichage des joueurs supplémentaires */}
+            {bookingData.players >= 2 && bookingData.player2.firstName && bookingData.player2.lastName && (
+              <Text style={styles.detailSubValue}>
+                Joueur 2: {bookingData.player2.firstName} {bookingData.player2.lastName}
+              </Text>
+            )}
+            {bookingData.players === 3 && bookingData.player3.firstName && bookingData.player3.lastName && (
+              <Text style={styles.detailSubValue}>
+                Joueur 3: {bookingData.player3.firstName} {bookingData.player3.lastName}
+              </Text>
+            )}
           </View>
         </View>
 
@@ -341,9 +367,7 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
           <Text style={styles.totalLabel}>Total à payer</Text>
           <Text style={styles.totalValue}>{bookingData.totalPrice}€</Text>
         </View>
-        <Text style={styles.priceInfo}>
-          Green Fee non inclus
-        </Text>
+        <Text style={styles.priceInfo}>Green Fee non inclus</Text>
       </View>
 
       {/* Bouton de paiement */}
@@ -371,7 +395,6 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
           </>
         )}
       </TouchableOpacity>
-
     </ScrollView>
   );
 };

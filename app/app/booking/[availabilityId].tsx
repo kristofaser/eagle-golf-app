@@ -19,6 +19,7 @@ import { Colors, Spacing, Typography, BorderRadius, Elevation } from '@/constant
 import { bookingService, AvailabilityWithDetails } from '@/services/booking.service';
 import { useAuth } from '@/hooks/useAuth';
 import { useUser } from '@/hooks/useUser';
+import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import { Avatar } from '@/components/atoms';
 import { supabase } from '@/utils/supabase/client';
 import { pricingService } from '@/services/pricing.service';
@@ -28,6 +29,20 @@ export default function BookingScreen() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const { user, isAmateur } = useUser();
+
+  // Protection de la route - Seuls les amateurs connectés peuvent réserver
+  const { isAuthorized, isChecking } = useProtectedRoute({
+    requireAuth: true,
+    requireRole: 'amateur',
+    redirectTo: '/(auth)/register',
+    onUnauthorized: () => {
+      Alert.alert(
+        'Connexion requise',
+        'Vous devez être connecté en tant qu\'amateur pour réserver une partie.',
+        [{ text: 'OK' }]
+      );
+    }
+  });
 
   // États
   const [availability, setAvailability] = useState<AvailabilityWithDetails | null>(null);
@@ -46,26 +61,12 @@ export default function BookingScreen() {
     totalAmount: 0,
   });
 
-  // Vérifier l'authentification
-  useEffect(() => {
-    if (!isAuthenticated) {
-      Alert.alert('Connexion requise', 'Vous devez être connecté pour réserver une partie.', [
-        { text: 'Se connecter', onPress: () => router.push('/(auth)/register') },
-        { text: 'Annuler', onPress: () => router.back() },
-      ]);
-    } else if (!isAmateur) {
-      Alert.alert('Accès refusé', 'Seuls les golfeurs amateurs peuvent réserver des parties.', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
-    }
-  }, [isAuthenticated, isAmateur]);
-
   // Charger les données de disponibilité
   useEffect(() => {
-    if (availabilityId && isAuthenticated && isAmateur) {
+    if (availabilityId && isAuthorized) {
       loadAvailability();
     }
-  }, [availabilityId, isAuthenticated, isAmateur]);
+  }, [availabilityId, isAuthorized]);
 
   // Calculer le prix quand le nombre de joueurs change
   useEffect(() => {
@@ -88,14 +89,14 @@ export default function BookingScreen() {
         setPricing({
           proFee: totalForAllPlayers,
           platformFee: platformFee,
-          totalAmount: total
+          totalAmount: total,
         });
       } else {
         // Aucun prix configuré, ne pas permettre la réservation
         setPricing({
           proFee: 0,
           platformFee: 0,
-          totalAmount: 0
+          totalAmount: 0,
         });
       }
     };
@@ -228,6 +229,21 @@ export default function BookingScreen() {
     return timeString.substring(0, 5); // HH:MM
   };
 
+  // Afficher un loader pendant la vérification d'authentification
+  if (isChecking) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={Colors.primary.accent} />
+        <Text style={styles.loadingText}>Vérification...</Text>
+      </View>
+    );
+  }
+
+  // Si non autorisé, ne rien afficher (la redirection est automatique)
+  if (!isAuthorized) {
+    return null;
+  }
+
   if (loading) {
     return (
       <View style={[styles.container, styles.centerContent]}>
@@ -262,168 +278,170 @@ export default function BookingScreen() {
         <KeyboardAvoidingView
           style={styles.keyboardContainer}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={styles.content}>
-            {/* Informations du pro */}
-            <Animated.View entering={FadeInDown.delay(100)} style={styles.card}>
-              <Text style={styles.cardTitle}>Professionnel</Text>
-              <View style={styles.proInfo}>
-                <Avatar
-                  source={{ uri: availability.profiles.avatar_url }}
-                  name={`${availability.profiles.first_name} ${availability.profiles.last_name}`}
-                  size="medium"
-                />
-                <View style={styles.proDetails}>
-                  <Text style={styles.proName}>
-                    {availability.profiles.first_name} {availability.profiles.last_name}
-                  </Text>
-                  <Text style={styles.proStatus}>
-                    {availability.pro_profiles.professional_status}
-                  </Text>
-                  <View style={styles.ratingRow}>
-                    <Ionicons name="star" size={16} color={Colors.secondary.champion} />
-                    <Text style={styles.handicap}>
-                      Handicap: {availability.pro_profiles.handicap || 'N/A'}
+        >
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <View style={styles.content}>
+              {/* Informations du pro */}
+              <Animated.View entering={FadeInDown.delay(100)} style={styles.card}>
+                <Text style={styles.cardTitle}>Professionnel</Text>
+                <View style={styles.proInfo}>
+                  <Avatar
+                    source={{ uri: availability.profiles.avatar_url }}
+                    name={`${availability.profiles.first_name} ${availability.profiles.last_name}`}
+                    size="medium"
+                  />
+                  <View style={styles.proDetails}>
+                    <Text style={styles.proName}>
+                      {availability.profiles.first_name} {availability.profiles.last_name}
+                    </Text>
+                    <Text style={styles.proStatus}>
+                      {availability.pro_profiles.professional_status}
+                    </Text>
+                    <View style={styles.ratingRow}>
+                      <Ionicons name="star" size={16} color={Colors.secondary.champion} />
+                      <Text style={styles.handicap}>
+                        Handicap: {availability.pro_profiles.handicap || 'N/A'}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              </Animated.View>
+
+              {/* Informations du parcours */}
+              <Animated.View entering={FadeInDown.delay(200)} style={styles.card}>
+                <Text style={styles.cardTitle}>Parcours</Text>
+                <View style={styles.courseInfo}>
+                  <Ionicons name="golf" size={24} color={Colors.primary.accent} />
+                  <View style={styles.courseDetails}>
+                    <Text style={styles.courseName}>{availability.golf_courses.name}</Text>
+                    <Text style={styles.courseAddress}>
+                      {availability.golf_courses.city}, {availability.golf_courses.postal_code}
                     </Text>
                   </View>
                 </View>
-              </View>
-            </Animated.View>
+              </Animated.View>
 
-            {/* Informations du parcours */}
-            <Animated.View entering={FadeInDown.delay(200)} style={styles.card}>
-              <Text style={styles.cardTitle}>Parcours</Text>
-              <View style={styles.courseInfo}>
-                <Ionicons name="golf" size={24} color={Colors.primary.accent} />
-                <View style={styles.courseDetails}>
-                  <Text style={styles.courseName}>{availability.golf_courses.name}</Text>
-                  <Text style={styles.courseAddress}>
-                    {availability.golf_courses.city}, {availability.golf_courses.postal_code}
-                  </Text>
+              {/* Date et heure */}
+              <Animated.View entering={FadeInDown.delay(300)} style={styles.card}>
+                <Text style={styles.cardTitle}>Date et heure</Text>
+                <View style={styles.dateTimeInfo}>
+                  <View style={styles.dateTimeItem}>
+                    <Ionicons name="calendar" size={20} color={Colors.primary.accent} />
+                    <Text style={styles.dateTimeText}>{formatDate(availability.date)}</Text>
+                  </View>
+                  <View style={styles.dateTimeItem}>
+                    <Ionicons name="time" size={20} color={Colors.primary.accent} />
+                    <Text style={styles.dateTimeText}>
+                      {formatTime(availability.start_time)} - {formatTime(availability.end_time)}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-            </Animated.View>
+              </Animated.View>
 
-            {/* Date et heure */}
-            <Animated.View entering={FadeInDown.delay(300)} style={styles.card}>
-              <Text style={styles.cardTitle}>Date et heure</Text>
-              <View style={styles.dateTimeInfo}>
-                <View style={styles.dateTimeItem}>
-                  <Ionicons name="calendar" size={20} color={Colors.primary.accent} />
-                  <Text style={styles.dateTimeText}>{formatDate(availability.date)}</Text>
-                </View>
-                <View style={styles.dateTimeItem}>
-                  <Ionicons name="time" size={20} color={Colors.primary.accent} />
-                  <Text style={styles.dateTimeText}>
-                    {formatTime(availability.start_time)} - {formatTime(availability.end_time)}
-                  </Text>
-                </View>
-              </View>
-            </Animated.View>
-
-            {/* Nombre de joueurs */}
-            <Animated.View entering={FadeInDown.delay(400)} style={styles.card}>
-              <Text style={styles.cardTitle}>Nombre de joueurs</Text>
-              <Text style={styles.availableSlotsText}>
-                {availableSlots} place{availableSlots > 1 ? 's' : ''} disponible
-                {availableSlots > 1 ? 's' : ''}
-              </Text>
-              <View style={styles.playersSelector}>
-                <TouchableOpacity
-                  onPress={() => setNumberOfPlayers(Math.max(1, numberOfPlayers - 1))}
-                  style={styles.playerButton}
-                  disabled={numberOfPlayers <= 1}
-                >
-                  <Ionicons
-                    name="remove-circle"
-                    size={32}
-                    color={numberOfPlayers <= 1 ? Colors.neutral.mist : Colors.primary.accent}
-                  />
-                </TouchableOpacity>
-                <Text style={styles.playerCount}>{numberOfPlayers}</Text>
-                <TouchableOpacity
-                  onPress={() => setNumberOfPlayers(Math.min(availableSlots, numberOfPlayers + 1))}
-                  style={styles.playerButton}
-                  disabled={numberOfPlayers >= availableSlots}
-                >
-                  <Ionicons
-                    name="add-circle"
-                    size={32}
-                    color={
-                      numberOfPlayers >= availableSlots
-                        ? Colors.neutral.mist
-                        : Colors.primary.accent
+              {/* Nombre de joueurs */}
+              <Animated.View entering={FadeInDown.delay(400)} style={styles.card}>
+                <Text style={styles.cardTitle}>Nombre de joueurs</Text>
+                <Text style={styles.availableSlotsText}>
+                  {availableSlots} place{availableSlots > 1 ? 's' : ''} disponible
+                  {availableSlots > 1 ? 's' : ''}
+                </Text>
+                <View style={styles.playersSelector}>
+                  <TouchableOpacity
+                    onPress={() => setNumberOfPlayers(Math.max(1, numberOfPlayers - 1))}
+                    style={styles.playerButton}
+                    disabled={numberOfPlayers <= 1}
+                  >
+                    <Ionicons
+                      name="remove-circle"
+                      size={32}
+                      color={numberOfPlayers <= 1 ? Colors.neutral.mist : Colors.primary.accent}
+                    />
+                  </TouchableOpacity>
+                  <Text style={styles.playerCount}>{numberOfPlayers}</Text>
+                  <TouchableOpacity
+                    onPress={() =>
+                      setNumberOfPlayers(Math.min(availableSlots, numberOfPlayers + 1))
                     }
-                  />
+                    style={styles.playerButton}
+                    disabled={numberOfPlayers >= availableSlots}
+                  >
+                    <Ionicons
+                      name="add-circle"
+                      size={32}
+                      color={
+                        numberOfPlayers >= availableSlots
+                          ? Colors.neutral.mist
+                          : Colors.primary.accent
+                      }
+                    />
+                  </TouchableOpacity>
+                </View>
+              </Animated.View>
+
+              {/* Demandes spéciales */}
+              <Animated.View entering={FadeInDown.delay(500)} style={styles.card}>
+                <Text style={styles.cardTitle}>Demandes spéciales (optionnel)</Text>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Ex: Je suis débutant, j'aimerais travailler mon putting..."
+                  multiline
+                  numberOfLines={3}
+                  value={specialRequests}
+                  onChangeText={setSpecialRequests}
+                  placeholderTextColor={Colors.neutral.course}
+                />
+              </Animated.View>
+
+              {/* Récapitulatif du prix */}
+              <Animated.View entering={FadeInDown.delay(600)} style={styles.card}>
+                <Text style={styles.cardTitle}>Récapitulatif</Text>
+                <View style={styles.priceBreakdown}>
+                  <View style={styles.priceRow}>
+                    <Text style={styles.priceLabel}>Honoraires du pro (4h)</Text>
+                    <Text style={styles.priceValue}>{pricing.proFee.toFixed(0)} €</Text>
+                  </View>
+                  <View style={styles.priceRow}>
+                    <Text style={styles.priceLabel}>Frais de service</Text>
+                    <Text style={styles.priceValue}>{pricing.platformFee.toFixed(0)} €</Text>
+                  </View>
+                  <View style={[styles.priceRow, styles.totalRow]}>
+                    <Text style={styles.totalLabel}>Total</Text>
+                    <Text style={styles.totalValue}>{pricing.totalAmount.toFixed(0)} €</Text>
+                  </View>
+                </View>
+              </Animated.View>
+
+              {/* Bouton de confirmation */}
+              <Animated.View entering={FadeInDown.delay(700)} style={styles.buttonContainer}>
+                {pricing.totalAmount > 0 ? (
+                  <TouchableOpacity
+                    style={[styles.confirmButton, submitting && styles.disabledButton]}
+                    onPress={handleBooking}
+                    disabled={submitting}
+                  >
+                    {submitting ? (
+                      <ActivityIndicator color="white" />
+                    ) : (
+                      <>
+                        <Ionicons name="checkmark-circle" size={24} color="white" />
+                        <Text style={styles.confirmButtonText}>Confirmer la réservation</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                ) : (
+                  <View style={styles.noPriceContainer}>
+                    <Ionicons name="information-circle" size={24} color={Colors.neutral.slate} />
+                    <Text style={styles.noPriceText}>
+                      Prix non configuré. Contactez directement le professionnel.
+                    </Text>
+                  </View>
+                )}
+                <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
+                  <Text style={styles.cancelButtonText}>Annuler</Text>
                 </TouchableOpacity>
-              </View>
-            </Animated.View>
-
-            {/* Demandes spéciales */}
-            <Animated.View entering={FadeInDown.delay(500)} style={styles.card}>
-              <Text style={styles.cardTitle}>Demandes spéciales (optionnel)</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Ex: Je suis débutant, j'aimerais travailler mon putting..."
-                multiline
-                numberOfLines={3}
-                value={specialRequests}
-                onChangeText={setSpecialRequests}
-                placeholderTextColor={Colors.neutral.course}
-              />
-            </Animated.View>
-
-            {/* Récapitulatif du prix */}
-            <Animated.View entering={FadeInDown.delay(600)} style={styles.card}>
-              <Text style={styles.cardTitle}>Récapitulatif</Text>
-              <View style={styles.priceBreakdown}>
-                <View style={styles.priceRow}>
-                  <Text style={styles.priceLabel}>Honoraires du pro (4h)</Text>
-                  <Text style={styles.priceValue}>{pricing.proFee.toFixed(0)} €</Text>
-                </View>
-                <View style={styles.priceRow}>
-                  <Text style={styles.priceLabel}>Frais de service</Text>
-                  <Text style={styles.priceValue}>{pricing.platformFee.toFixed(0)} €</Text>
-                </View>
-                <View style={[styles.priceRow, styles.totalRow]}>
-                  <Text style={styles.totalLabel}>Total</Text>
-                  <Text style={styles.totalValue}>{pricing.totalAmount.toFixed(0)} €</Text>
-                </View>
-              </View>
-            </Animated.View>
-
-            {/* Bouton de confirmation */}
-            <Animated.View entering={FadeInDown.delay(700)} style={styles.buttonContainer}>
-              {pricing.totalAmount > 0 ? (
-                <TouchableOpacity
-                  style={[styles.confirmButton, submitting && styles.disabledButton]}
-                  onPress={handleBooking}
-                  disabled={submitting}
-                >
-                  {submitting ? (
-                    <ActivityIndicator color="white" />
-                  ) : (
-                    <>
-                      <Ionicons name="checkmark-circle" size={24} color="white" />
-                      <Text style={styles.confirmButtonText}>Confirmer la réservation</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
-              ) : (
-                <View style={styles.noPriceContainer}>
-                  <Ionicons name="information-circle" size={24} color={Colors.neutral.slate} />
-                  <Text style={styles.noPriceText}>
-                    Prix non configuré. Contactez directement le professionnel.
-                  </Text>
-                </View>
-              )}
-              <TouchableOpacity style={styles.cancelButton} onPress={() => router.back()}>
-                <Text style={styles.cancelButtonText}>Annuler</Text>
-              </TouchableOpacity>
-            </Animated.View>
-          </View>
-        </ScrollView>
+              </Animated.View>
+            </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </>

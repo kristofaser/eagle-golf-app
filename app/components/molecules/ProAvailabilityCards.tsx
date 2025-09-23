@@ -1,10 +1,5 @@
 import React, { memo } from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, Elevation } from '@/constants/theme';
 import { Text } from '@/components/atoms';
@@ -44,7 +39,6 @@ const ProAvailabilityCardsComponent: React.FC<ProAvailabilityCardsProps> = ({
     );
   }
 
-
   return (
     <View style={styles.container}>
       {availabilities.map((course) => {
@@ -53,16 +47,13 @@ const ProAvailabilityCardsComponent: React.FC<ProAvailabilityCardsProps> = ({
         return (
           <TouchableOpacity
             key={course.golf_course_id}
-            style={[
-              styles.listItem,
-              isSelected && styles.listItemSelected,
-            ]}
+            style={[styles.listItem, isSelected && styles.listItemSelected]}
             onPress={() => onCourseSelect(course.golf_course_id, course.golf_course_name)}
             activeOpacity={0.7}
           >
             <View style={styles.leftContent}>
               <Ionicons
-                name={isSelected ? "checkmark-circle" : "ellipse-outline"}
+                name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
                 size={20}
                 color={isSelected ? Colors.semantic.success : Colors.neutral.iron}
               />
@@ -82,9 +73,7 @@ const ProAvailabilityCardsComponent: React.FC<ProAvailabilityCardsProps> = ({
               color="iron"
               style={styles.distance}
             >
-              {course.distance_km !== undefined
-                ? `${course.distance_km} km`
-                : ''}
+              {course.distance_km !== undefined ? `${course.distance_km} km` : ''}
             </Text>
           </TouchableOpacity>
         );

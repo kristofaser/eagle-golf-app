@@ -59,7 +59,6 @@ export const useProfileScreen = ({ profileId }: UseProfileScreenProps) => {
     queryFn: async () => {
       if (!profileId || !isPro) return [];
 
-
       const { data, error } = await amateurAvailabilityService.getProAvailableCourses(
         profileId,
         userLocation?.latitude,
@@ -70,7 +69,6 @@ export const useProfileScreen = ({ profileId }: UseProfileScreenProps) => {
         console.error('Erreur chargement parcours:', error);
         return [];
       }
-
 
       return data || [];
     },
@@ -95,7 +93,6 @@ export const useProfileScreen = ({ profileId }: UseProfileScreenProps) => {
       loadGolfCourses();
     }
   }, [profileId, loadGolfCourses]);
-
 
   // Mettre à jour editedProfile quand le profil change
   useEffect(() => {
@@ -142,8 +139,6 @@ export const useProfileScreen = ({ profileId }: UseProfileScreenProps) => {
     };
   }, [pricing, profile?.pro_profiles?.price_18_holes_1_player]);
 
-
-
   // Fonction pour sauvegarder le profil édité
   const handleSave = useCallback(async () => {
     if (!editedProfile || !isMyProfile) return;
@@ -177,7 +172,7 @@ export const useProfileScreen = ({ profileId }: UseProfileScreenProps) => {
         };
       }
 
-      const { error } = await profileService.updateProfile(profileId!, updateData);
+      const { error } = await profileService.updateProfile(profileId, updateData);
 
       if (error) {
         Alert.alert('Erreur', 'Impossible de sauvegarder les modifications');

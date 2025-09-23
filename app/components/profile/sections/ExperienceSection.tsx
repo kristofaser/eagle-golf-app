@@ -28,9 +28,13 @@ export const ExperienceSection = memo<ExperienceSectionProps>(({ experience }) =
       accessibilityLabel="Section expérience"
     >
       <View style={profileStyles.cardHeader}>
-        <Text style={profileStyles.cardTitle} accessibilityRole="header">Expérience</Text>
+        <Text style={profileStyles.cardTitle} accessibilityRole="header">
+          Expérience
+        </Text>
       </View>
-      <View style={[profileStyles.accentLine, { backgroundColor: sectionColors.experience.accent }]} />
+      <View
+        style={[profileStyles.accentLine, { backgroundColor: sectionColors.experience.accent }]}
+      />
 
       <View style={profileStyles.experienceList}>
         {experience.map((exp: ExperienceItem, index: number) => (
@@ -45,11 +49,7 @@ export const ExperienceSection = memo<ExperienceSectionProps>(({ experience }) =
                 exp.type === 'top30' && profileStyles.top30Badge,
               ]}
             >
-              <Ionicons
-                name={exp.type === 'winner' ? 'trophy' : 'medal'}
-                size={14}
-                color="white"
-              />
+              <Ionicons name={exp.type === 'winner' ? 'trophy' : 'medal'} size={14} color="white" />
               <Text style={profileStyles.experienceBadgeText}>
                 {exp.type === 'winner' ? 'Victoire' : exp.type.toUpperCase()}
               </Text>

@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Image,
-  Text,
-  StyleSheet,
-} from 'react-native';
+import { View, Image, Text, StyleSheet } from 'react-native';
 import { Colors } from '@/constants/theme';
 
 export interface CircleAvatarProps {
@@ -121,16 +116,10 @@ export const CircleAvatar: React.FC<CircleAvatarProps> = ({
   return (
     <View style={containerStyle}>
       {avatarUrl ? (
-        <Image
-          source={{ uri: avatarUrl }}
-          style={imageStyle}
-          resizeMode="cover"
-        />
+        <Image source={{ uri: avatarUrl }} style={imageStyle} resizeMode="cover" />
       ) : (
         <View style={fallbackStyle}>
-          <Text style={textStyle}>
-            {getInitials()}
-          </Text>
+          <Text style={textStyle}>{getInitials()}</Text>
         </View>
       )}
     </View>

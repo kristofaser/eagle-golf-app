@@ -23,10 +23,7 @@ export const ProfileInfo = memo<ProfileInfoProps>(({ profile, isProAvailable }) 
       }, ${isProAvailable ? 'Disponible' : 'Indisponible'}`}
     >
       <View style={profileStyles.titleContainer}>
-        <Animated.Text
-          style={profileStyles.title}
-          sharedTransitionTag={`title-${profile.id}`}
-        >
+        <Animated.Text style={profileStyles.title} sharedTransitionTag={`title-${profile.id}`}>
           {profile.first_name} {profile.last_name}
         </Animated.Text>
 

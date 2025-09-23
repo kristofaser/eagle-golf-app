@@ -177,7 +177,7 @@ export default function RegisterScreen() {
               </View>
 
               <Button
-                variant="secondary"
+                variant="soft"
                 size="large"
                 onPress={() => router.replace('/(auth)/login')}
                 style={styles.secondaryButton}

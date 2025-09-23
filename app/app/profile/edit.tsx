@@ -324,7 +324,6 @@ export default function EditProfileScreen() {
                 </View>
               )}
 
-
               <Button
                 variant="primary"
                 size="large"

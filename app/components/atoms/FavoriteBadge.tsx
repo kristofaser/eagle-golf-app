@@ -46,17 +46,9 @@ export const FavoriteBadge: React.FC<FavoriteBadgeProps> = ({
   // Limiter l'affichage à 99+ pour éviter un badge trop large
   const displayCount = count > 99 ? '99+' : count.toString();
 
-  const badgeStyles = [
-    styles.badge,
-    styles[size],
-    styles[color],
-    style,
-  ];
+  const badgeStyles = [styles.badge, styles[size], styles[color], style];
 
-  const textStyles = [
-    styles.text,
-    styles[`text_${size}`],
-  ];
+  const textStyles = [styles.text, styles[`text_${size}`]];
 
   return (
     <View style={badgeStyles}>

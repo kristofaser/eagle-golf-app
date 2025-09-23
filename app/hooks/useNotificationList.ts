@@ -65,7 +65,7 @@ export function useNotificationList(
     filterType = null,
     unreadOnly = false,
     autoRefresh = true,
-    debug = false
+    debug = false,
   } = options;
 
   // État local
@@ -79,145 +79,146 @@ export function useNotificationList(
   });
 
   // Mémoriser les filtres pour éviter les re-renders inutiles
-  const filters = useMemo(() => ({
-    filterType,
-    unreadOnly
-  }), [filterType, unreadOnly]);
+  const filters = useMemo(
+    () => ({
+      filterType,
+      unreadOnly,
+    }),
+    [filterType, unreadOnly]
+  );
 
   /**
    * Récupère les notifications depuis la base
    */
-  const loadNotifications = useCallback(async (
-    offset = 0,
-    append = false
-  ): Promise<void> => {
-    if (!userId) {
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        notifications: [],
-        hasMore: false
-      }));
-      return;
-    }
-
-    try {
-      setState(prev => ({
-        ...prev,
-        isLoading: offset === 0 && !append,
-        isLoadingMore: append,
-        error: null
-      }));
-
-      if (debug) {
-        logger.dev('📋 useNotificationList: Chargement...', {
-          userId,
-          offset,
-          append,
-          filters
-        });
+  const loadNotifications = useCallback(
+    async (offset = 0, append = false): Promise<void> => {
+      if (!userId) {
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          notifications: [],
+          hasMore: false,
+        }));
+        return;
       }
 
-      // Construction de la query avec filtres
-      let query = supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .range(offset, offset + pageSize - 1);
+      try {
+        setState((prev) => ({
+          ...prev,
+          isLoading: offset === 0 && !append,
+          isLoadingMore: append,
+          error: null,
+        }));
 
-      // Appliquer les filtres
-      if (filters.filterType) {
-        query = query.eq('type', filters.filterType);
+        if (debug) {
+          logger.dev('📋 useNotificationList: Chargement...', {
+            userId,
+            offset,
+            append,
+            filters,
+          });
+        }
+
+        // Construction de la query avec filtres
+        let query = supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .range(offset, offset + pageSize - 1);
+
+        // Appliquer les filtres
+        if (filters.filterType) {
+          query = query.eq('type', filters.filterType);
+        }
+
+        if (filters.unreadOnly) {
+          query = query.is('read_at', null);
+        }
+
+        const { data, error, count } = await query;
+
+        if (error) {
+          throw error;
+        }
+
+        const notifications = data || [];
+
+        // Récupérer le nombre total de notifications non lues
+        const { count: unreadCount } = await supabase
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .is('read_at', null);
+
+        setState((prev) => ({
+          ...prev,
+          notifications: append ? [...prev.notifications, ...notifications] : notifications,
+          isLoading: false,
+          isLoadingMore: false,
+          hasMore: notifications.length === pageSize,
+          totalUnread: unreadCount || 0,
+          error: null,
+        }));
+
+        if (debug) {
+          logger.dev('✅ useNotificationList: Chargé', {
+            count: notifications.length,
+            totalUnread: unreadCount,
+            hasMore: notifications.length === pageSize,
+          });
+        }
+      } catch (err) {
+        logger.error('❌ Erreur chargement notifications:', err);
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          isLoadingMore: false,
+          error: err instanceof Error ? err.message : 'Erreur inconnue',
+        }));
       }
-
-      if (filters.unreadOnly) {
-        query = query.is('read_at', null);
-      }
-
-      const { data, error, count } = await query;
-
-      if (error) {
-        throw error;
-      }
-
-      const notifications = data || [];
-
-      // Récupérer le nombre total de notifications non lues
-      const { count: unreadCount } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .is('read_at', null);
-
-      setState(prev => ({
-        ...prev,
-        notifications: append
-          ? [...prev.notifications, ...notifications]
-          : notifications,
-        isLoading: false,
-        isLoadingMore: false,
-        hasMore: notifications.length === pageSize,
-        totalUnread: unreadCount || 0,
-        error: null
-      }));
-
-      if (debug) {
-        logger.dev('✅ useNotificationList: Chargé', {
-          count: notifications.length,
-          totalUnread: unreadCount,
-          hasMore: notifications.length === pageSize
-        });
-      }
-
-    } catch (err) {
-      logger.error('❌ Erreur chargement notifications:', err);
-      setState(prev => ({
-        ...prev,
-        isLoading: false,
-        isLoadingMore: false,
-        error: err instanceof Error ? err.message : 'Erreur inconnue'
-      }));
-    }
-  }, [userId, pageSize, filters, debug]);
+    },
+    [userId, pageSize, filters, debug]
+  );
 
   /**
    * Marque une notification comme lue
    */
-  const markAsRead = useCallback(async (notificationId: string): Promise<boolean> => {
-    if (!userId) return false;
+  const markAsRead = useCallback(
+    async (notificationId: string): Promise<boolean> => {
+      if (!userId) return false;
 
-    try {
-      if (debug) {
-        logger.dev('📖 Marquage comme lue:', notificationId);
+      try {
+        if (debug) {
+          logger.dev('📖 Marquage comme lue:', notificationId);
+        }
+
+        const { error } = await supabase.rpc('mark_notification_read', {
+          p_notification_id: notificationId,
+          p_user_id: userId,
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        // Mettre à jour l'état local
+        setState((prev) => ({
+          ...prev,
+          notifications: prev.notifications.map((notif) =>
+            notif.id === notificationId ? { ...notif, read_at: new Date().toISOString() } : notif
+          ),
+          totalUnread: Math.max(0, prev.totalUnread - 1),
+        }));
+
+        return true;
+      } catch (err) {
+        logger.error('❌ Erreur marquage lecture:', err);
+        return false;
       }
-
-      const { error } = await supabase.rpc('mark_notification_read', {
-        p_notification_id: notificationId,
-        p_user_id: userId
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      // Mettre à jour l'état local
-      setState(prev => ({
-        ...prev,
-        notifications: prev.notifications.map(notif =>
-          notif.id === notificationId
-            ? { ...notif, read_at: new Date().toISOString() }
-            : notif
-        ),
-        totalUnread: Math.max(0, prev.totalUnread - 1)
-      }));
-
-      return true;
-    } catch (err) {
-      logger.error('❌ Erreur marquage lecture:', err);
-      return false;
-    }
-  }, [userId, debug]);
+    },
+    [userId, debug]
+  );
 
   /**
    * Marque toutes les notifications comme lues
@@ -241,13 +242,13 @@ export function useNotificationList(
       }
 
       // Mettre à jour l'état local
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        notifications: prev.notifications.map(notif => ({
+        notifications: prev.notifications.map((notif) => ({
           ...notif,
-          read_at: notif.read_at || new Date().toISOString()
+          read_at: notif.read_at || new Date().toISOString(),
         })),
-        totalUnread: 0
+        totalUnread: 0,
       }));
 
       return true;
@@ -264,7 +265,13 @@ export function useNotificationList(
     if (state.hasMore && !state.isLoadingMore && !state.isLoading) {
       loadNotifications(state.notifications.length, true);
     }
-  }, [state.hasMore, state.isLoadingMore, state.isLoading, state.notifications.length, loadNotifications]);
+  }, [
+    state.hasMore,
+    state.isLoadingMore,
+    state.isLoading,
+    state.notifications.length,
+    loadNotifications,
+  ]);
 
   /**
    * Rafraîchit la liste complète

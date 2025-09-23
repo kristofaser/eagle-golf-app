@@ -50,7 +50,8 @@ export function useProtectedRoute(options: ProtectedRouteOptions = {}) {
       }
 
       // Redirection avec sauvegarde de la page actuelle
-      router.replace({
+      // Utilisation de push au lieu de replace pour permettre le retour
+      router.push({
         pathname: redirectTo as any,
         params: {
           returnTo: pathname,

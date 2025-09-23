@@ -72,23 +72,8 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
   const positionStyle = getPositionStyle(position);
 
   return (
-    <View
-      style={[
-        styles.badge,
-        badgeSize,
-        positionStyle,
-        { backgroundColor: color },
-        style
-      ]}
-    >
-      <Text
-        style={[
-          styles.text,
-          { fontSize },
-          textStyle
-        ]}
-        numberOfLines={1}
-      >
+    <View style={[styles.badge, badgeSize, positionStyle, { backgroundColor: color }, style]}>
+      <Text style={[styles.text, { fontSize }, textStyle]} numberOfLines={1}>
         {displayText}
       </Text>
     </View>

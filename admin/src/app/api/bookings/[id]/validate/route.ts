@@ -155,9 +155,68 @@ export async function POST(
     // Plus besoin d'API automatique - le processus humain prime
     console.log(`✅ Réservation validée manuellement par l'admin: ${adminProfile.email}`);
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Validation mise à jour avec succès' 
+    // 🔔 Envoyer notification push à l'utilisateur
+    try {
+      console.log('📱 Envoi notification push pour validation admin...');
+
+      let pushTitle = '';
+      let pushMessage = '';
+      let pushType = '';
+
+      switch (action) {
+        case 'confirm':
+          pushTitle = '✅ Réservation confirmée';
+          pushMessage = 'Votre réservation a été confirmée par notre équipe !';
+          pushType = 'booking_confirmed';
+          break;
+        case 'reject':
+          pushTitle = '❌ Réservation annulée';
+          pushMessage = admin_notes || 'Votre réservation a été annulée par notre équipe.';
+          pushType = 'booking_cancelled';
+          break;
+        case 'alternative':
+          pushTitle = '🔄 Alternative proposée';
+          pushMessage = 'Une alternative a été proposée pour votre réservation.';
+          pushType = 'booking_alternative';
+          break;
+      }
+
+      const pushResponse = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-push-notification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        },
+        body: JSON.stringify({
+          userId: booking.amateur_id,
+          title: pushTitle,
+          body: pushMessage,
+          type: pushType,
+          data: {
+            bookingId: booking.id,
+            action: action,
+            adminNotes: admin_notes,
+            validatedBy: adminProfile.email,
+            timestamp: new Date().toISOString()
+          }
+        }),
+      });
+
+      if (pushResponse.ok) {
+        const pushResult = await pushResponse.json();
+        console.log('✅ Notification push envoyée:', pushResult);
+      } else {
+        const pushError = await pushResponse.text();
+        console.error('❌ Erreur envoi push notification:', pushError);
+      }
+    } catch (pushError) {
+      // Ne pas faire échouer la validation si la push notification échoue
+      console.error('❌ Erreur lors de l\'envoi de la notification push:', pushError);
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Validation mise à jour avec succès'
     });
 
   } catch (error: unknown) {

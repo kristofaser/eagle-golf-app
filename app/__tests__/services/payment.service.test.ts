@@ -154,7 +154,7 @@ describe('PaymentService', () => {
   });
 
   describe('checkPaymentStatus', () => {
-    it('devrait vérifier le statut d\'un paiement avec succès', async () => {
+    it("devrait vérifier le statut d'un paiement avec succès", async () => {
       const mockResponse = {
         success: true,
         payment_intent_id: 'pi_test_123',
@@ -265,7 +265,7 @@ describe('PaymentService', () => {
   });
 
   describe('calculateEndTime', () => {
-    it('devrait calculer l\'heure de fin correctement', () => {
+    it("devrait calculer l'heure de fin correctement", () => {
       expect(paymentService.calculateEndTime('10:00')).toBe('12:00');
       expect(paymentService.calculateEndTime('14:30')).toBe('16:30');
       expect(paymentService.calculateEndTime('08:15')).toBe('10:15');
@@ -325,10 +325,7 @@ describe('PaymentService', () => {
         total_amount: 100,
       };
 
-      const result = await paymentService.confirmPaymentAndBooking(
-        'pi_test_123',
-        bookingData
-      );
+      const result = await paymentService.confirmPaymentAndBooking('pi_test_123', bookingData);
 
       expect(result.success).toBe(true);
       expect(result.booking_id).toBe('booking_123');
@@ -346,17 +343,14 @@ describe('PaymentService', () => {
       );
     });
 
-    it('devrait rejeter si aucune availability_id n\'est fournie', async () => {
+    it("devrait rejeter si aucune availability_id n'est fournie", async () => {
       const bookingData = {
         amateur_id: 'amateur_456',
         pro_id: 'pro_123',
         // availability_id manquant!
       };
 
-      const result = await paymentService.confirmPaymentAndBooking(
-        'pi_test_123',
-        bookingData
-      );
+      const result = await paymentService.confirmPaymentAndBooking('pi_test_123', bookingData);
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Aucune disponibilité sélectionnée');
@@ -381,10 +375,7 @@ describe('PaymentService', () => {
         pro_id: 'pro_123',
       };
 
-      const result = await paymentService.confirmPaymentAndBooking(
-        'pi_test_123',
-        bookingData
-      );
+      const result = await paymentService.confirmPaymentAndBooking('pi_test_123', bookingData);
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Disponibilité non trouvée');

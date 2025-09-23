@@ -276,7 +276,9 @@ export const availabilityService = {
     startDate?: string,
     endDate?: string
   ): Promise<ProDailyAvailability[]> {
-    console.warn('⚠️ getProDailyAvailabilities est déprécié. Utilisez amateurAvailabilityService.getProAvailableDays()');
+    console.warn(
+      '⚠️ getProDailyAvailabilities est déprécié. Utilisez amateurAvailabilityService.getProAvailableDays()'
+    );
     return [];
   },
 
@@ -288,7 +290,9 @@ export const availabilityService = {
     proId: string,
     availabilities: Array<{ date: string; is_available: boolean }>
   ): Promise<boolean> {
-    console.warn('⚠️ updateProDailyAvailabilities est déprécié. Utilisez proAvailabilityService à la place');
+    console.warn(
+      '⚠️ updateProDailyAvailabilities est déprécié. Utilisez proAvailabilityService à la place'
+    );
     return true; // Retourne true pour éviter les erreurs dans l'ancien code
   },
 
@@ -306,7 +310,9 @@ export const availabilityService = {
    * Vérifie si un pro est disponible à une date donnée (legacy)
    */
   async isProDailyAvailable(proId: string, date: string): Promise<boolean> {
-    console.warn('⚠️ isProDailyAvailable est déprécié. Utilisez amateurAvailabilityService.checkAvailabilityForCourseAndDate()');
+    console.warn(
+      '⚠️ isProDailyAvailable est déprécié. Utilisez amateurAvailabilityService.checkAvailabilityForCourseAndDate()'
+    );
     return false; // Par défaut, pas disponible pour forcer l'utilisation du nouveau système
   },
 };

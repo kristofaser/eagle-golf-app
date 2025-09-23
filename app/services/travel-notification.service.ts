@@ -31,7 +31,7 @@ class TravelNotificationService {
           user_id: data.user_id,
           enabled: data.alerts_enabled,
           created_at: data.created_at,
-          updated_at: data.updated_at
+          updated_at: data.updated_at,
         };
         return { data: transformed, error: null };
       }
@@ -50,13 +50,16 @@ class TravelNotificationService {
     try {
       const { data, error } = await supabase
         .from('user_travel_alerts')
-        .upsert({
-          user_id: userId,
-          alerts_enabled: enabled,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id'
-        })
+        .upsert(
+          {
+            user_id: userId,
+            alerts_enabled: enabled,
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: 'user_id',
+          }
+        )
         .select()
         .single();
 
@@ -78,10 +81,7 @@ class TravelNotificationService {
    */
   async deletePreferences(userId: string) {
     try {
-      const { error } = await supabase
-        .from('user_travel_alerts')
-        .delete()
-        .eq('user_id', userId);
+      const { error } = await supabase.from('user_travel_alerts').delete().eq('user_id', userId);
 
       if (error) {
         logger.error('Erreur suppression préférences voyage:', error);
@@ -104,7 +104,8 @@ class TravelNotificationService {
     try {
       const { data, error } = await supabase
         .from('user_travel_alerts')
-        .select(`
+        .select(
+          `
           user_id,
           profiles!inner(
             id,
@@ -112,7 +113,8 @@ class TravelNotificationService {
             first_name,
             last_name
           )
-        `)
+        `
+        )
         .eq('alerts_enabled', true);
 
       if (error) {

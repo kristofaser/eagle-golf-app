@@ -57,9 +57,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error) {
           // Personnaliser les messages d'erreur Supabase
           if (error.message?.includes('rate limit') || error.status === 429) {
-            throw new Error('Trop de tentatives. Veuillez attendre quelques minutes avant de réessayer.');
+            throw new Error(
+              'Trop de tentatives. Veuillez attendre quelques minutes avant de réessayer.'
+            );
           } else if (error.message?.includes('Email not confirmed')) {
-            throw new Error('Votre compte n\'est pas encore activé. Vérifiez votre boîte mail.');
+            throw new Error("Votre compte n'est pas encore activé. Vérifiez votre boîte mail.");
           }
           throw error;
         }
@@ -226,7 +228,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 throw profileError;
               }
             } else {
-              console.log('✅ Profil principal créé, profil amateur sera créé en différé après établissement JWT');
+              console.log(
+                '✅ Profil principal créé, profil amateur sera créé en différé après établissement JWT'
+              );
             }
           }
 
@@ -247,7 +251,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   console.error('❌ Erreur création profil amateur différée:', amateurError);
                   // Ne pas throw ici car on est dans un setTimeout
                   Alert.alert(
-                    'Erreur de profil', 
+                    'Erreur de profil',
                     'Votre profil principal a été créé mais le profil amateur a échoué. Contactez le support.'
                   );
                 } else {

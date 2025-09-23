@@ -1,15 +1,15 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
 serve(async (req) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
@@ -20,21 +20,18 @@ serve(async (req) => {
       {
         auth: {
           autoRefreshToken: false,
-          persistSession: false
-        }
+          persistSession: false,
+        },
       }
-    )
+    );
 
-    const { booking_id } = await req.json()
+    const { booking_id } = await req.json();
 
     if (!booking_id) {
-      return new Response(
-        JSON.stringify({ error: 'booking_id is required' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+      return new Response(JSON.stringify({ error: 'booking_id is required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Vérifier que la réservation existe
@@ -42,16 +39,13 @@ serve(async (req) => {
       .from('bookings')
       .select('id, amateur_id')
       .eq('id', booking_id)
-      .single()
+      .single();
 
     if (bookingError || !booking) {
-      return new Response(
-        JSON.stringify({ error: 'Booking not found' }),
-        { 
-          status: 404, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+      return new Response(JSON.stringify({ error: 'Booking not found' }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Vérifier si une validation existe déjà
@@ -59,20 +53,20 @@ serve(async (req) => {
       .from('admin_booking_validations')
       .select('id')
       .eq('booking_id', booking_id)
-      .single()
+      .single();
 
     if (existingValidation) {
       return new Response(
-        JSON.stringify({ 
-          success: true, 
+        JSON.stringify({
+          success: true,
           message: 'Validation already exists',
-          validation_id: existingValidation.id 
+          validation_id: existingValidation.id,
         }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
-      )
+      );
     }
 
     // Créer l'entrée de validation avec les privilèges service
@@ -81,42 +75,35 @@ serve(async (req) => {
       .insert({
         booking_id: booking_id,
         status: 'pending',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       })
       .select()
-      .single()
+      .single();
 
     if (validationError) {
-      console.error('Error creating validation:', validationError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to create validation' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+      console.error('Error creating validation:', validationError);
+      return new Response(JSON.stringify({ error: 'Failed to create validation' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         validation_id: validation.id,
-        message: 'Validation created successfully'
+        message: 'Validation created successfully',
       }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
-    )
-
+    );
   } catch (error) {
-    console.error('Unexpected error:', error)
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+    console.error('Unexpected error:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
-})
+});

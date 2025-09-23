@@ -10,20 +10,20 @@ import { DepartmentCluster } from '@/types/clustering';
  * Niveaux de zoom basés sur latitudeDelta
  */
 export enum ZoomLevel {
-  COUNTRY = 'country',     // latitudeDelta > 2.0 - Vue pays entier
-  REGIONAL = 'regional',   // latitudeDelta 0.5-2.0 - Vue régionale 
-  LOCAL = 'local',         // latitudeDelta 0.1-0.5 - Vue départementale
-  DETAILED = 'detailed'    // latitudeDelta < 0.1 - Vue locale détaillée
+  COUNTRY = 'country', // latitudeDelta > 2.0 - Vue pays entier
+  REGIONAL = 'regional', // latitudeDelta 0.5-2.0 - Vue régionale
+  LOCAL = 'local', // latitudeDelta 0.1-0.5 - Vue départementale
+  DETAILED = 'detailed', // latitudeDelta < 0.1 - Vue locale détaillée
 }
 
 /**
  * Configuration des seuils de zoom
  */
 export const ZOOM_THRESHOLDS = {
-  COUNTRY_MIN: 2.0,      // Plus de 2° = vue pays
-  REGIONAL_MIN: 0.5,     // 0.5-2° = vue régionale
-  LOCAL_MIN: 0.1,        // 0.1-0.5° = vue locale
-  DETAILED_MIN: 0.0      // Moins de 0.1° = vue détaillée
+  COUNTRY_MIN: 2.0, // Plus de 2° = vue pays
+  REGIONAL_MIN: 0.5, // 0.5-2° = vue régionale
+  LOCAL_MIN: 0.1, // 0.1-0.5° = vue locale
+  DETAILED_MIN: 0.0, // Moins de 0.1° = vue détaillée
 } as const;
 
 /**
@@ -31,7 +31,7 @@ export const ZOOM_THRESHOLDS = {
  */
 export function getZoomLevel(region: Region): ZoomLevel {
   const { latitudeDelta } = region;
-  
+
   if (latitudeDelta >= ZOOM_THRESHOLDS.COUNTRY_MIN) {
     return ZoomLevel.COUNTRY;
   }
@@ -49,7 +49,7 @@ export function getZoomLevel(region: Region): ZoomLevel {
  */
 export function getVisibleBounds(region: Region) {
   const { latitude, longitude, latitudeDelta, longitudeDelta } = region;
-  
+
   return {
     north: latitude + latitudeDelta / 2,
     south: latitude - latitudeDelta / 2,
@@ -62,29 +62,22 @@ export function getVisibleBounds(region: Region) {
  * Vérifie si un point est dans les bounds visibles
  */
 export function isInVisibleBounds(
-  lat: number, 
-  lng: number, 
+  lat: number,
+  lng: number,
   bounds: ReturnType<typeof getVisibleBounds>
 ): boolean {
-  return lat >= bounds.south && 
-         lat <= bounds.north && 
-         lng >= bounds.west && 
-         lng <= bounds.east;
+  return lat >= bounds.south && lat <= bounds.north && lng >= bounds.west && lng <= bounds.east;
 }
 
 /**
  * Filtre les golfs visibles dans la région
  */
-export function filterGolfsInBounds(
-  golfs: GolfParcours[], 
-  region: Region
-): GolfParcours[] {
+export function filterGolfsInBounds(golfs: GolfParcours[], region: Region): GolfParcours[] {
   const bounds = getVisibleBounds(region);
-  
-  return golfs.filter(golf => 
-    golf.latitude && 
-    golf.longitude && 
-    isInVisibleBounds(golf.latitude, golf.longitude, bounds)
+
+  return golfs.filter(
+    (golf) =>
+      golf.latitude && golf.longitude && isInVisibleBounds(golf.latitude, golf.longitude, bounds)
   );
 }
 
@@ -92,12 +85,12 @@ export function filterGolfsInBounds(
  * Filtre les clusters visibles dans la région
  */
 export function filterClustersInBounds(
-  clusters: DepartmentCluster[], 
+  clusters: DepartmentCluster[],
   region: Region
 ): DepartmentCluster[] {
   const bounds = getVisibleBounds(region);
-  
-  return clusters.filter(cluster => 
+
+  return clusters.filter((cluster) =>
     isInVisibleBounds(cluster.center.latitude, cluster.center.longitude, bounds)
   );
 }
@@ -135,13 +128,17 @@ export function getDisplayForZoomLevel(
 
     case ZoomLevel.REGIONAL:
       // Vue régionale : clusters + quelques golfs des gros départements
-      const bigClusters = visibleClusters.filter(c => c.count >= 5);
+      const bigClusters = visibleClusters.filter((c) => c.count >= 5);
       const smallClustersGolfs = visibleClusters
-        .filter(c => c.count < 5)
-        .flatMap(c => c.golfs || [])
-        .filter(g => g.latitude && g.longitude && 
-          isInVisibleBounds(g.latitude, g.longitude, getVisibleBounds(region)));
-      
+        .filter((c) => c.count < 5)
+        .flatMap((c) => c.golfs || [])
+        .filter(
+          (g) =>
+            g.latitude &&
+            g.longitude &&
+            isInVisibleBounds(g.latitude, g.longitude, getVisibleBounds(region))
+        );
+
       return {
         showClusters: true,
         showIndividualGolfs: true,
@@ -152,7 +149,7 @@ export function getDisplayForZoomLevel(
 
     case ZoomLevel.LOCAL:
       // Vue locale : principalement des golfs individuels, quelques gros clusters
-      const hugeClusters = visibleClusters.filter(c => c.count >= 10);
+      const hugeClusters = visibleClusters.filter((c) => c.count >= 10);
       return {
         showClusters: hugeClusters.length > 0,
         showIndividualGolfs: true,
@@ -186,12 +183,12 @@ export function getDisplayForZoomLevel(
  * Calcule la région optimale pour afficher un département
  */
 export function getRegionForDepartment(departmentGolfs: GolfParcours[]): Region | null {
-  const validGolfs = departmentGolfs.filter(g => g.latitude && g.longitude);
-  
+  const validGolfs = departmentGolfs.filter((g) => g.latitude && g.longitude);
+
   if (validGolfs.length === 0) return null;
 
-  const lats = validGolfs.map(g => g.latitude!);
-  const lngs = validGolfs.map(g => g.longitude!);
+  const lats = validGolfs.map((g) => g.latitude!);
+  const lngs = validGolfs.map((g) => g.longitude!);
 
   const minLat = Math.min(...lats);
   const maxLat = Math.max(...lats);

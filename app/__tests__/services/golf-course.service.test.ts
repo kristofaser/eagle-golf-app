@@ -55,7 +55,7 @@ describe('GolfCourseService', () => {
       expect(mockQuery.select().eq).toHaveBeenCalledWith('id', 'course-1');
     });
 
-    it('devrait gérer le cas où le parcours n\'existe pas', async () => {
+    it("devrait gérer le cas où le parcours n'existe pas", async () => {
       const mockQuery = {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
@@ -72,9 +72,11 @@ describe('GolfCourseService', () => {
       const result = await golfCourseService.getGolfCourse('course-not-found');
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Parcours non trouvé'
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Parcours non trouvé',
+        })
+      );
     });
 
     it('devrait gérer les erreurs de base de données', async () => {
@@ -95,12 +97,14 @@ describe('GolfCourseService', () => {
       const result = await golfCourseService.getGolfCourse('course-1');
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Database connection failed'
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Database connection failed',
+        })
+      );
     });
 
-    it('devrait gérer les exceptions durant l\'exécution', async () => {
+    it("devrait gérer les exceptions durant l'exécution", async () => {
       const mockQuery = {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
@@ -114,9 +118,11 @@ describe('GolfCourseService', () => {
       const result = await golfCourseService.getGolfCourse('course-1');
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Network error'
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Network error',
+        })
+      );
     });
   });
 
@@ -202,14 +208,14 @@ describe('GolfCourseService', () => {
         {
           id: 'course-proche',
           name: 'Golf Proche',
-          latitude: 48.8600,
-          longitude: 2.3600,
+          latitude: 48.86,
+          longitude: 2.36,
           city: 'Paris',
         },
         {
           id: 'course-loin',
           name: 'Golf Loin',
-          latitude: 45.7640,
+          latitude: 45.764,
           longitude: 4.8357,
           city: 'Lyon',
         },
@@ -381,22 +387,22 @@ describe('GolfCourseService', () => {
         {
           id: 'course-loin',
           name: 'Golf Loin',
-          latitude: 48.9000,
-          longitude: 2.4000,
+          latitude: 48.9,
+          longitude: 2.4,
           city: 'Paris',
         },
         {
           id: 'course-proche',
           name: 'Golf Proche',
-          latitude: 48.8570,
-          longitude: 2.3530,
+          latitude: 48.857,
+          longitude: 2.353,
           city: 'Paris',
         },
         {
           id: 'course-moyen',
           name: 'Golf Moyen',
-          latitude: 48.8700,
-          longitude: 2.3700,
+          latitude: 48.87,
+          longitude: 2.37,
           city: 'Paris',
         },
       ];
@@ -444,9 +450,11 @@ describe('GolfCourseService', () => {
       const result = await golfCourseService.searchNearbyGolfCourses(48.8566, 2.3522, 10, 5);
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Database unavailable'
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Database unavailable',
+        })
+      );
     });
   });
 
@@ -505,7 +513,7 @@ describe('GolfCourseService', () => {
       expect(result.error).toBeNull();
     });
 
-    it('devrait gérer le cas où aucun parcours n\'est trouvé', async () => {
+    it("devrait gérer le cas où aucun parcours n'est trouvé", async () => {
       const mockListQuery = {
         select: jest.fn().mockReturnValue({
           order: jest.fn().mockResolvedValue({
@@ -539,9 +547,11 @@ describe('GolfCourseService', () => {
       const result = await golfCourseService.listGolfCoursesWithAvailability('2024-01-15');
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Database error'
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Database error',
+        })
+      );
     });
 
     it('devrait gérer le cas où le comptage retourne null', async () => {
@@ -773,14 +783,14 @@ describe('GolfCourseService', () => {
 
       // Vérifier les paramètres des requêtes de comptage
       const countCalls = (supabase.from as jest.Mock).mock.calls.filter(
-        call => call[0] === 'pro_availabilities'
+        (call) => call[0] === 'pro_availabilities'
       );
       expect(countCalls).toHaveLength(2);
     });
   });
 
   describe('getCourseStats', () => {
-    it('devrait calculer les statistiques complètes d\'un parcours', async () => {
+    it("devrait calculer les statistiques complètes d'un parcours", async () => {
       // Mock pour bookings count
       const mockBookingsQuery = {
         select: jest.fn().mockReturnValue({
@@ -841,7 +851,7 @@ describe('GolfCourseService', () => {
       expect(result.error).toBeNull();
     });
 
-    it('devrait gérer le cas où il n\'y a aucune statistique', async () => {
+    it("devrait gérer le cas où il n'y a aucune statistique", async () => {
       const mockEmptyQuery = {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
@@ -898,9 +908,11 @@ describe('GolfCourseService', () => {
       const result = await golfCourseService.getCourseStats('course-1');
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Database error'
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Database error',
+        })
+      );
     });
 
     it('devrait calculer correctement la note moyenne avec des notes décimales', async () => {
@@ -1080,10 +1092,7 @@ describe('GolfCourseService', () => {
         select: jest.fn().mockReturnValue({
           eq: jest.fn().mockReturnValue({
             eq: jest.fn().mockResolvedValue({
-              data: [
-                { reviews: [{ rating: 4.66 }] },
-                { reviews: [{ rating: 4.33 }] },
-              ],
+              data: [{ reviews: [{ rating: 4.66 }] }, { reviews: [{ rating: 4.33 }] }],
               error: null,
             }),
           }),
@@ -1161,7 +1170,7 @@ describe('GolfCourseService', () => {
           id: 'course-2',
           name: 'Golf B',
           city: 'Lyon',
-          latitude: 45.7640,
+          latitude: 45.764,
           longitude: 4.8357,
         },
       ];
@@ -1253,13 +1262,13 @@ describe('GolfCourseService', () => {
           id: 'course-proche',
           name: 'Golf Proche',
           city: 'Paris',
-          location: { coordinates: [2.3530, 48.8570] }, // ~500m du centre
+          location: { coordinates: [2.353, 48.857] }, // ~500m du centre
         },
         {
           id: 'course-loin',
           name: 'Golf Loin',
           city: 'Lyon',
-          location: { coordinates: [4.8357, 45.7640] }, // ~400km
+          location: { coordinates: [4.8357, 45.764] }, // ~400km
         },
       ];
 
@@ -1305,10 +1314,7 @@ describe('GolfCourseService', () => {
 
       (supabase.from as jest.Mock).mockReturnValue(mockQuery);
 
-      const result = await golfCourseService.listGolfCourses(
-        {},
-        { page: 2, limit: 10 }
-      );
+      const result = await golfCourseService.listGolfCourses({}, { page: 2, limit: 10 });
 
       expect(result.data).toHaveLength(10);
       // Page 2 (start=10, end=20), après tri par nom : Golf 0, Golf 1, Golf 10, Golf 11...Golf 19, Golf 2, Golf 20...
@@ -1357,11 +1363,10 @@ describe('GolfCourseService', () => {
 
       (supabase.from as jest.Mock).mockReturnValue(mockQuery);
 
-      const result = await golfCourseService.listGolfCourses(
-        {},
-        undefined,
-        { sortBy: 'city', sortOrder: 'asc' }
-      );
+      const result = await golfCourseService.listGolfCourses({}, undefined, {
+        sortBy: 'city',
+        sortOrder: 'asc',
+      });
 
       expect(result.data![0].city).toBe('Alpha');
       expect(result.data![1].city).toBe('Zebra');
@@ -1380,9 +1385,11 @@ describe('GolfCourseService', () => {
       const result = await golfCourseService.listGolfCourses();
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Database connection failed'
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Database connection failed',
+        })
+      );
     });
   });
 
@@ -1474,9 +1481,11 @@ describe('GolfCourseService', () => {
       const result = await golfCourseService.listGolfCoursesWithLocation();
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Network error'
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Network error',
+        })
+      );
     });
 
     it('devrait gérer les parcours avec coordonnées partielles', async () => {
@@ -1572,10 +1581,8 @@ describe('GolfCourseService', () => {
       expect(mockStorageGetPublicUrl).toHaveBeenCalledTimes(2);
     });
 
-    it('devrait gérer les erreurs d\'upload storage', async () => {
-      const mockFiles = [
-        new File(['image1'], 'image1.jpg', { type: 'image/jpeg' }),
-      ];
+    it("devrait gérer les erreurs d'upload storage", async () => {
+      const mockFiles = [new File(['image1'], 'image1.jpg', { type: 'image/jpeg' })];
 
       const mockStorageError = new Error('Storage full');
       const mockStorageUpload = jest.fn().mockResolvedValue({ error: mockStorageError });
@@ -1588,15 +1595,15 @@ describe('GolfCourseService', () => {
       const result = await golfCourseService.uploadCourseImages('course-1', mockFiles);
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Storage full'
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Storage full',
+        })
+      );
     });
 
     it('devrait gérer les erreurs de mise à jour de la base de données', async () => {
-      const mockFiles = [
-        new File(['image1'], 'image1.jpg', { type: 'image/jpeg' }),
-      ];
+      const mockFiles = [new File(['image1'], 'image1.jpg', { type: 'image/jpeg' })];
 
       // Mock pour upload storage (succès)
       const mockStorageUpload = jest.fn().mockResolvedValue({ error: null });
@@ -1638,15 +1645,15 @@ describe('GolfCourseService', () => {
       const result = await golfCourseService.uploadCourseImages('course-1', mockFiles);
 
       expect(result.data).toBeNull();
-      expect(result.error).toEqual(expect.objectContaining({
-        message: 'Database error'
-      }));
+      expect(result.error).toEqual(
+        expect.objectContaining({
+          message: 'Database error',
+        })
+      );
     });
 
     it('devrait ajouter les nouvelles images aux images existantes', async () => {
-      const mockFiles = [
-        new File(['image1'], 'image1.jpg', { type: 'image/jpeg' }),
-      ];
+      const mockFiles = [new File(['image1'], 'image1.jpg', { type: 'image/jpeg' })];
 
       const mockStorageUpload = jest.fn().mockResolvedValue({ error: null });
       const mockStorageGetPublicUrl = jest.fn().mockReturnValue({
@@ -1685,17 +1692,12 @@ describe('GolfCourseService', () => {
 
       // Vérifier que l'update combine les images existantes et nouvelles
       expect(mockUpdateQuery.update).toHaveBeenCalledWith({
-        images: [
-          'https://storage.url/existing-image.jpg',
-          'https://storage.url/new-image.jpg',
-        ],
+        images: ['https://storage.url/existing-image.jpg', 'https://storage.url/new-image.jpg'],
       });
     });
 
-    it('devrait gérer le cas où le parcours n\'a pas d\'images existantes', async () => {
-      const mockFiles = [
-        new File(['image1'], 'image1.jpg', { type: 'image/jpeg' }),
-      ];
+    it("devrait gérer le cas où le parcours n'a pas d'images existantes", async () => {
+      const mockFiles = [new File(['image1'], 'image1.jpg', { type: 'image/jpeg' })];
 
       const mockStorageUpload = jest.fn().mockResolvedValue({ error: null });
       const mockStorageGetPublicUrl = jest.fn().mockReturnValue({

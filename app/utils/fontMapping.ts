@@ -10,7 +10,10 @@ import { Typography } from '@/constants/theme';
  * Sur iOS et Android, les polices avec différents poids doivent être
  * référencées par leur nom de famille spécifique, pas par fontWeight
  */
-export const getFontFamily = (weight?: keyof typeof Typography.fontWeight, base: string = 'Inter') => {
+export const getFontFamily = (
+  weight?: keyof typeof Typography.fontWeight,
+  base: string = 'Inter'
+) => {
   if (base === 'SpaceMono') {
     return 'SpaceMono';
   }
@@ -20,7 +23,7 @@ export const getFontFamily = (weight?: keyof typeof Typography.fontWeight, base:
     return Platform.select({
       ios: 'System',
       android: 'sans-serif',
-      default: 'System'
+      default: 'System',
     });
   }
 
@@ -46,7 +49,10 @@ export const getFontFamily = (weight?: keyof typeof Typography.fontWeight, base:
 /**
  * Helper pour obtenir les styles de police complets
  */
-export const getFontStyle = (weight?: keyof typeof Typography.fontWeight, family: string = 'Inter') => {
+export const getFontStyle = (
+  weight?: keyof typeof Typography.fontWeight,
+  family: string = 'Inter'
+) => {
   const fontFamily = getFontFamily(weight, family);
 
   // Sur React Native, on doit utiliser fontFamily, pas fontWeight avec les polices custom
@@ -56,7 +62,7 @@ export const getFontStyle = (weight?: keyof typeof Typography.fontWeight, family
     fontWeight: Platform.select({
       ios: undefined, // iOS gère mieux avec juste fontFamily
       android: undefined, // Android aussi
-      default: Typography.fontWeight[weight || 'regular']
-    })
+      default: Typography.fontWeight[weight || 'regular'],
+    }),
   };
 };

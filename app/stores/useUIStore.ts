@@ -164,8 +164,10 @@ export const useUIStore = create<UIState>()(
           };
 
           // Ajouter en début de liste et respecter la limite
-          const newItems = [newNotification, ...state.notifications.items]
-            .slice(0, state.notifications.maxItems);
+          const newItems = [newNotification, ...state.notifications.items].slice(
+            0,
+            state.notifications.maxItems
+          );
 
           // Incrémenter le compteur seulement si non lue
           const newUnreadCount = notification.read
@@ -183,13 +185,14 @@ export const useUIStore = create<UIState>()(
 
       removeNotification: (id) =>
         set((state) => {
-          const notificationToRemove = state.notifications.items.find(n => n.id === id);
-          const newItems = state.notifications.items.filter(n => n.id !== id);
+          const notificationToRemove = state.notifications.items.find((n) => n.id === id);
+          const newItems = state.notifications.items.filter((n) => n.id !== id);
 
           // Décrémenter le compteur si notification non lue supprimée
-          const newUnreadCount = notificationToRemove && !notificationToRemove.read
-            ? Math.max(0, state.notifications.unreadCount - 1)
-            : state.notifications.unreadCount;
+          const newUnreadCount =
+            notificationToRemove && !notificationToRemove.read
+              ? Math.max(0, state.notifications.unreadCount - 1)
+              : state.notifications.unreadCount;
 
           return {
             notifications: {
@@ -202,7 +205,7 @@ export const useUIStore = create<UIState>()(
 
       markNotificationAsRead: (id) =>
         set((state) => {
-          const newItems = state.notifications.items.map(notification => {
+          const newItems = state.notifications.items.map((notification) => {
             if (notification.id === id && !notification.read) {
               return { ...notification, read: true };
             }
@@ -210,7 +213,7 @@ export const useUIStore = create<UIState>()(
           });
 
           // Calculer le nouveau nombre de non lues
-          const newUnreadCount = newItems.filter(n => !n.read).length;
+          const newUnreadCount = newItems.filter((n) => !n.read).length;
 
           return {
             notifications: {
@@ -225,7 +228,7 @@ export const useUIStore = create<UIState>()(
         set((state) => ({
           notifications: {
             ...state.notifications,
-            items: state.notifications.items.map(n => ({ ...n, read: true })),
+            items: state.notifications.items.map((n) => ({ ...n, read: true })),
             unreadCount: 0,
           },
         })),
@@ -298,16 +301,18 @@ export const useIsLoading = (key: string) =>
 export const useNotifications = () => useUIStore((state) => state.notifications);
 export const useNotificationItems = () => useUIStore((state) => state.notifications.items);
 export const useUnreadCount = () => useUIStore((state) => state.notifications.unreadCount);
-export const useNotificationPanelVisible = () => useUIStore((state) => state.notifications.isVisible);
-export const useNotificationActions = () => useUIStore((state) => ({
-  addNotification: state.addNotification,
-  removeNotification: state.removeNotification,
-  markNotificationAsRead: state.markNotificationAsRead,
-  markAllNotificationsAsRead: state.markAllNotificationsAsRead,
-  clearNotifications: state.clearNotifications,
-  toggleNotificationPanel: state.toggleNotificationPanel,
-  setNotificationPanelVisible: state.setNotificationPanelVisible,
-  incrementUnreadCount: state.incrementUnreadCount,
-  decrementUnreadCount: state.decrementUnreadCount,
-  setUnreadCount: state.setUnreadCount,
-}));
+export const useNotificationPanelVisible = () =>
+  useUIStore((state) => state.notifications.isVisible);
+export const useNotificationActions = () =>
+  useUIStore((state) => ({
+    addNotification: state.addNotification,
+    removeNotification: state.removeNotification,
+    markNotificationAsRead: state.markNotificationAsRead,
+    markAllNotificationsAsRead: state.markAllNotificationsAsRead,
+    clearNotifications: state.clearNotifications,
+    toggleNotificationPanel: state.toggleNotificationPanel,
+    setNotificationPanelVisible: state.setNotificationPanelVisible,
+    incrementUnreadCount: state.incrementUnreadCount,
+    decrementUnreadCount: state.decrementUnreadCount,
+    setUnreadCount: state.setUnreadCount,
+  }));

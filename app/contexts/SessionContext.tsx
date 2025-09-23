@@ -36,40 +36,36 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   // Flag de sécurité pour désactiver en cas de problème
   // ⚠️ DÉSACTIVÉ TEMPORAIREMENT : Realtime n'est pas activé sur la table profiles dans Supabase
   const ENABLE_REALTIME_DELETION = false; // !process.env.JEST_WORKER_ID && process.env.NODE_ENV !== 'test';
-  
+
   // Utiliser le hook correctement (toujours appelé, mais avec userId conditionnel)
-  useUserDeletionRealtime(
-    ENABLE_REALTIME_DELETION ? state.session?.user?.id : null,
-    {
-      debug: false, // Désactiver les logs verbose
-      onUserDeleted: async () => {
-        console.log('🚨 Realtime SessionContext: Utilisateur supprimé détecté, déconnexion...');
-        
-        try {
-          // ✅ SÉCURISÉ : Utilise la méthode existante bien testée
-          await supabase.auth.signOut();
-          console.log('✅ Realtime SessionContext: Déconnexion réussie via signOut()');
-          
-          // Le reste se fera automatiquement via onAuthStateChange ci-dessous
-          // qui va déclencher setState avec session: null
-          
-        } catch (error) {
-          console.error('❌ Realtime SessionContext: Erreur lors de signOut():', error);
-          
-          // 🔄 FALLBACK : Forcer le nettoyage de session même en cas d'erreur
-          setState(prev => ({
-            ...prev,
-            session: null,
-            user: null,
-            error: null,
-            loading: false,
-          }));
-          
-          console.log('✅ Realtime SessionContext: Session forcée à null (fallback)');
-        }
+  useUserDeletionRealtime(ENABLE_REALTIME_DELETION ? state.session?.user?.id : null, {
+    debug: false, // Désactiver les logs verbose
+    onUserDeleted: async () => {
+      console.log('🚨 Realtime SessionContext: Utilisateur supprimé détecté, déconnexion...');
+
+      try {
+        // ✅ SÉCURISÉ : Utilise la méthode existante bien testée
+        await supabase.auth.signOut();
+        console.log('✅ Realtime SessionContext: Déconnexion réussie via signOut()');
+
+        // Le reste se fera automatiquement via onAuthStateChange ci-dessous
+        // qui va déclencher setState avec session: null
+      } catch (error) {
+        console.error('❌ Realtime SessionContext: Erreur lors de signOut():', error);
+
+        // 🔄 FALLBACK : Forcer le nettoyage de session même en cas d'erreur
+        setState((prev) => ({
+          ...prev,
+          session: null,
+          user: null,
+          error: null,
+          loading: false,
+        }));
+
+        console.log('✅ Realtime SessionContext: Session forcée à null (fallback)');
       }
-    }
-  );
+    },
+  });
 
   // Initialiser et écouter les changements de session
   useEffect(() => {
@@ -86,8 +82,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
           if (!profile && !error) {
             // Profil supprimé mais JWT encore valide → Déconnexion automatique
-            console.warn('🚨 SessionContext: Utilisateur supprimé détecté au startup, déconnexion automatique');
-            
+            console.warn(
+              '🚨 SessionContext: Utilisateur supprimé détecté au startup, déconnexion automatique'
+            );
+
             try {
               // Afficher l'alerte cohérente avec Realtime
               Alert.alert(
@@ -98,7 +96,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
             } catch (alertError) {
               console.warn('⚠️ SessionContext: Alert non disponible, continuant la déconnexion');
             }
-            
+
             try {
               await supabase.auth.signOut();
               console.log('✅ SessionContext: Déconnexion proactive réussie');

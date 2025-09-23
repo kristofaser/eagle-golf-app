@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  Switch,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, Switch, StyleSheet, ActivityIndicator } from 'react-native';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { useCourseAlert } from '@/hooks/useCourseAlert';
 import { Ionicons } from '@expo/vector-icons';
@@ -45,12 +39,7 @@ export const CourseAlertToggle: React.FC<CourseAlertToggleProps> = ({
   style,
   onToggle,
 }) => {
-  const {
-    isEnabled,
-    isLoading,
-    error,
-    toggleAlert,
-  } = useCourseAlert(golfCourseId);
+  const { isEnabled, isLoading, error, toggleAlert } = useCourseAlert(golfCourseId);
 
   const handleToggle = async () => {
     const success = await toggleAlert();
@@ -63,16 +52,16 @@ export const CourseAlertToggle: React.FC<CourseAlertToggleProps> = ({
     return (
       <View style={[styles.container, compact && styles.compactContainer, style]}>
         <ActivityIndicator size="small" color={Colors.primary.electric} />
-        <Text style={[styles.loadingText, compact && styles.compactText]}>
-          Chargement...
-        </Text>
+        <Text style={[styles.loadingText, compact && styles.compactText]}>Chargement...</Text>
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={[styles.container, styles.errorContainer, compact && styles.compactContainer, style]}>
+      <View
+        style={[styles.container, styles.errorContainer, compact && styles.compactContainer, style]}
+      >
         <Ionicons name="warning-outline" size={16} color={Colors.semantic.warning.default} />
         <Text style={[styles.errorText, compact && styles.compactText]}>
           {compact ? 'Erreur' : 'Erreur de chargement'}
@@ -91,9 +80,7 @@ export const CourseAlertToggle: React.FC<CourseAlertToggleProps> = ({
           style={styles.icon}
         />
         <Text style={[styles.text, compact && styles.compactText]}>
-          {compact
-            ? 'Être averti'
-            : `Être averti quand un pro est disponible sur ${courseName}`}
+          {compact ? 'Être averti' : `Être averti quand un pro est disponible sur ${courseName}`}
         </Text>
       </View>
       <Switch

@@ -42,9 +42,9 @@ function ParcoursScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('map'); // Map par défaut
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
-  const [selectedCourseData, setSelectedCourseData] = useState<GolfParcours | CourseCardData | null>(
-    null
-  );
+  const [selectedCourseData, setSelectedCourseData] = useState<
+    GolfParcours | CourseCardData | null
+  >(null);
   const [, forceUpdate] = useState(0);
   const selectedCourseRef = useRef<string | null>(null);
   const bottomSheetRef = useRef<BottomSheetModal>(null);
@@ -67,27 +67,32 @@ function ParcoursScreen() {
             userLatitude: location.coords.latitude,
             userLongitude: location.coords.longitude,
           };
-          logger.dev('📍 Position utilisateur obtenue:', location.coords.latitude, location.coords.longitude);
+          logger.dev(
+            '📍 Position utilisateur obtenue:',
+            location.coords.latitude,
+            location.coords.longitude
+          );
         }
       } catch (locError) {
         logger.warn('⚠️ Erreur géolocalisation', locError);
       }
 
       // Récupérer toutes les données pour le système dynamique
-      const { data: allGolfs, error: golfsError } = await golfParcoursService.listGolfCoursesWithLocation();
-      
+      const { data: allGolfs, error: golfsError } =
+        await golfParcoursService.listGolfCoursesWithLocation();
+
       if (golfsError) throw golfsError;
-      
+
       if (!allGolfs || allGolfs.length === 0) {
         throw new Error('Aucun golf trouvé');
       }
 
       // Générer les données complètes pour le système zoom dynamique
       const fullMapData = golfParcoursService.generateFullMapData(allGolfs);
-      
+
       setAllClusters(fullMapData.allClusters);
       setAllGolfs(fullMapData.allGolfs);
-      
+
       logger.dev('✅ Données de carte chargées (système dynamique):', {
         totalGolfs: fullMapData.totalGolfs,
         clusters: fullMapData.allClusters.length,
@@ -99,8 +104,8 @@ function ParcoursScreen() {
       if (userCoords && allGolfs.length > 20) {
         // Si on a une position utilisateur, prioriser les golfs proches
         const nearbyGolfs = allGolfs
-          .filter(golf => golf.latitude && golf.longitude)
-          .map(golf => {
+          .filter((golf) => golf.latitude && golf.longitude)
+          .map((golf) => {
             const distance = golfParcoursService.calculateDistance(
               userCoords.userLatitude,
               userCoords.userLongitude,
@@ -193,53 +198,61 @@ function ParcoursScreen() {
   // Le clic sur cluster n'est plus nécessaire avec le système dynamique Airbnb
   // Le zoom se fait automatiquement selon le niveau de zoom de la carte
 
-  const renderCourse = useCallback(({ item, index }: { item: CourseCardData; index: number }) => (
-    <TouchableOpacity
-      style={styles.courseCard}
-      onPress={() => handleCoursePress(item)}
-      activeOpacity={0.9}
-    >
-      <Image
-        source={{
-          uri: item.images?.[0] || defaultCourseImages[index % defaultCourseImages.length],
-        }}
-        style={styles.courseImage}
-      />
-      <View style={styles.courseInfo}>
-        <Text variant="h4" color="charcoal" numberOfLines={1} style={styles.courseName}>
-          {item.name}
-        </Text>
-        <View style={styles.locationRow}>
-          <Icon name="location-on" size={14} color={Colors.neutral.course} family="MaterialIcons" />
-          <Text variant="caption" color="course">
-            {item.city}
+  const renderCourse = useCallback(
+    ({ item, index }: { item: CourseCardData; index: number }) => (
+      <TouchableOpacity
+        style={styles.courseCard}
+        onPress={() => handleCoursePress(item)}
+        activeOpacity={0.9}
+      >
+        <Image
+          source={{
+            uri: item.images?.[0] || defaultCourseImages[index % defaultCourseImages.length],
+          }}
+          style={styles.courseImage}
+        />
+        <View style={styles.courseInfo}>
+          <Text variant="h4" color="charcoal" numberOfLines={1} style={styles.courseName}>
+            {item.name}
           </Text>
+          <View style={styles.locationRow}>
+            <Icon
+              name="location-on"
+              size={14}
+              color={Colors.neutral.course}
+              family="MaterialIcons"
+            />
+            <Text variant="caption" color="course">
+              {item.city}
+            </Text>
+          </View>
+          <View style={styles.courseDetails}>
+            {item.hole_count && (
+              <Badge variant="default" size="small">
+                {item.hole_count} trous
+              </Badge>
+            )}
+            {item.par && (
+              <Badge variant="default" size="small">
+                Par {item.par}
+              </Badge>
+            )}
+            {item.active_pros && item.active_pros > 0 && (
+              <Badge variant="success" size="small">
+                {item.active_pros} pros
+              </Badge>
+            )}
+          </View>
+          {item.green_fee_weekday && (
+            <Text variant="caption" color="accent" weight="semiBold" style={styles.price}>
+              À partir de {item.green_fee_weekday / 100}€
+            </Text>
+          )}
         </View>
-        <View style={styles.courseDetails}>
-          {item.hole_count && (
-            <Badge variant="default" size="small">
-              {item.hole_count} trous
-            </Badge>
-          )}
-          {item.par && (
-            <Badge variant="default" size="small">
-              Par {item.par}
-            </Badge>
-          )}
-          {item.active_pros && item.active_pros > 0 && (
-            <Badge variant="success" size="small">
-              {item.active_pros} pros
-            </Badge>
-          )}
-        </View>
-        {item.green_fee_weekday && (
-          <Text variant="caption" color="accent" weight="semiBold" style={styles.price}>
-            À partir de {item.green_fee_weekday / 100}€
-          </Text>
-        )}
-      </View>
-    </TouchableOpacity>
-  ), [handleCoursePress]);
+      </TouchableOpacity>
+    ),
+    [handleCoursePress]
+  );
 
   if (loading && !refreshing) {
     return <LoadingScreen message="Chargement des parcours..." />;

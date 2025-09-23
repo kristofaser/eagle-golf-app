@@ -18,7 +18,7 @@ export const MonthPills: React.FC<MonthPillsProps> = ({
     const monthsSet = new Set<string>();
     const monthsData: { date: Date; label: string; key: string }[] = [];
 
-    availableDates.forEach(dateStr => {
+    availableDates.forEach((dateStr) => {
       const date = new Date(dateStr);
       const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
 
@@ -61,19 +61,11 @@ export const MonthPills: React.FC<MonthPillsProps> = ({
         {uniqueMonths.map((month) => (
           <TouchableOpacity
             key={month.key}
-            style={[
-              styles.pill,
-              isCurrentMonth(month.date) && styles.pillSelected,
-            ]}
+            style={[styles.pill, isCurrentMonth(month.date) && styles.pillSelected]}
             onPress={() => onMonthSelect(month.date)}
             activeOpacity={0.7}
           >
-            <Text
-              style={[
-                styles.pillText,
-                isCurrentMonth(month.date) && styles.pillTextSelected,
-              ]}
-            >
+            <Text style={[styles.pillText, isCurrentMonth(month.date) && styles.pillTextSelected]}>
               {month.label}
             </Text>
           </TouchableOpacity>

@@ -149,7 +149,9 @@ export function ProPricingManager({
                 placeholder="150"
                 editable={isEditable}
               />
-              <Text style={styles.currency}>€<Text style={styles.perPerson}>/Pers.</Text></Text>
+              <Text style={styles.currency}>
+                €<Text style={styles.perPerson}>/Pers.</Text>
+              </Text>
             </View>
           </View>
 
@@ -166,7 +168,9 @@ export function ProPricingManager({
                 placeholder="130"
                 editable={isEditable}
               />
-              <Text style={styles.currency}>€<Text style={styles.perPerson}>/Pers.</Text></Text>
+              <Text style={styles.currency}>
+                €<Text style={styles.perPerson}>/Pers.</Text>
+              </Text>
             </View>
           </View>
 
@@ -183,7 +187,9 @@ export function ProPricingManager({
                 placeholder="110"
                 editable={isEditable}
               />
-              <Text style={styles.currency}>€<Text style={styles.perPerson}>/Pers.</Text></Text>
+              <Text style={styles.currency}>
+                €<Text style={styles.perPerson}>/Pers.</Text>
+              </Text>
             </View>
           </View>
         </View>
@@ -205,7 +211,9 @@ export function ProPricingManager({
                 placeholder="280"
                 editable={isEditable}
               />
-              <Text style={styles.currency}>€<Text style={styles.perPerson}>/Pers.</Text></Text>
+              <Text style={styles.currency}>
+                €<Text style={styles.perPerson}>/Pers.</Text>
+              </Text>
             </View>
           </View>
 
@@ -222,7 +230,9 @@ export function ProPricingManager({
                 placeholder="240"
                 editable={isEditable}
               />
-              <Text style={styles.currency}>€<Text style={styles.perPerson}>/Pers.</Text></Text>
+              <Text style={styles.currency}>
+                €<Text style={styles.perPerson}>/Pers.</Text>
+              </Text>
             </View>
           </View>
 
@@ -239,11 +249,12 @@ export function ProPricingManager({
                 placeholder="200"
                 editable={isEditable}
               />
-              <Text style={styles.currency}>€<Text style={styles.perPerson}>/Pers.</Text></Text>
+              <Text style={styles.currency}>
+                €<Text style={styles.perPerson}>/Pers.</Text>
+              </Text>
             </View>
           </View>
         </View>
-
       </View>
 
       {isEditable && !hideButton && (

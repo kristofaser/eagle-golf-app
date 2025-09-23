@@ -72,12 +72,13 @@ export const TimeSlotSelectionStep = memo(function TimeSlotSelectionStep({
                 </TouchableOpacity>
               ))}
             </View>
-            
+
             {/* Message de confirmation */}
             <View style={styles.confirmationMessage}>
               <Ionicons name="information-circle-outline" size={18} color={Colors.neutral.iron} />
               <Text variant="caption" color="iron" style={styles.confirmationText}>
-                L'heure exacte de départ sera confirmée par Eagle après validation auprès du parcours.
+                L'heure exacte de départ sera confirmée par Eagle après validation auprès du
+                parcours.
               </Text>
             </View>
           </>

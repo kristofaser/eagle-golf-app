@@ -20,6 +20,7 @@ import { ProAvailabilityDisplay } from '@/components/molecules/ProAvailabilityDi
 import { FullProfile } from '@/services/profile.service';
 import { bookingService, Booking } from '@/services/booking.service';
 import { useProProfileTab } from '@/contexts/ProProfileContext';
+import { CancelBookingBottomSheet } from './CancelBookingBottomSheet';
 
 const DEFAULT_AVATAR =
   'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=400&h=400&fit=crop&crop=center';
@@ -39,6 +40,8 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
   const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([]);
   const [pastBookings, setPastBookings] = useState<Booking[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(true);
+  const [cancelBottomSheetVisible, setCancelBottomSheetVisible] = useState(false);
+  const [selectedBookingToCancel, setSelectedBookingToCancel] = useState<Booking | null>(null);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -75,7 +78,7 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
         },
         { limit: 10 }
       );
-      
+
       setUpcomingBookings(filteredUpcoming);
       setPastBookings(past || []);
     } catch (error) {
@@ -111,6 +114,36 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
 
   const handleManageAvailability = () => {
     router.push('/profile/availability');
+  };
+
+  const handleCancelBooking = (booking: Booking) => {
+    setSelectedBookingToCancel(booking);
+    setCancelBottomSheetVisible(true);
+  };
+
+  const handleConfirmCancel = async (bookingId: string) => {
+    try {
+      const response = await bookingService.cancelBooking(bookingId);
+
+      if (response.error) {
+        console.error('Erreur annulation:', response.error);
+        // TODO: Afficher une erreur à l'utilisateur
+        throw new Error(response.error.message);
+      }
+
+      console.log('Réservation annulée avec succès:', response.data);
+
+      // Recharger les réservations après annulation
+      await loadBookings();
+    } catch (error) {
+      console.error("Erreur lors de l'annulation:", error);
+      throw error; // Relancer l'erreur pour que la BottomSheet puisse la gérer
+    }
+  };
+
+  const handleCloseCancelBottomSheet = () => {
+    setCancelBottomSheetVisible(false);
+    setSelectedBookingToCancel(null);
   };
 
   if (loadingBookings) {
@@ -208,7 +241,29 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
               {upcomingBookings.length > 0 ? (
                 <View style={styles.bookingsContainer}>
                   {upcomingBookings.slice(0, 5).map((booking) => (
-                    <View key={booking.id} style={styles.bookingCard}>
+                    <View
+                      key={booking.id}
+                      style={[
+                        styles.bookingCard,
+                        booking.status === 'confirmed' ? styles.confirmedCard : styles.pendingCard,
+                      ]}
+                    >
+                      {/* Badge statut en haut à droite */}
+                      <View
+                        style={[
+                          styles.statusBadgeCorner,
+                          booking.status === 'confirmed'
+                            ? styles.confirmedBadge
+                            : styles.pendingBadge,
+                        ]}
+                      >
+                        <Ionicons
+                          name={booking.status === 'confirmed' ? 'checkmark-circle' : 'time'}
+                          size={24}
+                          color={Colors.neutral.white}
+                        />
+                      </View>
+
                       <View style={styles.bookingContent}>
                         {/* Avatar à gauche */}
                         <Avatar
@@ -217,7 +272,7 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
                           size="large"
                         />
 
-                        {/* Informations empilées à droite */}
+                        {/* Informations au centre */}
                         <View style={styles.bookingInfo}>
                           {/* Nom de l'amateur */}
                           <Text variant="body" color="charcoal" weight="semiBold">
@@ -225,42 +280,33 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
                             {booking.amateur_profile?.last_name || ''}
                           </Text>
 
-                          {/* Golf avec icône */}
-                          <View style={styles.bookingLocation}>
-                            <HugeiconsIcon
-                              icon={Location05Icon}
-                              size={14}
-                              color={Colors.primary.accent}
-                              strokeWidth={2}
-                            />
-                            <Text variant="caption" color="charcoal" style={styles.courseName}>
-                              {booking.golf_parcours?.name || 'Golf Course'}
-                            </Text>
-                          </View>
-
-                          {/* Date et heure */}
-                          <Text variant="caption" color="iron">
-                            {new Date(booking.booking_date).toLocaleDateString('fr-FR', {
-                              weekday: 'long',
-                              day: '2-digit',
-                              month: 'long',
-                            })}{' '}
-                            à {booking.start_time.slice(0, 5)}
+                          {/* Golf */}
+                          <Text variant="caption" color="charcoal">
+                            {booking.golf_parcours?.name || 'Golf Course'}
                           </Text>
 
-                          {/* Badge statut sous la date */}
-                          <View
-                            style={[
-                              styles.statusBadgeInline,
-                              booking.status === 'confirmed'
-                                ? styles.confirmedBadge
-                                : styles.pendingBadge,
-                            ]}
+                          {/* Bouton Annuler discret */}
+                          <TouchableOpacity
+                            style={styles.cancelButton}
+                            onPress={() => handleCancelBooking(booking)}
                           >
-                            <Text variant="caption" color="white" weight="medium">
-                              {booking.status === 'confirmed'
-                                ? 'Confirmé'
-                                : 'En attente de confirmation'}
+                            <Text variant="caption" color="iron" weight="medium">
+                              Annuler
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+
+                        {/* Date et heure à droite */}
+                        <View style={styles.bookingDateTime}>
+                          <View style={styles.dateBadge}>
+                            <Text variant="caption" color="white" weight="semiBold">
+                              {new Date(booking.booking_date).toLocaleDateString('fr-FR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                              })}
+                            </Text>
+                            <Text variant="caption" color="white" style={styles.timeText}>
+                              {booking.start_time.slice(0, 5)}
                             </Text>
                           </View>
                         </View>
@@ -311,10 +357,10 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
                   Gérer mes disponibilités
                 </Text>
               </TouchableOpacity>
-              
+
               {/* Bouton Profil Professionnel */}
-              <TouchableOpacity 
-                style={[styles.actionButton, { marginTop: Spacing.s }]} 
+              <TouchableOpacity
+                style={[styles.actionButton, { marginTop: Spacing.s }]}
                 onPress={() => router.push('/profile/pro-settings')}
               >
                 <Ionicons name="star-outline" size={20} color={Colors.primary.accent} />
@@ -326,6 +372,15 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
           </Animated.View>
         )}
       </ScrollView>
+
+      {/* BottomSheet d'annulation */}
+      <CancelBookingBottomSheet
+        visible={cancelBottomSheetVisible}
+        booking={selectedBookingToCancel}
+        userType="pro"
+        onClose={handleCloseCancelBottomSheet}
+        onConfirmCancel={handleConfirmCancel}
+      />
     </View>
   );
 }
@@ -410,10 +465,17 @@ const styles = StyleSheet.create({
   },
   bookingCard: {
     backgroundColor: Colors.neutral.white,
-    borderRadius: BorderRadius.medium,
+    borderRadius: BorderRadius.large,
     padding: Spacing.m,
     marginBottom: Spacing.s,
+    borderWidth: 2,
     ...Elevation.small,
+  },
+  confirmedCard: {
+    borderColor: Colors.semantic.success.default,
+  },
+  pendingCard: {
+    borderColor: Colors.semantic.warning.default,
   },
   bookingContent: {
     flexDirection: 'row',
@@ -432,18 +494,40 @@ const styles = StyleSheet.create({
   courseName: {
     flex: 1,
   },
-  statusBadgeInline: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.small,
-    marginTop: Spacing.xs,
+  statusBadgeCorner: {
+    position: 'absolute',
+    top: -16,
+    right: -16,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
   },
   confirmedBadge: {
-    backgroundColor: Colors.semantic.success,
+    backgroundColor: Colors.semantic.success.default,
   },
   pendingBadge: {
-    backgroundColor: Colors.semantic.warning,
+    backgroundColor: Colors.semantic.warning.default,
+  },
+  cancelButton: {
+    marginTop: Spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  bookingDateTime: {
+    alignItems: 'flex-end',
+  },
+  dateBadge: {
+    backgroundColor: Colors.neutral.charcoal,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: Spacing.xxs,
+    borderRadius: BorderRadius.small,
+    alignItems: 'center',
+    minWidth: 50,
+  },
+  timeText: {
+    marginTop: 1,
   },
   ctaButton: {
     backgroundColor: Colors.primary.accent,

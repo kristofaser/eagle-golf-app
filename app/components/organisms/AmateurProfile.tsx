@@ -12,11 +12,12 @@ import { useRouter } from 'expo-router';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
-import { Location05Icon } from '@hugeicons/core-free-icons';
+import { Location05Icon, UserIcon, UserMultipleIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
 import { Colors, Spacing, Typography, BorderRadius, Elevation } from '@/constants/theme';
 import { Text, LoadingScreen, Avatar } from '@/components/atoms';
 import { FullProfile } from '@/services/profile.service';
 import { bookingService, BookingWithDetails } from '@/services/booking.service';
+import { CancelBookingBottomSheet } from './CancelBookingBottomSheet';
 
 const DEFAULT_AVATAR =
   'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=400&h=400&fit=crop&crop=center';
@@ -35,6 +36,11 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
   const [pastBookings, setPastBookings] = useState<BookingWithDetails[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(true);
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [showAllBookings, setShowAllBookings] = useState(false);
+  const [cancelBottomSheetVisible, setCancelBottomSheetVisible] = useState(false);
+  const [selectedBookingToCancel, setSelectedBookingToCancel] = useState<BookingWithDetails | null>(
+    null
+  );
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -64,6 +70,13 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
         (booking) => booking.status === 'pending' || booking.status === 'confirmed'
       );
 
+      // Trier par date et heure de partie (de la plus proche à la plus loin)
+      const sortedUpcoming = filteredUpcoming.sort((a, b) => {
+        const dateTimeA = new Date(`${a.booking_date}T${a.start_time}`);
+        const dateTimeB = new Date(`${b.booking_date}T${b.start_time}`);
+        return dateTimeA.getTime() - dateTimeB.getTime();
+      });
+
       // Réservations passées pour les stats
       const { data: past } = await bookingService.listBookings(
         {
@@ -74,7 +87,7 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
         { limit: 10 }
       );
 
-      setUpcomingBookings(filteredUpcoming);
+      setUpcomingBookings(sortedUpcoming || []);
       setPastBookings(past || []);
     } catch (error) {
       console.error('Erreur chargement réservations:', error);
@@ -122,6 +135,55 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
 
   const handleBookGame = () => {
     router.push('/(tabs)/pros');
+  };
+
+  const handleCancelBooking = (booking: BookingWithDetails) => {
+    setSelectedBookingToCancel(booking);
+    setCancelBottomSheetVisible(true);
+  };
+
+  const handleConfirmCancel = async (bookingId: string) => {
+    try {
+      const response = await bookingService.cancelBooking(bookingId);
+
+      if (response.error) {
+        console.error('Erreur annulation:', response.error);
+        // TODO: Afficher une erreur à l'utilisateur
+        throw new Error(response.error.message);
+      }
+
+      console.log('Réservation annulée avec succès:', response.data);
+
+      // Recharger les réservations après annulation
+      await loadBookings();
+    } catch (error) {
+      console.error("Erreur lors de l'annulation:", error);
+      throw error; // Relancer l'erreur pour que la BottomSheet puisse la gérer
+    }
+  };
+
+  const handleCloseCancelBottomSheet = () => {
+    setCancelBottomSheetVisible(false);
+    setSelectedBookingToCancel(null);
+  };
+
+  // Fonction pour obtenir l'icône selon le nombre de joueurs
+  const getPlayerIcon = (numberOfPlayers: number | null) => {
+    switch (numberOfPlayers) {
+      case 1:
+        return UserIcon;
+      case 2:
+        return UserMultipleIcon;
+      case 3:
+      default:
+        return UserGroupIcon;
+    }
+  };
+
+  // Fonction pour obtenir le texte selon le nombre de joueurs
+  const getPlayerText = (numberOfPlayers: number | null) => {
+    const count = numberOfPlayers || 1;
+    return count === 1 ? '1 joueur' : `${count} joueurs`;
   };
 
   if (loadingBookings) {
@@ -173,22 +235,42 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
         {/* Mes Parties */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text variant="h3" color="charcoal" weight="semiBold" style={styles.cardTitle}>
+            <Text variant="h3" color="charcoal" weight="semiBold">
               Mes Parties
             </Text>
-            {upcomingBookings.length > 3 && (
-              <TouchableOpacity>
+            {upcomingBookings.length > 5 && (
+              <TouchableOpacity onPress={() => setShowAllBookings(!showAllBookings)}>
                 <Text variant="caption" color="accent" weight="medium">
-                  Voir tout ({upcomingBookings.length})
+                  {showAllBookings ? 'Voir moins' : `Voir tout (${upcomingBookings.length})`}
                 </Text>
               </TouchableOpacity>
             )}
           </View>
 
-          {upcomingBookings.length > 0 ? (
+          {upcomingBookings && upcomingBookings.length > 0 ? (
             <View style={styles.bookingsContainer}>
-              {upcomingBookings.slice(0, 5).map((booking) => (
-                <View key={booking.id} style={styles.bookingCard}>
+              {upcomingBookings.slice(0, showAllBookings ? upcomingBookings.length : 5).map((booking) => (
+                <View
+                  key={booking.id}
+                  style={[
+                    styles.bookingCard,
+                    booking.status === 'confirmed' ? styles.confirmedCard : styles.pendingCard,
+                  ]}
+                >
+                  {/* Badge statut en haut à droite */}
+                  <View
+                    style={[
+                      styles.statusBadgeCorner,
+                      booking.status === 'confirmed' ? styles.confirmedBadge : styles.pendingBadge,
+                    ]}
+                  >
+                    <Ionicons
+                      name={booking.status === 'confirmed' ? 'checkmark-circle' : 'time'}
+                      size={24}
+                      color={Colors.neutral.white}
+                    />
+                  </View>
+
                   <View style={styles.bookingContent}>
                     {/* Avatar à gauche */}
                     <Avatar
@@ -197,7 +279,7 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
                       size="large"
                     />
 
-                    {/* Informations empilées à droite */}
+                    {/* Informations au centre */}
                     <View style={styles.bookingInfo}>
                       {/* Nom du pro */}
                       <Text variant="body" color="charcoal" weight="semiBold">
@@ -205,42 +287,45 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
                         {booking.pro_profile?.profile?.last_name || ''}
                       </Text>
 
-                      {/* Golf avec icône */}
-                      <View style={styles.bookingLocation}>
-                        <HugeiconsIcon
-                          icon={Location05Icon}
-                          size={14}
-                          color={Colors.primary.accent}
-                          strokeWidth={2}
-                        />
-                        <Text variant="caption" color="charcoal" style={styles.courseName}>
-                          {booking.golf_parcours?.name || 'Golf Course'}
+                      {/* Golf */}
+                      <Text variant="caption" color="charcoal">
+                        {booking.golf_parcours?.name || 'Golf Course'}
+                      </Text>
+
+                      {/* Bouton Annuler discret */}
+                      <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={() => handleCancelBooking(booking)}
+                      >
+                        <Text variant="caption" color="iron" weight="medium">
+                          Annuler
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Date et heure à droite */}
+                    <View style={styles.bookingDateTime}>
+                      <View style={styles.dateBadge}>
+                        <Text variant="caption" color="white" weight="semiBold">
+                          {new Date(booking.booking_date).toLocaleDateString('fr-FR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                          })}
+                        </Text>
+                        <Text variant="caption" color="white" style={styles.timeText}>
+                          {booking.start_time.slice(0, 5)}
                         </Text>
                       </View>
 
-                      {/* Date et heure */}
-                      <Text variant="caption" color="iron">
-                        {new Date(booking.booking_date).toLocaleDateString('fr-FR', {
-                          weekday: 'long',
-                          day: '2-digit',
-                          month: 'long',
-                        })}{' '}
-                        à {booking.start_time.slice(0, 5)}
-                      </Text>
-
-                      {/* Badge statut sous la date */}
-                      <View
-                        style={[
-                          styles.statusBadgeInline,
-                          booking.status === 'confirmed'
-                            ? styles.confirmedBadge
-                            : styles.pendingBadge,
-                        ]}
-                      >
-                        <Text variant="caption" color="white" weight="medium">
-                          {booking.status === 'confirmed'
-                            ? 'Confirmé'
-                            : 'En attente de confirmation'}
+                      {/* Nombre de joueurs */}
+                      <View style={styles.playersInfo}>
+                        <HugeiconsIcon
+                          icon={getPlayerIcon(booking.number_of_players)}
+                          size={32}
+                          color={Colors.neutral.iron}
+                        />
+                        <Text variant="caption" color="iron" style={styles.playersText}>
+                          {getPlayerText(booking.number_of_players)}
                         </Text>
                       </View>
                     </View>
@@ -267,6 +352,15 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
           )}
         </View>
       </ScrollView>
+
+      {/* BottomSheet d'annulation */}
+      <CancelBookingBottomSheet
+        visible={cancelBottomSheetVisible}
+        booking={selectedBookingToCancel}
+        userType="amateur"
+        onClose={handleCloseCancelBottomSheet}
+        onConfirmCancel={handleConfirmCancel}
+      />
     </View>
   );
 }
@@ -323,9 +417,16 @@ const styles = StyleSheet.create({
   bookingCard: {
     padding: Spacing.m,
     backgroundColor: Colors.neutral.white,
-    borderRadius: BorderRadius.small,
+    borderRadius: BorderRadius.large,
     marginBottom: Spacing.xs,
+    borderWidth: 2,
     ...Elevation.small,
+  },
+  confirmedCard: {
+    borderColor: Colors.semantic.success.default,
+  },
+  pendingCard: {
+    borderColor: Colors.semantic.warning.default,
   },
   bookingContent: {
     flexDirection: 'row',
@@ -336,18 +437,49 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: Spacing.xs,
   },
-  statusBadgeInline: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.small,
-    marginTop: Spacing.xs,
+  statusBadgeCorner: {
+    position: 'absolute',
+    top: -16,
+    right: -16,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
   },
   confirmedBadge: {
-    backgroundColor: Colors.semantic.success,
+    backgroundColor: Colors.semantic.success.default,
   },
   pendingBadge: {
-    backgroundColor: Colors.semantic.warning,
+    backgroundColor: Colors.semantic.warning.default,
+  },
+  cancelButton: {
+    marginTop: Spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  bookingDateTime: {
+    alignItems: 'center',
+  },
+  dateBadge: {
+    backgroundColor: Colors.neutral.charcoal,
+    paddingHorizontal: Spacing.xs,
+    paddingVertical: Spacing.xxs,
+    borderRadius: BorderRadius.small,
+    alignItems: 'center',
+    minWidth: 50,
+  },
+  timeText: {
+    marginTop: 1,
+  },
+  playersInfo: {
+    alignItems: 'center',
+    marginTop: Spacing.xs,
+    gap: Spacing.xxs,
+  },
+  playersText: {
+    fontSize: 10,
+    lineHeight: 12,
   },
   statsGrid: {
     flexDirection: 'row',

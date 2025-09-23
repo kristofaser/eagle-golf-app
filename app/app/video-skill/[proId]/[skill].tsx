@@ -26,7 +26,7 @@ export default function VideoSkillScreen() {
   const [proName, setProName] = useState<string>('');
 
   // Create video player
-  const player = useVideoPlayer(videoUrl, player => {
+  const player = useVideoPlayer(videoUrl, (player) => {
     if (videoUrl) {
       player.play();
       player.loop = true;
@@ -211,7 +211,6 @@ export default function VideoSkillScreen() {
             />
           )}
         </View>
-
       </View>
     </>
   );

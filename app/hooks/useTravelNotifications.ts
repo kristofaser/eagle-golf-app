@@ -35,7 +35,7 @@ export const useTravelNotifications = () => {
 
       // Essayer de charger depuis Supabase d'abord
       const { data, error: dbError } = await travelNotificationService.getPreferences(user.id);
-      
+
       if (data) {
         setIsEnabled(data.enabled);
         // Synchroniser avec AsyncStorage
@@ -50,11 +50,11 @@ export const useTravelNotifications = () => {
 
       // Fallback sur AsyncStorage si pas en base
       const stored = await AsyncStorage.getItem(`${STORAGE_KEY}_${user.id}`);
-      
+
       if (stored) {
         const preferences: TravelNotificationPreferences = JSON.parse(stored);
         setIsEnabled(preferences.enabled);
-        
+
         // Migrer vers la base si pas déjà fait
         await travelNotificationService.updatePreferences(user.id, preferences.enabled);
       } else {
@@ -85,14 +85,14 @@ export const useTravelNotifications = () => {
       };
 
       // Sauvegarder en AsyncStorage (cache local)
-      await AsyncStorage.setItem(
-        `${STORAGE_KEY}_${user.id}`, 
-        JSON.stringify(preferences)
-      );
+      await AsyncStorage.setItem(`${STORAGE_KEY}_${user.id}`, JSON.stringify(preferences));
 
       // Sauvegarder en base Supabase
-      const { error: dbError } = await travelNotificationService.updatePreferences(user.id, enabled);
-      
+      const { error: dbError } = await travelNotificationService.updatePreferences(
+        user.id,
+        enabled
+      );
+
       if (dbError) {
         logger.warn('Erreur sauvegarde en base, conservé en local', dbError);
         // On continue malgré l'erreur DB, le cache local garde la préférence
@@ -107,20 +107,23 @@ export const useTravelNotifications = () => {
     }
   };
 
-  const toggleNotifications = useCallback(async (newValue?: boolean) => {
-    const targetValue = newValue !== undefined ? newValue : !isEnabled;
-    
-    setIsEnabled(targetValue);
-    
-    const success = await savePreferences(targetValue);
-    
-    if (!success) {
-      // Rollback en cas d'erreur
-      setIsEnabled(!targetValue);
-    }
-    
-    return success;
-  }, [isEnabled, savePreferences]);
+  const toggleNotifications = useCallback(
+    async (newValue?: boolean) => {
+      const targetValue = newValue !== undefined ? newValue : !isEnabled;
+
+      setIsEnabled(targetValue);
+
+      const success = await savePreferences(targetValue);
+
+      if (!success) {
+        // Rollback en cas d'erreur
+        setIsEnabled(!targetValue);
+      }
+
+      return success;
+    },
+    [isEnabled, savePreferences]
+  );
 
   const clearPreferences = async () => {
     try {

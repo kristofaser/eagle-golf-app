@@ -5,21 +5,11 @@
  * avec possibilité d'ajouter/retirer des favoris.
  */
 import React, { useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Pressable,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { Image } from 'expo-image';
 import { Colors, BorderRadius, Spacing, Typography } from '@/constants/theme';
 import { HugeiconsIcon } from '@hugeicons/react-native';
-import {
-  FavouriteIcon,
-  LocationPin01Icon,
-  GolfHoleIcon,
-} from '@hugeicons/core-free-icons';
+import { FavouriteIcon, LocationPin01Icon, GolfHoleIcon } from '@hugeicons/core-free-icons';
 import { useParcoursFavorite } from '@/hooks/useParcoursFavorite';
 
 export interface ParcoursData {
@@ -92,15 +82,19 @@ export const ParcoursCard: React.FC<ParcoursCardProps> = ({
     onPress(data);
   }, [data, onPress]);
 
-  const handleFavoritePress = useCallback((e: any) => {
-    e.stopPropagation();
-    if (!isToggling) {
-      toggleFavorite();
-    }
-  }, [toggleFavorite, isToggling]);
+  const handleFavoritePress = useCallback(
+    (e: any) => {
+      e.stopPropagation();
+      if (!isToggling) {
+        toggleFavorite();
+      }
+    },
+    [toggleFavorite, isToggling]
+  );
 
   // Obtenir l'image du parcours
-  const courseImage = data.images?.[0] || defaultCourseImages[Math.floor(Math.random() * defaultCourseImages.length)];
+  const courseImage =
+    data.images?.[0] || defaultCourseImages[Math.floor(Math.random() * defaultCourseImages.length)];
 
   // Formatage de la distance
   const formatDistance = (distance?: number) => {
@@ -109,16 +103,9 @@ export const ParcoursCard: React.FC<ParcoursCardProps> = ({
   };
 
   // Styles conditionnels selon la taille
-  const cardStyles = [
-    styles.card,
-    styles[`card_${size}`],
-    style,
-  ];
+  const cardStyles = [styles.card, styles[`card_${size}`], style];
 
-  const imageStyles = [
-    styles.image,
-    styles[`image_${size}`],
-  ];
+  const imageStyles = [styles.image, styles[`image_${size}`]];
 
   return (
     <Pressable style={cardStyles} onPress={handlePress}>
@@ -127,7 +114,7 @@ export const ParcoursCard: React.FC<ParcoursCardProps> = ({
         <Image
           source={{
             uri: courseImage,
-            cacheKey: `course-${data.id}`
+            cacheKey: `course-${data.id}`,
           }}
           style={imageStyles}
           contentFit="cover"
@@ -170,29 +157,20 @@ export const ParcoursCard: React.FC<ParcoursCardProps> = ({
         {/* Localisation */}
         {data.address && (
           <View style={styles.locationContainer}>
-            <HugeiconsIcon
-              icon={LocationPin01Icon}
-              size={14}
-              color={Colors.neutral.course}
-            />
+            <HugeiconsIcon icon={LocationPin01Icon} size={14} color={Colors.neutral.course} />
             <Text style={styles.location} numberOfLines={1}>
-              {data.address.city}{data.address.department && `, ${data.address.department}`}
+              {data.address.city}
+              {data.address.department && `, ${data.address.department}`}
             </Text>
           </View>
         )}
 
         {/* Type de parcours */}
-        {data.course_type && (
-          <Text style={styles.courseType}>
-            {data.course_type}
-          </Text>
-        )}
+        {data.course_type && <Text style={styles.courseType}>{data.course_type}</Text>}
 
         {/* Distance si disponible */}
         {showDistance && data.distance && (
-          <Text style={styles.distance}>
-            {formatDistance(data.distance)}
-          </Text>
+          <Text style={styles.distance}>{formatDistance(data.distance)}</Text>
         )}
       </View>
     </Pressable>

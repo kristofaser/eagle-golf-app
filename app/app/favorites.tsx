@@ -39,18 +39,23 @@ export default function FavoritesScreen() {
   const totalFavorites = useTotalFavorites();
 
   // Récupérer les données des pros favoris
-  const { data: prosData, isLoading, refetch, isRefetching } = useQuery({
+  const {
+    data: prosData,
+    isLoading,
+    refetch,
+    isRefetching,
+  } = useQuery({
     queryKey: ['favoriteProProfiles', favorites.ids],
     queryFn: async () => {
       if (favorites.ids.length === 0) return [];
 
       const profiles = await Promise.allSettled(
-        favorites.ids.map(id => profileService.getFullProfile(id))
+        favorites.ids.map((id) => profileService.getFullProfile(id))
       );
 
       const results = profiles
         .filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled')
-        .map(result => {
+        .map((result) => {
           const profile = result.value?.data || result.value;
           if (!profile) return null;
 
@@ -129,10 +134,7 @@ export default function FavoritesScreen() {
       <Text variant="body" color="course" style={styles.emptyMessage}>
         Ajoutez des pros à vos favoris pour les retrouver rapidement ici
       </Text>
-      <TouchableOpacity
-        style={styles.browseButton}
-        onPress={() => router.push('/(tabs)/pros')}
-      >
+      <TouchableOpacity style={styles.browseButton} onPress={() => router.push('/(tabs)/pros')}>
         <Text variant="body" color="ball" weight="semiBold">
           Parcourir les pros
         </Text>

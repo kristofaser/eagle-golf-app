@@ -53,7 +53,7 @@ describe('useAuth Hook', () => {
   });
 
   describe('État initial', () => {
-    it('devrait retourner l\'état initial correct', () => {
+    it("devrait retourner l'état initial correct", () => {
       const { result } = renderHook(() => useAuth());
 
       expect(result.current.loading).toBe(false);
@@ -65,7 +65,7 @@ describe('useAuth Hook', () => {
       });
     });
 
-    it('devrait détecter quand l\'utilisateur n\'est pas authentifié', () => {
+    it("devrait détecter quand l'utilisateur n'est pas authentifié", () => {
       const SessionContext = require('@/contexts/SessionContext');
       SessionContext.useSession.mockReturnValueOnce(null);
 
@@ -75,7 +75,7 @@ describe('useAuth Hook', () => {
     });
   });
 
-  describe('Méthodes d\'authentification', () => {
+  describe("Méthodes d'authentification", () => {
     it('devrait appeler signIn avec les bonnes credentials', async () => {
       const { result } = renderHook(() => useAuth());
 
@@ -205,7 +205,7 @@ describe('useAuth Hook', () => {
   });
 
   describe('Gestion des états de chargement', () => {
-    it('devrait gérer l\'état de chargement lors de la connexion', () => {
+    it("devrait gérer l'état de chargement lors de la connexion", () => {
       const AuthContext = require('@/contexts/AuthContext.refactored');
       AuthContext.useAuth.mockReturnValueOnce({
         loading: true,
@@ -224,7 +224,7 @@ describe('useAuth Hook', () => {
       expect(result.current.loading).toBe(true);
     });
 
-    it('devrait gérer les erreurs d\'authentification', () => {
+    it("devrait gérer les erreurs d'authentification", () => {
       const AuthContext = require('@/contexts/AuthContext.refactored');
       const error = new Error('Invalid credentials');
       AuthContext.useAuth.mockReturnValueOnce({

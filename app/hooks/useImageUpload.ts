@@ -74,7 +74,9 @@ export interface ImageUploadConfig {
   onError?: (error: Error) => void;
 }
 
-const DEFAULT_CONFIG: Required<Omit<ImageUploadConfig, 'onImageSelected' | 'onUploadProgress' | 'onUploadComplete' | 'onError'>> = {
+const DEFAULT_CONFIG: Required<
+  Omit<ImageUploadConfig, 'onImageSelected' | 'onUploadProgress' | 'onUploadComplete' | 'onError'>
+> = {
   source: 'both',
   quality: 0.8,
   allowsEditing: true,
@@ -118,16 +120,20 @@ export function useImageUpload(config: ImageUploadConfig = {}) {
   const requestPermissions = useCallback(async (): Promise<boolean> => {
     try {
       const permissions = await Promise.all([
-        finalConfig.source !== 'gallery' ? ImagePicker.requestCameraPermissionsAsync() : Promise.resolve({ status: 'granted' }),
-        finalConfig.source !== 'camera' ? ImagePicker.requestMediaLibraryPermissionsAsync() : Promise.resolve({ status: 'granted' }),
+        finalConfig.source !== 'gallery'
+          ? ImagePicker.requestCameraPermissionsAsync()
+          : Promise.resolve({ status: 'granted' }),
+        finalConfig.source !== 'camera'
+          ? ImagePicker.requestMediaLibraryPermissionsAsync()
+          : Promise.resolve({ status: 'granted' }),
       ]);
 
-      const allGranted = permissions.every(p => p.status === 'granted');
+      const allGranted = permissions.every((p) => p.status === 'granted');
 
       if (!allGranted && finalConfig.showPermissionAlerts) {
         Alert.alert(
           'Permissions requises',
-          'Cette application a besoin d\'accéder à votre caméra et/ou galerie.',
+          "Cette application a besoin d'accéder à votre caméra et/ou galerie.",
           [{ text: 'OK' }]
         );
       }
@@ -143,28 +149,31 @@ export function useImageUpload(config: ImageUploadConfig = {}) {
   // Validation
   // ============================================
 
-  const validateImage = useCallback((image: ImageResult): { isValid: boolean; error?: string } => {
-    // Validation taille fichier
-    if (image.fileSize && image.fileSize > finalConfig.maxFileSize) {
-      const maxMB = (finalConfig.maxFileSize / (1024 * 1024)).toFixed(1);
-      return { isValid: false, error: `L'image dépasse ${maxMB}MB` };
-    }
+  const validateImage = useCallback(
+    (image: ImageResult): { isValid: boolean; error?: string } => {
+      // Validation taille fichier
+      if (image.fileSize && image.fileSize > finalConfig.maxFileSize) {
+        const maxMB = (finalConfig.maxFileSize / (1024 * 1024)).toFixed(1);
+        return { isValid: false, error: `L'image dépasse ${maxMB}MB` };
+      }
 
-    // Validation dimensions
-    if (image.width < finalConfig.minWidth || image.height < finalConfig.minHeight) {
-      return {
-        isValid: false,
-        error: `L'image doit faire au moins ${finalConfig.minWidth}x${finalConfig.minHeight}px`
-      };
-    }
+      // Validation dimensions
+      if (image.width < finalConfig.minWidth || image.height < finalConfig.minHeight) {
+        return {
+          isValid: false,
+          error: `L'image doit faire au moins ${finalConfig.minWidth}x${finalConfig.minHeight}px`,
+        };
+      }
 
-    // Validation type
-    if (image.type && !finalConfig.allowedTypes.includes(image.type)) {
-      return { isValid: false, error: 'Format d\'image non supporté' };
-    }
+      // Validation type
+      if (image.type && !finalConfig.allowedTypes.includes(image.type)) {
+        return { isValid: false, error: "Format d'image non supporté" };
+      }
 
-    return { isValid: true };
-  }, [finalConfig]);
+      return { isValid: true };
+    },
+    [finalConfig]
+  );
 
   // ============================================
   // Sélection d'image
@@ -225,38 +234,41 @@ export function useImageUpload(config: ImageUploadConfig = {}) {
   // Upload vers Supabase
   // ============================================
 
-  const uploadToSupabase = useCallback(async (image: ImageResult): Promise<string> => {
-    if (finalConfig.uploadTo === 'profile' && user) {
-      // Upload spécifique au profil
-      // Convertir l'URI en blob pour l'upload
-      const response = await fetch(image.uri);
-      const blob = await response.blob();
-      const result = await profileService.uploadAvatar(user.id, blob);
+  const uploadToSupabase = useCallback(
+    async (image: ImageResult): Promise<string> => {
+      if (finalConfig.uploadTo === 'profile' && user) {
+        // Upload spécifique au profil
+        // Convertir l'URI en blob pour l'upload
+        const response = await fetch(image.uri);
+        const blob = await response.blob();
+        const result = await profileService.uploadAvatar(user.id, blob);
 
-      if (result.error) {
-        throw new Error(result.error.message);
+        if (result.error) {
+          throw new Error(result.error.message);
+        }
+
+        const url = result.data!;
+        // Mise à jour du profil
+        await updateProfile({ avatar_url: url });
+
+        return url;
+      } else if (finalConfig.uploadTo === 'custom' && finalConfig.bucket) {
+        // Upload custom
+        const fileName = finalConfig.path
+          ? `${finalConfig.path}/${Date.now()}.jpg`
+          : `${Date.now()}.jpg`;
+
+        // Ici, implémenter l'upload vers un bucket custom
+        // const url = await supabase.storage.from(finalConfig.bucket).upload(fileName, image);
+        // return url;
+
+        throw new Error('Upload custom non implémenté');
       }
 
-      const url = result.data!;
-      // Mise à jour du profil
-      await updateProfile({ avatar_url: url });
-
-      return url;
-    } else if (finalConfig.uploadTo === 'custom' && finalConfig.bucket) {
-      // Upload custom
-      const fileName = finalConfig.path
-        ? `${finalConfig.path}/${Date.now()}.jpg`
-        : `${Date.now()}.jpg`;
-
-      // Ici, implémenter l'upload vers un bucket custom
-      // const url = await supabase.storage.from(finalConfig.bucket).upload(fileName, image);
-      // return url;
-
-      throw new Error('Upload custom non implémenté');
-    }
-
-    throw new Error('Configuration upload invalide');
-  }, [finalConfig, user, profileService, updateProfile]);
+      throw new Error('Configuration upload invalide');
+    },
+    [finalConfig, user, profileService, updateProfile]
+  );
 
   // ============================================
   // Action principale
@@ -274,25 +286,21 @@ export function useImageUpload(config: ImageUploadConfig = {}) {
       } else {
         // Mode 'both' - afficher un menu
         image = await new Promise<ImageResult | null>((resolve) => {
-          Alert.alert(
-            finalConfig.title,
-            undefined,
-            [
-              {
-                text: finalConfig.cancelButtonText,
-                style: 'cancel',
-                onPress: () => resolve(null)
-              },
-              {
-                text: finalConfig.cameraButtonText,
-                onPress: async () => resolve(await takePhoto())
-              },
-              {
-                text: finalConfig.galleryButtonText,
-                onPress: async () => resolve(await pickFromGallery())
-              },
-            ]
-          );
+          Alert.alert(finalConfig.title, undefined, [
+            {
+              text: finalConfig.cancelButtonText,
+              style: 'cancel',
+              onPress: () => resolve(null),
+            },
+            {
+              text: finalConfig.cameraButtonText,
+              onPress: async () => resolve(await takePhoto()),
+            },
+            {
+              text: finalConfig.galleryButtonText,
+              onPress: async () => resolve(await pickFromGallery()),
+            },
+          ]);
         });
       }
 
@@ -323,54 +331,56 @@ export function useImageUpload(config: ImageUploadConfig = {}) {
     takePhoto,
     pickFromGallery,
     validateImage,
-    config.onImageSelected
+    config.onImageSelected,
   ]);
 
-  const uploadImage = useCallback(async (image?: ImageResult): Promise<string | null> => {
-    const imageToUpload = image || selectedImage;
-    if (!imageToUpload) return null;
+  const uploadImage = useCallback(
+    async (image?: ImageResult): Promise<string | null> => {
+      const imageToUpload = image || selectedImage;
+      if (!imageToUpload) return null;
 
-    if (finalConfig.confirmBeforeUpload) {
-      return new Promise((resolve) => {
-        Alert.alert(
-          'Confirmer',
-          'Voulez-vous utiliser cette image ?',
-          [
+      if (finalConfig.confirmBeforeUpload) {
+        return new Promise((resolve) => {
+          Alert.alert('Confirmer', 'Voulez-vous utiliser cette image ?', [
             { text: 'Annuler', style: 'cancel', onPress: () => resolve(null) },
             {
               text: 'Confirmer',
               onPress: async () => {
                 const url = await performUpload(imageToUpload);
                 resolve(url);
-              }
-            }
-          ]
-        );
-      });
-    }
-
-    return performUpload(imageToUpload);
-  }, [selectedImage, finalConfig.confirmBeforeUpload]);
-
-  const performUpload = useCallback(async (image: ImageResult): Promise<string | null> => {
-    return uploadOperation.execute(async () => {
-      setUploadProgress(0);
-
-      try {
-        const url = await uploadToSupabase(image);
-
-        setUploadProgress(100);
-        setUploadedUrl(url);
-        config.onUploadComplete?.(url);
-
-        return url;
-      } catch (error) {
-        logger.error('Upload error:', error);
-        config.onError?.(error as Error);
-        throw error;
+              },
+            },
+          ]);
+        });
       }
-    });
-  }, [uploadOperation, uploadToSupabase, config]);
+
+      return performUpload(imageToUpload);
+    },
+    [selectedImage, finalConfig.confirmBeforeUpload]
+  );
+
+  const performUpload = useCallback(
+    async (image: ImageResult): Promise<string | null> => {
+      return uploadOperation.execute(async () => {
+        setUploadProgress(0);
+
+        try {
+          const url = await uploadToSupabase(image);
+
+          setUploadProgress(100);
+          setUploadedUrl(url);
+          config.onUploadComplete?.(url);
+
+          return url;
+        } catch (error) {
+          logger.error('Upload error:', error);
+          config.onError?.(error as Error);
+          throw error;
+        }
+      });
+    },
+    [uploadOperation, uploadToSupabase, config]
+  );
 
   // ============================================
   // Interface publique
@@ -410,7 +420,7 @@ export function useImageUpload(config: ImageUploadConfig = {}) {
       setUploadProgress(0);
       imageOperation.reset();
       uploadOperation.reset();
-    }
+    },
   };
 }
 
@@ -419,42 +429,47 @@ export function useImageUpload(config: ImageUploadConfig = {}) {
 // ============================================
 
 // Remplace useSimpleImagePicker
-export const useSimpleImagePicker = () => useImageUpload({
-  source: 'both',
-  uploadTo: null,
-  title: 'Changer la photo de profil',
-});
+export const useSimpleImagePicker = () =>
+  useImageUpload({
+    source: 'both',
+    uploadTo: null,
+    title: 'Changer la photo de profil',
+  });
 
 // Remplace useImagePicker
-export const useImagePicker = () => useImageUpload({
-  source: 'both',
-  uploadTo: null,
-  quality: 0.8,
-});
+export const useImagePicker = () =>
+  useImageUpload({
+    source: 'both',
+    uploadTo: null,
+    quality: 0.8,
+  });
 
 // Remplace useExpoImagePicker
-export const useExpoImagePicker = () => useImageUpload({
-  source: 'both',
-  uploadTo: null,
-  quality: 0.9,
-  allowsEditing: false,
-});
+export const useExpoImagePicker = () =>
+  useImageUpload({
+    source: 'both',
+    uploadTo: null,
+    quality: 0.9,
+    allowsEditing: false,
+  });
 
 // Remplace useHybridImagePicker
-export const useHybridImagePicker = () => useImageUpload({
-  source: 'both',
-  uploadTo: null,
-  confirmBeforeUpload: false,
-});
+export const useHybridImagePicker = () =>
+  useImageUpload({
+    source: 'both',
+    uploadTo: null,
+    confirmBeforeUpload: false,
+  });
 
 // Remplace useProfileUpload
-export const useProfileUpload = () => useImageUpload({
-  source: 'both',
-  uploadTo: 'profile',
-  autoUpload: false,
-  confirmBeforeUpload: true,
-  title: 'Photo de profil',
-});
+export const useProfileUpload = () =>
+  useImageUpload({
+    source: 'both',
+    uploadTo: 'profile',
+    autoUpload: false,
+    confirmBeforeUpload: true,
+    title: 'Photo de profil',
+  });
 
 // Remplace useSimpleProfileUpload
 export const useSimpleProfileUpload = () => {
@@ -466,7 +481,7 @@ export const useSimpleProfileUpload = () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission requise', 'L\'accès à la galerie est nécessaire.');
+        Alert.alert('Permission requise', "L'accès à la galerie est nécessaire.");
         return;
       }
 
@@ -484,53 +499,56 @@ export const useSimpleProfileUpload = () => {
       }
     } catch (error) {
       logger.error('Erreur sélection image:', error);
-      Alert.alert('Erreur', 'Impossible de sélectionner l\'image');
+      Alert.alert('Erreur', "Impossible de sélectionner l'image");
     }
   }, []);
 
-  const uploadProfileImage = useCallback(async (userId: string) => {
-    if (!tempImageUri || !hasSelectedImage) return null;
+  const uploadProfileImage = useCallback(
+    async (userId: string) => {
+      if (!tempImageUri || !hasSelectedImage) return null;
 
-    setUploading(true);
-    try {
-      const fileName = `${userId}-${Date.now()}.jpg`;
+      setUploading(true);
+      try {
+        const fileName = `${userId}-${Date.now()}.jpg`;
 
-      logger.dev('Uploading image from URI:', tempImageUri);
+        logger.dev('Uploading image from URI:', tempImageUri);
 
-      // Utiliser FormData pour React Native (méthode simple et fiable)
-      const formData = new FormData();
-      const photo = {
-        uri: tempImageUri,
-        type: 'image/jpeg',
-        name: fileName,
-      } as any;
+        // Utiliser FormData pour React Native (méthode simple et fiable)
+        const formData = new FormData();
+        const photo = {
+          uri: tempImageUri,
+          type: 'image/jpeg',
+          name: fileName,
+        } as any;
 
-      formData.append('file', photo);
+        formData.append('file', photo);
 
-      logger.dev('FormData created with photo:', photo.name);
+        logger.dev('FormData created with photo:', photo.name);
 
-      // Upload via ProfileService
-      const { data: avatarUrl, error } = await profileService.uploadAvatarWithFormData(
-        userId,
-        formData,
-        fileName
-      );
+        // Upload via ProfileService
+        const { data: avatarUrl, error } = await profileService.uploadAvatarWithFormData(
+          userId,
+          formData,
+          fileName
+        );
 
-      if (error) {
-        logger.error('Upload error:', error);
+        if (error) {
+          logger.error('Upload error:', error);
+          throw error;
+        }
+
+        logger.dev('Upload successful, URL:', avatarUrl);
+        setHasSelectedImage(false);
+        return avatarUrl;
+      } catch (error) {
+        logger.error('Erreur upload:', error);
         throw error;
+      } finally {
+        setUploading(false);
       }
-
-      logger.dev('Upload successful, URL:', avatarUrl);
-      setHasSelectedImage(false);
-      return avatarUrl;
-    } catch (error) {
-      logger.error('Erreur upload:', error);
-      throw error;
-    } finally {
-      setUploading(false);
-    }
-  }, [tempImageUri, hasSelectedImage]);
+    },
+    [tempImageUri, hasSelectedImage]
+  );
 
   return {
     tempImageUri,
