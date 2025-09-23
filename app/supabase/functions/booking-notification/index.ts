@@ -64,7 +64,11 @@ serve(async (req) => {
       );
     }
 
-    console.log('Booking notification request:', {\n      bookingId: body.bookingId,\n      action: body.action,\n      adminId: body.adminId\n    });
+    console.log('Booking notification request:', {
+      bookingId: body.bookingId,
+      action: body.action,
+      adminId: body.adminId
+    });
 
     // Récupérer les informations complètes du booking
     const { data: booking, error: bookingError } = await supabaseClient
