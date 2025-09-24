@@ -80,9 +80,9 @@ export const CircleAvatar: React.FC<CircleAvatarProps> = ({
   const containerStyle = [
     styles.container,
     {
-      width: size,
-      height: size,
-      borderRadius: size / 2,
+      width: size + (borderWidth * 2),
+      height: size + (borderWidth * 2),
+      borderRadius: (size + (borderWidth * 2)) / 2,
       borderWidth,
       borderColor,
     },
@@ -129,6 +129,8 @@ export const CircleAvatar: React.FC<CircleAvatarProps> = ({
 const styles = StyleSheet.create({
   container: {
     overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   image: {
     // Style sera appliqué dynamiquement

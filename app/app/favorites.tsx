@@ -10,19 +10,15 @@ import {
 import { FlashList } from '@shopify/flash-list';
 import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Text, LoadingScreen, Avatar, FavoriteBadge } from '@/components/atoms';
+import { Text, LoadingScreen } from '@/components/atoms';
 import type { JoueurData } from '@/components/molecules/ContentCard';
 import { ProCard } from '@/components/molecules/ProCard';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
-import { Ionicons } from '@expo/vector-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
 import {
   ArrowLeft01Icon,
   Search01Icon,
-  FavouriteIcon,
-  UserIcon,
-  Delete01Icon,
 } from '@hugeicons/core-free-icons';
 import { useQuery } from '@tanstack/react-query';
 import { profileService } from '@/services/profile.service';
@@ -32,11 +28,11 @@ import { useTotalFavorites } from '@/hooks/useFavorites';
 
 export default function FavoritesScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const favorites = useFavorites();
   const { isAuthenticated } = useAuth();
   const { profile } = useUser();
   const totalFavorites = useTotalFavorites();
+
 
   // Récupérer les données des pros favoris
   const {
@@ -49,6 +45,8 @@ export default function FavoritesScreen() {
     queryFn: async () => {
       if (favorites.ids.length === 0) return [];
 
+      console.log('🔍 Favorite IDs to load:', favorites.ids);
+
       const profiles = await Promise.allSettled(
         favorites.ids.map((id) => profileService.getFullProfile(id))
       );
@@ -56,30 +54,60 @@ export default function FavoritesScreen() {
       const results = profiles
         .filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled')
         .map((result) => {
-          const profile = result.value?.data || result.value;
-          if (!profile) return null;
+          const serviceResponse = result.value;
+
+          // Vérifier si c'est une réponse de service avec erreur
+          if (serviceResponse?.error) {
+            console.log('❌ Service error for profile:', serviceResponse.error);
+            return null;
+          }
+
+          const profile = serviceResponse?.data || serviceResponse;
+          if (!profile) {
+            console.log('❌ Profile is null/undefined');
+            return null;
+          }
+
+          // Validation des données critiques
+          if (!profile.id || (!profile.first_name && !profile.last_name)) {
+            console.log('❌ Profile missing critical data:', profile.id);
+            return null;
+          }
+
+          console.log('✅ Profile loaded:', {
+            id: profile.id,
+            name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
+            avatar_url: profile.avatar_url,
+            pro_profiles: profile.pro_profiles
+          });
 
           return {
             id: profile.id,
-            title: `${profile.first_name} ${profile.last_name}`,
-            imageUrl: profile.avatar_url || '',
+            title: (() => {
+              const firstName = profile.first_name || '';
+              const lastName = profile.last_name || '';
+              return firstName || lastName
+                ? `${firstName} ${lastName}`.trim()
+                : 'Profil Utilisateur';
+            })(),
+            imageUrl: profile.avatar_url || null,
             type: 'joueur' as const,
             age: 30,
-            region: profile.city || 'Non spécifié',
+            region: profile.city || 'Non spécifiée',
             handicap: 'Pro',
             scoreAverage: 72,
             specialite: 'Golf professionnel',
             styleJeu: 'Complet',
             experience: 10,
-            circuits: profile.pro_profiles?.division || 'Alps Tour',
+            circuits: profile.pro_profiles?.[0]?.division || 'Alps Tour',
             meilleurResultat: 'Victoire professionnelle',
             victoires: 1,
             tarif: '', // Sera r\u00e9cup\u00e9r\u00e9 depuis pro_pricing
-            rating: profile.pro_profiles?.rating || null,
+            rating: null, // Pas de rating dans pro_profiles
             isPremium: false, // \u00c0 d\u00e9terminer selon les prix dans pro_pricing
-            isAvailable: profile.pro_profiles?.is_globally_available || false,
-            division: profile.pro_profiles?.division || 'Alps Tour',
-            worldRanking: profile.pro_profiles?.world_ranking || null,
+            isAvailable: profile.pro_profiles?.[0]?.is_globally_available || false,
+            division: profile.pro_profiles?.[0]?.division || 'Alps Tour',
+            worldRanking: profile.pro_profiles?.[0]?.world_ranking || null,
             distance: 0,
           };
         })
@@ -88,26 +116,23 @@ export default function FavoritesScreen() {
       return results;
     },
     enabled: favorites.hasAny,
+    // Cache intelligent pour les favoris
+    staleTime: 5 * 60 * 1000, // 5 minutes au lieu de 30
+    gcTime: 15 * 60 * 1000, // 15 minutes de conservation
+    // Validation des données
+    select: (data) => {
+      return data?.filter(item =>
+        item &&
+        item.title &&
+        item.title !== 'undefined undefined'
+      ) || [];
+    },
   });
 
   const handleGoBack = () => {
     router.back();
   };
 
-  const handleClearAllFavorites = () => {
-    Alert.alert(
-      'Supprimer tous les favoris',
-      'Voulez-vous vraiment supprimer tous vos pros favoris ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Supprimer',
-          style: 'destructive',
-          onPress: () => favorites.actions.clearAllFavorites(),
-        },
-      ]
-    );
-  };
 
   const handleProPress = (proData: JoueurData) => {
     router.push(`/profile/${proData.id}`);
