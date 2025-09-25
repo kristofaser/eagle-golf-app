@@ -28,7 +28,7 @@ import { profileStyles, IMAGE_HEIGHT } from './styles/profileStyles';
 export default function ProfileScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const profileId = Array.isArray(id) ? id[0] : id;
 
   // Hook principal avec toute la logique métier
@@ -192,12 +192,14 @@ export default function ProfileScreen() {
         />
 
         {/* Footer de réservation - Version FAB */}
-        <BookingFAB
-          price={currentPrice}
-          players={numberOfPlayers}
-          onPress={() => {
-            router.push({
-              pathname: '/booking-modal',
+        {/* Ne pas afficher le bouton de réservation si c'est son propre profil */}
+        {user?.id !== profileId && (
+          <BookingFAB
+            price={currentPrice}
+            players={numberOfPlayers}
+            onPress={() => {
+              router.push({
+                pathname: '/booking-modal',
               params: {
                 proId: profileId || '',
                 proName: `${profile.first_name} ${profile.last_name}`,
@@ -208,6 +210,7 @@ export default function ProfileScreen() {
           }}
           isAuthenticated={isAuthenticated}
         />
+        )}
 
         {/* Ancien Footer - Gardé en commentaire pour pouvoir revenir facilement */}
         {/* <BookingFooter

@@ -427,6 +427,14 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
 
       {/* FAB Menu */}
       <View style={styles.fabContainer}>
+        {/* Overlay invisible pour fermer le menu en touchant à l'extérieur */}
+        {fabMenuOpen && (
+          <Pressable
+            style={styles.fabOverlay}
+            onPress={() => setFabMenuOpen(false)}
+          />
+        )}
+
         {/* Menu Items */}
         {menuItemsVisible && (
           <>
@@ -777,5 +785,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: Colors.neutral.white,
+  },
+  fabOverlay: {
+    position: 'absolute',
+    top: -1000,
+    left: -1000,
+    right: -100,
+    bottom: -100,
+    width: 2000,
+    height: 2000,
+    backgroundColor: 'transparent',
+    zIndex: -1, // Derrière les menu items mais capture les touches
   },
 });

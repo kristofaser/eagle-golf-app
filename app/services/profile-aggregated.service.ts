@@ -154,10 +154,11 @@ class ProfileAggregatedService {
       return [];
     }
 
-    // Convertir les prix de centimes en euros pour l'interface
+    // Les prix sont déjà stockés en euros dans la base de données
+    // Pas de conversion nécessaire
     return (data || []).map((item) => ({
       ...item,
-      price: item.price / 100, // Convertir centimes en euros
+      price: item.price, // Prix déjà en euros
     })) as ProPricing[];
   }
 
