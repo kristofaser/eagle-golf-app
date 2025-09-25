@@ -121,14 +121,14 @@ export default function ProfileScreen() {
                 style={styles.headerButton}
               >
                 <View>
-                  <Ionicons name="notifications-outline" size={24} color={Colors.neutral.charcoal} />
+                  <Ionicons
+                    name="notifications-outline"
+                    size={24}
+                    color={Colors.neutral.charcoal}
+                  />
                   {unreadCount > 0 && (
                     <View style={styles.badge}>
-                      <Text
-                        variant="caption"
-                        color="white"
-                        style={styles.badgeText}
-                      >
+                      <Text variant="caption" color="white" style={styles.badgeText}>
                         {unreadCount > 99 ? '99+' : unreadCount}
                       </Text>
                     </View>

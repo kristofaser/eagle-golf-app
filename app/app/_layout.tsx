@@ -47,132 +47,132 @@ function RootLayoutContent() {
           <ProProfileProvider>
             <BottomSheetModalProvider>
               <OverlayProvider>
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  animation: 'slide_from_right',
-                  animationDuration: DURATIONS.NORMAL,
-                }}
-              >
-                <Stack.Screen name="index" options={{ headerShown: false }} />
-                <Stack.Screen name="splash" options={{ headerShown: false }} />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen
-                  name="profile/pricing"
-                  options={{
+                <Stack
+                  screenOptions={{
                     headerShown: false,
-                    presentation: 'modal',
-                    animation: 'slide_from_bottom',
-                    animationDuration: DURATIONS.MEDIUM,
-                  }}
-                />
-                <Stack.Screen
-                  name="profile/availability"
-                  options={{
-                    headerShown: false,
-                    presentation: 'modal',
-                    animation: 'slide_from_bottom',
-                    animationDuration: DURATIONS.MEDIUM,
-                  }}
-                />
-                <Stack.Screen
-                  name="profile/pro-settings"
-                  options={{
-                    headerShown: true,
-                    title: 'Mes Skills',
-                    presentation: 'modal',
-                    animation: 'slide_from_bottom',
-                    animationDuration: DURATIONS.MEDIUM,
-                    headerStyle: {
-                      backgroundColor: '#FFFFFF',
-                    },
-                    headerTitleStyle: {
-                      color: '#1A1A1A',
-                      fontWeight: '600',
-                    },
-                  }}
-                />
-                <Stack.Screen
-                  name="profile/experiences"
-                  options={{
-                    headerShown: false,
-                    presentation: 'modal',
-                    animation: 'slide_from_bottom',
-                    animationDuration: DURATIONS.MEDIUM,
-                  }}
-                />
-                <Stack.Screen
-                  name="search"
-                  options={{
-                    headerShown: false,
-                    presentation: 'card',
-                    animation: 'fade',
-                    animationDuration: DURATIONS.FAST,
-                  }}
-                />
-                <Stack.Screen
-                  name="profile/[id]"
-                  options={{
-                    headerShown: false,
-                    presentation: 'card',
-                    animation: 'fade',
+                    animation: 'slide_from_right',
                     animationDuration: DURATIONS.NORMAL,
                   }}
-                />
-                <Stack.Screen
-                  name="parcours/[id]"
-                  options={{
-                    headerShown: false,
-                    presentation: 'card',
-                    animation: 'fade_from_bottom',
-                    animationDuration: DURATIONS.NORMAL,
-                  }}
-                />
-                <Stack.Screen
-                  name="booking-modal"
-                  options={{
-                    headerShown: false,
-                    presentation: 'modal',
-                    animation: 'slide_from_bottom',
-                    animationDuration: DURATIONS.MEDIUM,
-                  }}
-                />
-                <Stack.Screen
-                  name="become-pro"
-                  options={{
-                    headerShown: false,
-                    presentation: 'modal',
-                    animation: 'slide_from_bottom',
-                    animationDuration: DURATIONS.MEDIUM,
-                  }}
-                />
-                <Stack.Screen
-                  name="video-skill/upload/[skill]"
-                  options={{
-                    headerShown: true,
-                    presentation: 'modal',
-                    animation: 'slide_from_bottom',
-                    animationDuration: DURATIONS.MEDIUM,
-                    headerStyle: {
-                      backgroundColor: Colors.neutral.white,
-                    },
-                    headerTitleStyle: {
-                      color: Colors.neutral.charcoal,
-                      fontWeight: '600',
-                    },
-                  }}
-                />
-                <Stack.Screen
-                  name="notifications"
-                  options={{
-                    headerShown: false,
-                    presentation: 'modal',
-                    animation: 'slide_from_bottom',
-                    animationDuration: DURATIONS.MEDIUM,
-                  }}
-                />
-              </Stack>
-              <StatusBar style="auto" />
+                >
+                  <Stack.Screen name="index" options={{ headerShown: false }} />
+                  <Stack.Screen name="splash" options={{ headerShown: false }} />
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen
+                    name="profile/pricing"
+                    options={{
+                      headerShown: false,
+                      presentation: 'modal',
+                      animation: 'slide_from_bottom',
+                      animationDuration: DURATIONS.MEDIUM,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="profile/availability"
+                    options={{
+                      headerShown: false,
+                      presentation: 'modal',
+                      animation: 'slide_from_bottom',
+                      animationDuration: DURATIONS.MEDIUM,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="profile/pro-settings"
+                    options={{
+                      headerShown: true,
+                      title: 'Mes Skills',
+                      presentation: 'modal',
+                      animation: 'slide_from_bottom',
+                      animationDuration: DURATIONS.MEDIUM,
+                      headerStyle: {
+                        backgroundColor: '#FFFFFF',
+                      },
+                      headerTitleStyle: {
+                        color: '#1A1A1A',
+                        fontWeight: '600',
+                      },
+                    }}
+                  />
+                  <Stack.Screen
+                    name="profile/experiences"
+                    options={{
+                      headerShown: false,
+                      presentation: 'modal',
+                      animation: 'slide_from_bottom',
+                      animationDuration: DURATIONS.MEDIUM,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="search"
+                    options={{
+                      headerShown: false,
+                      presentation: 'card',
+                      animation: 'fade',
+                      animationDuration: DURATIONS.FAST,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="profile/[id]"
+                    options={{
+                      headerShown: false,
+                      presentation: 'card',
+                      animation: 'fade',
+                      animationDuration: DURATIONS.NORMAL,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="parcours/[id]"
+                    options={{
+                      headerShown: false,
+                      presentation: 'card',
+                      animation: 'fade_from_bottom',
+                      animationDuration: DURATIONS.NORMAL,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="booking-modal"
+                    options={{
+                      headerShown: false,
+                      presentation: 'modal',
+                      animation: 'slide_from_bottom',
+                      animationDuration: DURATIONS.MEDIUM,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="become-pro"
+                    options={{
+                      headerShown: false,
+                      presentation: 'modal',
+                      animation: 'slide_from_bottom',
+                      animationDuration: DURATIONS.MEDIUM,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="video-skill/upload/[skill]"
+                    options={{
+                      headerShown: true,
+                      presentation: 'modal',
+                      animation: 'slide_from_bottom',
+                      animationDuration: DURATIONS.MEDIUM,
+                      headerStyle: {
+                        backgroundColor: Colors.neutral.white,
+                      },
+                      headerTitleStyle: {
+                        color: Colors.neutral.charcoal,
+                        fontWeight: '600',
+                      },
+                    }}
+                  />
+                  <Stack.Screen
+                    name="notifications"
+                    options={{
+                      headerShown: false,
+                      presentation: 'modal',
+                      animation: 'slide_from_bottom',
+                      animationDuration: DURATIONS.MEDIUM,
+                    }}
+                  />
+                </Stack>
+                <StatusBar style="auto" />
               </OverlayProvider>
             </BottomSheetModalProvider>
           </ProProfileProvider>

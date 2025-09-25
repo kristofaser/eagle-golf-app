@@ -35,10 +35,7 @@ export function BecomeProFAB({ status, isLoading, onPress }: BecomeProFABProps) 
 
   // Style d'animation FAB
   const fabAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: fabScale.value },
-      { translateY: fabTranslateY.value }
-    ],
+    transform: [{ scale: fabScale.value }, { translateY: fabTranslateY.value }],
   }));
 
   // Animation d'entrée au montage
@@ -112,11 +109,7 @@ export function BecomeProFAB({ status, isLoading, onPress }: BecomeProFABProps) 
     return (
       <View style={styles.fabContainer}>
         <Animated.View
-          style={[
-            styles.fab,
-            fabAnimatedStyle,
-            { backgroundColor: Colors.neutral.mist }
-          ]}
+          style={[styles.fab, fabAnimatedStyle, { backgroundColor: Colors.neutral.mist }]}
         >
           <ActivityIndicator size="small" color={Colors.neutral.white} />
         </Animated.View>
@@ -137,8 +130,8 @@ export function BecomeProFAB({ status, isLoading, onPress }: BecomeProFABProps) 
           fabAnimatedStyle,
           {
             backgroundColor: config.backgroundColor,
-            opacity: config.disabled ? 0.8 : 1
-          }
+            opacity: config.disabled ? 0.8 : 1,
+          },
         ]}
       >
         <TouchableOpacity
@@ -147,17 +140,9 @@ export function BecomeProFAB({ status, isLoading, onPress }: BecomeProFABProps) 
           activeOpacity={config.disabled ? 1 : 0.8}
           disabled={config.disabled}
         >
-          <HugeiconsIcon
-            icon={config.icon}
-            size={20}
-            color={config.iconColor}
-          />
+          <HugeiconsIcon icon={config.icon} size={20} color={config.iconColor} />
           {/* Optionnel : afficher le texte à côté de l'icône */}
-          {status === 'pending' && (
-            <Text style={styles.fabText}>
-              {config.text}
-            </Text>
-          )}
+          {status === 'pending' && <Text style={styles.fabText}>{config.text}</Text>}
         </TouchableOpacity>
       </Animated.View>
     </View>

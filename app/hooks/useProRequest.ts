@@ -13,7 +13,7 @@ import { useProRequestRealtime } from './useProRequestRealtime';
 import {
   checkUserProRequestStatus,
   ProRequestStatus,
-  UserProRequestResult
+  UserProRequestResult,
 } from '@/services/pro-request-status.service';
 import { logger } from '@/utils/logger';
 
@@ -67,11 +67,7 @@ export function useProRequest(
   userId: string | null | undefined,
   options: UseProRequestOptions = {}
 ): UseProRequestResult {
-  const {
-    showInAppNotifications = true,
-    autoLoad = true,
-    debug = false
-  } = options;
+  const { showInAppNotifications = true, autoLoad = true, debug = false } = options;
 
   // État local
   const [state, setState] = useState<{
@@ -87,7 +83,7 @@ export function useProRequest(
     isLoading: true,
     error: null,
     hasRequest: false,
-    canMakeNewRequest: true
+    canMakeNewRequest: true,
   });
 
   // Hook realtime pour les changements
@@ -100,16 +96,16 @@ export function useProRequest(
       }
 
       // Mettre à jour l'état local immédiatement
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         status: newStatus,
         hasRequest: true,
-        canMakeNewRequest: newStatus === 'rejected'
+        canMakeNewRequest: newStatus === 'rejected',
       }));
 
       // Recharger les données complètes
       await loadProRequestStatus();
-    }
+    },
   });
 
   /**
@@ -117,19 +113,19 @@ export function useProRequest(
    */
   const loadProRequestStatus = useCallback(async () => {
     if (!userId) {
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
         status: 'none',
         hasRequest: false,
         request: null,
-        canMakeNewRequest: true
+        canMakeNewRequest: true,
       }));
       return;
     }
 
     try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       if (debug) {
         logger.dev('📋 useProRequest: Chargement du statut pour:', userId);
@@ -143,7 +139,7 @@ export function useProRequest(
         hasRequest: result.hasRequest,
         canMakeNewRequest: result.canMakeNewRequest,
         isLoading: false,
-        error: null
+        error: null,
       });
 
       if (debug) {
@@ -151,10 +147,10 @@ export function useProRequest(
       }
     } catch (error) {
       logger.error('❌ useProRequest: Erreur chargement:', error);
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Erreur inconnue'
+        error: error instanceof Error ? error.message : 'Erreur inconnue',
       }));
     }
   }, [userId, debug]);
@@ -185,7 +181,7 @@ export function useProRequest(
     refresh: loadProRequestStatus,
 
     // Realtime
-    isRealtimeActive
+    isRealtimeActive,
   };
 }
 
@@ -196,6 +192,6 @@ export function useProRequestSimple(userId: string | null | undefined) {
   return useProRequest(userId, {
     showInAppNotifications: true,
     autoLoad: true,
-    debug: __DEV__
+    debug: __DEV__,
   });
 }

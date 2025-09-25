@@ -15,7 +15,7 @@ export function useUser() {
     proRequestStatus,
     proRequest,
     loadingProRequest,
-    refreshProRequestStatus
+    refreshProRequestStatus,
   } = useUserContext();
   const { loading: sessionLoading } = useSessionContext();
 

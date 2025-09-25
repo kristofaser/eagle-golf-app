@@ -18,7 +18,13 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
-import { Location05Icon, UserIcon, UserMultipleIcon, UserGroupIcon, TrophyIcon } from '@hugeicons/core-free-icons';
+import {
+  Location05Icon,
+  UserIcon,
+  UserMultipleIcon,
+  UserGroupIcon,
+  TrophyIcon,
+} from '@hugeicons/core-free-icons';
 import { Colors, Spacing, Typography, BorderRadius, Elevation } from '@/constants/theme';
 import { Text, LoadingScreen, Avatar } from '@/components/atoms';
 import { FullProfile } from '@/services/profile.service';
@@ -66,7 +72,7 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
     await Promise.all([
       onRefresh(),
       loadBookings(),
-      refreshProRequestStatus() // Rafraîchir aussi le statut pro
+      refreshProRequestStatus(), // Rafraîchir aussi le statut pro
     ]);
     setRefreshing(false);
   };
@@ -235,10 +241,7 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
 
   // FAB animation style
   const fabAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: fabScale.value },
-      { translateY: fabTranslateY.value }
-    ],
+    transform: [{ scale: fabScale.value }, { translateY: fabTranslateY.value }],
   }));
 
   // Animate FAB on mount
@@ -267,7 +270,11 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
   return (
     <View style={styles.container}>
       {/* Profile Header */}
-      <TouchableOpacity style={styles.profileHeader} onPress={handleEditProfile} activeOpacity={0.9}>
+      <TouchableOpacity
+        style={styles.profileHeader}
+        onPress={handleEditProfile}
+        activeOpacity={0.9}
+      >
         <View style={styles.avatarContainer}>
           <Avatar
             imageUrl={profile.avatar_url}
@@ -326,90 +333,92 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
             <View style={styles.bookingsContainer}>
               {upcomingBookings
                 .slice(0, showAllBookings ? upcomingBookings.length : 5)
-                .filter(booking => booking != null)
+                .filter((booking) => booking != null)
                 .map((booking) => (
-                <View
-                  key={booking.id}
-                  style={[
-                    styles.bookingCard,
-                    booking.status === 'confirmed' ? styles.confirmedCard : styles.pendingCard,
-                  ]}
-                >
-                  {/* Badge statut en haut à droite */}
                   <View
+                    key={booking.id}
                     style={[
-                      styles.statusBadgeCorner,
-                      booking.status === 'confirmed' ? styles.confirmedBadge : styles.pendingBadge,
+                      styles.bookingCard,
+                      booking.status === 'confirmed' ? styles.confirmedCard : styles.pendingCard,
                     ]}
                   >
-                    <Ionicons
-                      name={booking.status === 'confirmed' ? 'checkmark-circle' : 'time'}
-                      size={24}
-                      color={Colors.neutral.white}
-                    />
-                  </View>
-
-                  <View style={styles.bookingContent}>
-                    {/* Avatar à gauche */}
-                    <Avatar
-                      imageUrl={booking.pro_profile?.profile?.avatar_url}
-                      name={`${booking.pro_profile?.profile?.first_name || 'Pro'} ${booking.pro_profile?.profile?.last_name || ''}`}
-                      size="large"
-                    />
-
-                    {/* Informations au centre */}
-                    <View style={styles.bookingInfo}>
-                      {/* Nom du pro */}
-                      <Text variant="body" color="charcoal" weight="semiBold">
-                        {booking.pro_profile?.profile?.first_name || 'Pro'}{' '}
-                        {booking.pro_profile?.profile?.last_name || ''}
-                      </Text>
-
-                      {/* Golf */}
-                      <Text variant="caption" color="charcoal">
-                        {booking.golf_parcours?.name || 'Golf Course'}
-                      </Text>
-
-                      {/* Bouton Annuler discret */}
-                      <TouchableOpacity
-                        style={styles.cancelButton}
-                        onPress={() => handleCancelBooking(booking)}
-                      >
-                        <Text variant="caption" color="iron" weight="medium">
-                          Annuler
-                        </Text>
-                      </TouchableOpacity>
+                    {/* Badge statut en haut à droite */}
+                    <View
+                      style={[
+                        styles.statusBadgeCorner,
+                        booking.status === 'confirmed'
+                          ? styles.confirmedBadge
+                          : styles.pendingBadge,
+                      ]}
+                    >
+                      <Ionicons
+                        name={booking.status === 'confirmed' ? 'checkmark-circle' : 'time'}
+                        size={24}
+                        color={Colors.neutral.white}
+                      />
                     </View>
 
-                    {/* Date et heure à droite */}
-                    <View style={styles.bookingDateTime}>
-                      <View style={styles.dateBadge}>
-                        <Text variant="caption" color="white" weight="semiBold">
-                          {new Date(booking.booking_date).toLocaleDateString('fr-FR', {
-                            day: '2-digit',
-                            month: '2-digit',
-                          })}
+                    <View style={styles.bookingContent}>
+                      {/* Avatar à gauche */}
+                      <Avatar
+                        imageUrl={booking.pro_profile?.profile?.avatar_url}
+                        name={`${booking.pro_profile?.profile?.first_name || 'Pro'} ${booking.pro_profile?.profile?.last_name || ''}`}
+                        size="large"
+                      />
+
+                      {/* Informations au centre */}
+                      <View style={styles.bookingInfo}>
+                        {/* Nom du pro */}
+                        <Text variant="body" color="charcoal" weight="semiBold">
+                          {booking.pro_profile?.profile?.first_name || 'Pro'}{' '}
+                          {booking.pro_profile?.profile?.last_name || ''}
                         </Text>
-                        <Text variant="caption" color="white" style={styles.timeText}>
-                          {booking.start_time.slice(0, 5)}
+
+                        {/* Golf */}
+                        <Text variant="caption" color="charcoal">
+                          {booking.golf_parcours?.name || 'Golf Course'}
                         </Text>
+
+                        {/* Bouton Annuler discret */}
+                        <TouchableOpacity
+                          style={styles.cancelButton}
+                          onPress={() => handleCancelBooking(booking)}
+                        >
+                          <Text variant="caption" color="iron" weight="medium">
+                            Annuler
+                          </Text>
+                        </TouchableOpacity>
                       </View>
 
-                      {/* Nombre de joueurs */}
-                      <View style={styles.playersInfo}>
-                        <HugeiconsIcon
-                          icon={getPlayerIcon(booking.number_of_players)}
-                          size={32}
-                          color={Colors.neutral.iron}
-                        />
-                        <Text variant="caption" color="iron" style={styles.playersText}>
-                          {getPlayerText(booking.number_of_players)}
-                        </Text>
+                      {/* Date et heure à droite */}
+                      <View style={styles.bookingDateTime}>
+                        <View style={styles.dateBadge}>
+                          <Text variant="caption" color="white" weight="semiBold">
+                            {new Date(booking.booking_date).toLocaleDateString('fr-FR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                            })}
+                          </Text>
+                          <Text variant="caption" color="white" style={styles.timeText}>
+                            {booking.start_time.slice(0, 5)}
+                          </Text>
+                        </View>
+
+                        {/* Nombre de joueurs */}
+                        <View style={styles.playersInfo}>
+                          <HugeiconsIcon
+                            icon={getPlayerIcon(booking.number_of_players)}
+                            size={32}
+                            color={Colors.neutral.iron}
+                          />
+                          <Text variant="caption" color="iron" style={styles.playersText}>
+                            {getPlayerText(booking.number_of_players)}
+                          </Text>
+                        </View>
                       </View>
                     </View>
                   </View>
-                </View>
-              ))}
+                ))}
             </View>
           ) : (
             <View style={styles.emptyState}>
@@ -456,10 +465,12 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
             fabAnimatedStyle,
             {
               backgroundColor:
-                proRequestStatus === 'pending' ? Colors.semantic.warning.default :
-                proRequestStatus === 'rejected' ? Colors.neutral.iron :
-                Colors.semantic.success.default
-            }
+                proRequestStatus === 'pending'
+                  ? Colors.semantic.warning.default
+                  : proRequestStatus === 'rejected'
+                    ? Colors.neutral.iron
+                    : Colors.semantic.success.default,
+            },
           ]}
         >
           <TouchableOpacity
@@ -471,23 +482,26 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
             <View style={styles.fabContent}>
               <Ionicons
                 name={
-                  proRequestStatus === 'pending' ? 'time-outline' :
-                  proRequestStatus === 'rejected' ? 'refresh-outline' :
-                  'trophy-outline'
+                  proRequestStatus === 'pending'
+                    ? 'time-outline'
+                    : proRequestStatus === 'rejected'
+                      ? 'refresh-outline'
+                      : 'trophy-outline'
                 }
                 size={20}
                 color={Colors.neutral.white}
               />
               <Text variant="body" color="white" weight="semiBold">
-                {proRequestStatus === 'pending' ? 'En attente' :
-                 proRequestStatus === 'rejected' ? 'Réessayer' :
-                 'Devenir Pro'}
+                {proRequestStatus === 'pending'
+                  ? 'En attente'
+                  : proRequestStatus === 'rejected'
+                    ? 'Réessayer'
+                    : 'Devenir Pro'}
               </Text>
             </View>
           </TouchableOpacity>
         </Animated.View>
       )}
-
     </View>
   );
 }

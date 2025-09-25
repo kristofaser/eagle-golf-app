@@ -29,7 +29,7 @@ const PRO_DIVISIONS = [
   'Circuit Français',
 ] as const;
 
-type ProDivision = typeof PRO_DIVISIONS[number];
+type ProDivision = (typeof PRO_DIVISIONS)[number];
 
 interface ProProfileEditBottomSheetProps {
   profile: FullProfile;
@@ -38,7 +38,12 @@ interface ProProfileEditBottomSheetProps {
   onProfileUpdated: () => void;
 }
 
-export function ProProfileEditBottomSheet({ profile, visible, onClose, onProfileUpdated }: ProProfileEditBottomSheetProps) {
+export function ProProfileEditBottomSheet({
+  profile,
+  visible,
+  onClose,
+  onProfileUpdated,
+}: ProProfileEditBottomSheetProps) {
   const { user, refreshSession, loadUserProfile } = useAuth();
   const {
     uploading: uploadingImage,
@@ -188,11 +193,7 @@ export function ProProfileEditBottomSheet({ profile, visible, onClose, onProfile
               />
               {/* Icône camera en overlay */}
               <View style={styles.cameraOverlay}>
-                <Ionicons
-                  name="camera"
-                  size={16}
-                  color={Colors.neutral.white}
-                />
+                <Ionicons name="camera" size={16} color={Colors.neutral.white} />
               </View>
             </TouchableOpacity>
             {hasSelectedImage && (
@@ -214,12 +215,7 @@ export function ProProfileEditBottomSheet({ profile, visible, onClose, onProfile
                 />
               </View>
               <View style={styles.halfInput}>
-                <Input
-                  label="Nom"
-                  value={lastName}
-                  onChangeText={setLastName}
-                  placeholder="Doe"
-                />
+                <Input label="Nom" value={lastName} onChangeText={setLastName} placeholder="Doe" />
               </View>
             </View>
 
@@ -233,10 +229,7 @@ export function ProProfileEditBottomSheet({ profile, visible, onClose, onProfile
                   style={styles.selectButton}
                   onPress={() => setShowDivisionPicker(true)}
                 >
-                  <Text
-                    variant="body"
-                    color={division ? 'charcoal' : 'slate'}
-                  >
+                  <Text variant="body" color={division ? 'charcoal' : 'slate'}>
                     {division || 'Sélectionner une division'}
                   </Text>
                   <Ionicons name="chevron-down" size={20} color={Colors.neutral.slate} />

@@ -88,7 +88,7 @@ export function useNotificationRealtime(
     incrementUnreadCount,
     markNotificationAsRead,
     decrementUnreadCount,
-    removeNotification
+    removeNotification,
   } = useUIStore();
   const channelRef = useRef<any>(null);
   const currentAppState = useRef<AppStateStatus>(AppState.currentState);

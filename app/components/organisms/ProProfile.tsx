@@ -15,11 +15,19 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withSequence,
-  withDelay
+  withDelay,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
-import { GolfCartIcon, Location05Icon, EuroIcon, CalendarIcon, UserIcon, Settings02Icon, TrophyIcon } from '@hugeicons/core-free-icons';
+import {
+  GolfCartIcon,
+  Location05Icon,
+  EuroIcon,
+  CalendarIcon,
+  UserIcon,
+  Settings02Icon,
+  TrophyIcon,
+} from '@hugeicons/core-free-icons';
 import { Colors, Spacing, Typography, BorderRadius, Elevation } from '@/constants/theme';
 import { Text, LoadingScreen, Avatar } from '@/components/atoms';
 import { FullProfile } from '@/services/profile.service';
@@ -30,13 +38,11 @@ import { ProProfileEditBottomSheet } from './ProProfileEditBottomSheet';
 const DEFAULT_AVATAR =
   'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=400&h=400&fit=crop&crop=center';
 
-
 interface ProProfileProps {
   profile: FullProfile;
   onRefresh: () => Promise<void>;
   openSection?: string;
 }
-
 
 export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps) {
   const router = useRouter();
@@ -58,32 +64,20 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
 
   // Styles d'animation FAB
   const fabAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: fabScale.value },
-      { translateY: fabTranslateY.value }
-    ],
+    transform: [{ scale: fabScale.value }, { translateY: fabTranslateY.value }],
   }));
 
   // Styles d'animation menu items
   const menuItem1AnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: menuItem1Scale.value },
-      { translateY: menuItem1TranslateY.value }
-    ],
+    transform: [{ scale: menuItem1Scale.value }, { translateY: menuItem1TranslateY.value }],
   }));
 
   const menuItem2AnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: menuItem2Scale.value },
-      { translateY: menuItem2TranslateY.value }
-    ],
+    transform: [{ scale: menuItem2Scale.value }, { translateY: menuItem2TranslateY.value }],
   }));
 
   const menuItem3AnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: menuItem3Scale.value },
-      { translateY: menuItem3TranslateY.value }
-    ],
+    transform: [{ scale: menuItem3Scale.value }, { translateY: menuItem3TranslateY.value }],
   }));
   const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([]);
   const [pastBookings, setPastBookings] = useState<Booking[]>([]);
@@ -143,7 +137,6 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
     loadBookings();
   }, [profile.id]);
 
-
   const totalGamesPlayed = pastBookings.length;
   const proProfile = profile?.pro_profiles || null;
 
@@ -191,65 +184,29 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
 
       // Animation d'ouverture avec staggered effect plus réactif
       // Item 1 (le plus proche) - immédiat
-      menuItem1Scale.value = withDelay(
-        0,
-        withSpring(1, { tension: 250, friction: 8 })
-      );
-      menuItem1TranslateY.value = withDelay(
-        0,
-        withSpring(0, { tension: 180, friction: 8 })
-      );
+      menuItem1Scale.value = withDelay(0, withSpring(1, { tension: 250, friction: 8 }));
+      menuItem1TranslateY.value = withDelay(0, withSpring(0, { tension: 180, friction: 8 }));
 
       // Item 2 (milieu) - délai réduit
-      menuItem2Scale.value = withDelay(
-        50,
-        withSpring(1, { tension: 250, friction: 8 })
-      );
-      menuItem2TranslateY.value = withDelay(
-        50,
-        withSpring(0, { tension: 180, friction: 8 })
-      );
+      menuItem2Scale.value = withDelay(50, withSpring(1, { tension: 250, friction: 8 }));
+      menuItem2TranslateY.value = withDelay(50, withSpring(0, { tension: 180, friction: 8 }));
 
       // Item 3 (le plus loin) - délai réduit
-      menuItem3Scale.value = withDelay(
-        100,
-        withSpring(1, { tension: 250, friction: 8 })
-      );
-      menuItem3TranslateY.value = withDelay(
-        100,
-        withSpring(0, { tension: 180, friction: 8 })
-      );
+      menuItem3Scale.value = withDelay(100, withSpring(1, { tension: 250, friction: 8 }));
+      menuItem3TranslateY.value = withDelay(100, withSpring(0, { tension: 180, friction: 8 }));
     } else if (menuItemsVisible) {
       // Animation de fermeture avec cascade inversée
       // Item 3 (le plus loin) se ferme en premier
-      menuItem3Scale.value = withDelay(
-        0,
-        withSpring(0, { tension: 250, friction: 8 })
-      );
-      menuItem3TranslateY.value = withDelay(
-        0,
-        withSpring(50, { tension: 180, friction: 8 })
-      );
+      menuItem3Scale.value = withDelay(0, withSpring(0, { tension: 250, friction: 8 }));
+      menuItem3TranslateY.value = withDelay(0, withSpring(50, { tension: 180, friction: 8 }));
 
       // Item 2 (milieu) suit
-      menuItem2Scale.value = withDelay(
-        50,
-        withSpring(0, { tension: 250, friction: 8 })
-      );
-      menuItem2TranslateY.value = withDelay(
-        50,
-        withSpring(50, { tension: 180, friction: 8 })
-      );
+      menuItem2Scale.value = withDelay(50, withSpring(0, { tension: 250, friction: 8 }));
+      menuItem2TranslateY.value = withDelay(50, withSpring(50, { tension: 180, friction: 8 }));
 
       // Item 1 (le plus proche) se ferme en dernier
-      menuItem1Scale.value = withDelay(
-        100,
-        withSpring(0, { tension: 250, friction: 8 })
-      );
-      menuItem1TranslateY.value = withDelay(
-        100,
-        withSpring(50, { tension: 180, friction: 8 })
-      );
+      menuItem1Scale.value = withDelay(100, withSpring(0, { tension: 250, friction: 8 }));
+      menuItem1TranslateY.value = withDelay(100, withSpring(50, { tension: 180, friction: 8 }));
 
       // Masquer les items après l'animation de fermeture (200ms total)
       setTimeout(() => {
@@ -313,7 +270,11 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
   return (
     <View style={styles.container}>
       {/* Profile Header */}
-      <TouchableOpacity style={styles.profileHeader} onPress={handleEditProfile} activeOpacity={0.9}>
+      <TouchableOpacity
+        style={styles.profileHeader}
+        onPress={handleEditProfile}
+        activeOpacity={0.9}
+      >
         <View style={styles.avatarContainer}>
           <Avatar
             imageUrl={profile.avatar_url}
@@ -340,7 +301,6 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
         </View>
       </TouchableOpacity>
 
-
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
@@ -348,116 +308,120 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
       >
         {/* Parties Content */}
         <Animated.View entering={FadeIn.duration(300)}>
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
-                <Text variant="body" weight="semiBold" color="charcoal">
-                  Mes Parties
-                </Text>
-                {upcomingBookings && upcomingBookings.length > 3 && (
-                  <TouchableOpacity>
-                    <Text variant="caption" color="accent">
-                      Voir tout ({upcomingBookings?.length || 0})
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Text variant="body" weight="semiBold" color="charcoal">
+                Mes Parties
+              </Text>
+              {upcomingBookings && upcomingBookings.length > 3 && (
+                <TouchableOpacity>
+                  <Text variant="caption" color="accent">
+                    Voir tout ({upcomingBookings?.length || 0})
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
-              {Array.isArray(upcomingBookings) && upcomingBookings.length > 0 ? (
-                <View style={styles.bookingsContainer}>
-                  {upcomingBookings && upcomingBookings.slice(0, 5).map((booking) => booking ? (
-                    <View
-                      key={booking.id}
-                      style={[
-                        styles.bookingCard,
-                        booking.status === 'confirmed' ? styles.confirmedCard : styles.pendingCard,
-                      ]}
-                    >
-                      {/* Badge statut en haut à droite */}
+            {Array.isArray(upcomingBookings) && upcomingBookings.length > 0 ? (
+              <View style={styles.bookingsContainer}>
+                {upcomingBookings &&
+                  upcomingBookings.slice(0, 5).map((booking) =>
+                    booking ? (
                       <View
+                        key={booking.id}
                         style={[
-                          styles.statusBadgeCorner,
+                          styles.bookingCard,
                           booking.status === 'confirmed'
-                            ? styles.confirmedBadge
-                            : styles.pendingBadge,
+                            ? styles.confirmedCard
+                            : styles.pendingCard,
                         ]}
                       >
-                        <Ionicons
-                          name={booking.status === 'confirmed' ? 'checkmark-circle' : 'time'}
-                          size={24}
-                          color={Colors.neutral.white}
-                        />
-                      </View>
-
-                      <View style={styles.bookingContent}>
-                        {/* Avatar à gauche */}
-                        <Avatar
-                          imageUrl={booking?.amateur_profile?.avatar_url}
-                          name={`${booking?.amateur_profile?.first_name || 'Amateur'} ${booking?.amateur_profile?.last_name || ''}`}
-                          size="large"
-                        />
-
-                        {/* Informations au centre */}
-                        <View style={styles.bookingInfo}>
-                          {/* Nom de l'amateur */}
-                          <Text variant="body" color="charcoal" weight="semiBold">
-                            {booking?.amateur_profile?.first_name || 'Amateur'}{' '}
-                            {booking?.amateur_profile?.last_name || ''}
-                          </Text>
-
-                          {/* Golf */}
-                          <Text variant="caption" color="charcoal">
-                            {booking?.golf_parcours?.name || 'Golf Course'}
-                          </Text>
-
-                          {/* Bouton Annuler discret */}
-                          <TouchableOpacity
-                            style={styles.cancelButton}
-                            onPress={() => handleCancelBooking(booking)}
-                          >
-                            <Text variant="caption" color="iron" weight="medium">
-                              Annuler
-                            </Text>
-                          </TouchableOpacity>
+                        {/* Badge statut en haut à droite */}
+                        <View
+                          style={[
+                            styles.statusBadgeCorner,
+                            booking.status === 'confirmed'
+                              ? styles.confirmedBadge
+                              : styles.pendingBadge,
+                          ]}
+                        >
+                          <Ionicons
+                            name={booking.status === 'confirmed' ? 'checkmark-circle' : 'time'}
+                            size={24}
+                            color={Colors.neutral.white}
+                          />
                         </View>
 
-                        {/* Date et heure à droite */}
-                        <View style={styles.bookingDateTime}>
-                          <View style={styles.dateBadge}>
-                            <Text variant="caption" color="white" weight="semiBold">
-                              {booking?.booking_date
-                                ? new Date(booking.booking_date).toLocaleDateString('fr-FR', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                  })
-                                : '--/--'
-                              }
+                        <View style={styles.bookingContent}>
+                          {/* Avatar à gauche */}
+                          <Avatar
+                            imageUrl={booking?.amateur_profile?.avatar_url}
+                            name={`${booking?.amateur_profile?.first_name || 'Amateur'} ${booking?.amateur_profile?.last_name || ''}`}
+                            size="large"
+                          />
+
+                          {/* Informations au centre */}
+                          <View style={styles.bookingInfo}>
+                            {/* Nom de l'amateur */}
+                            <Text variant="body" color="charcoal" weight="semiBold">
+                              {booking?.amateur_profile?.first_name || 'Amateur'}{' '}
+                              {booking?.amateur_profile?.last_name || ''}
                             </Text>
-                            <Text variant="caption" color="white" style={styles.timeText}>
-                              {booking?.start_time?.slice(0, 5) || '--:--'}
+
+                            {/* Golf */}
+                            <Text variant="caption" color="charcoal">
+                              {booking?.golf_parcours?.name || 'Golf Course'}
                             </Text>
+
+                            {/* Bouton Annuler discret */}
+                            <TouchableOpacity
+                              style={styles.cancelButton}
+                              onPress={() => handleCancelBooking(booking)}
+                            >
+                              <Text variant="caption" color="iron" weight="medium">
+                                Annuler
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+
+                          {/* Date et heure à droite */}
+                          <View style={styles.bookingDateTime}>
+                            <View style={styles.dateBadge}>
+                              <Text variant="caption" color="white" weight="semiBold">
+                                {booking?.booking_date
+                                  ? new Date(booking.booking_date).toLocaleDateString('fr-FR', {
+                                      day: '2-digit',
+                                      month: '2-digit',
+                                    })
+                                  : '--/--'}
+                              </Text>
+                              <Text variant="caption" color="white" style={styles.timeText}>
+                                {booking?.start_time?.slice(0, 5) || '--:--'}
+                              </Text>
+                            </View>
                           </View>
                         </View>
                       </View>
-                    </View>
-                  ) : null)}
-                </View>
-              ) : (
-                <View style={styles.emptyState}>
-                  <HugeiconsIcon
-                    icon={GolfCartIcon}
-                    size={48}
-                    color={Colors.neutral.mist}
-                    strokeWidth={1.5}
-                  />
-                  <Text variant="body" color="iron" style={styles.emptyTitle}>
-                    Aucune partie prévue
-                  </Text>
-                  <Text variant="caption" color="gray" style={styles.emptyText}>
-                    Vos prochaines parties avec des amateurs apparaîtront ici
-                  </Text>
-                </View>
-              )}
-            </View>
+                    ) : null
+                  )}
+              </View>
+            ) : (
+              <View style={styles.emptyState}>
+                <HugeiconsIcon
+                  icon={GolfCartIcon}
+                  size={48}
+                  color={Colors.neutral.mist}
+                  strokeWidth={1.5}
+                />
+                <Text variant="body" color="iron" style={styles.emptyTitle}>
+                  Aucune partie prévue
+                </Text>
+                <Text variant="caption" color="gray" style={styles.emptyText}>
+                  Vos prochaines parties avec des amateurs apparaîtront ici
+                </Text>
+              </View>
+            )}
+          </View>
         </Animated.View>
       </ScrollView>
 
@@ -477,9 +441,7 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
                 <View style={styles.fabMenuItemIcon}>
                   <HugeiconsIcon icon={GolfCartIcon} size={16} color={Colors.primary.navy} />
                 </View>
-                <Text style={styles.fabMenuItemText}>
-                  Mes expériences
-                </Text>
+                <Text style={styles.fabMenuItemText}>Mes expériences</Text>
               </TouchableOpacity>
             </Animated.View>
 
@@ -494,9 +456,7 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
                 <View style={styles.fabMenuItemIcon}>
                   <HugeiconsIcon icon={UserIcon} size={16} color={Colors.primary.navy} />
                 </View>
-                <Text style={styles.fabMenuItemText}>
-                  Mes skills
-                </Text>
+                <Text style={styles.fabMenuItemText}>Mes skills</Text>
               </TouchableOpacity>
             </Animated.View>
 
@@ -511,9 +471,7 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
                 <View style={styles.fabMenuItemIcon}>
                   <HugeiconsIcon icon={CalendarIcon} size={16} color={Colors.primary.navy} />
                 </View>
-                <Text style={styles.fabMenuItemText}>
-                  Mes dispos
-                </Text>
+                <Text style={styles.fabMenuItemText}>Mes dispos</Text>
               </TouchableOpacity>
             </Animated.View>
 
@@ -528,9 +486,7 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
                 <View style={styles.fabMenuItemIcon}>
                   <HugeiconsIcon icon={EuroIcon} size={16} color={Colors.primary.navy} />
                 </View>
-                <Text style={styles.fabMenuItemText}>
-                  Mes tarifs
-                </Text>
+                <Text style={styles.fabMenuItemText}>Mes tarifs</Text>
               </TouchableOpacity>
             </Animated.View>
           </>

@@ -175,11 +175,11 @@ export default function BecomeProScreen() {
       // Animation de fermeture quand on décoche
       fabScale.value = withSpring(0, {
         tension: 100,
-        friction: 8
+        friction: 8,
       });
       fabTranslateY.value = withSpring(50, {
         tension: 80,
-        friction: 10
+        friction: 10,
       });
 
       previousTermsAccepted.current = formData.termsAccepted;
@@ -848,11 +848,14 @@ export default function BecomeProScreen() {
         <View style={styles.compactSummaryDivider} />
 
         <View style={styles.compactSummaryRow}>
-          <Ionicons name="document-text-outline" size={16} color={Colors.semantic.success.default} />
+          <Ionicons
+            name="document-text-outline"
+            size={16}
+            color={Colors.semantic.success.default}
+          />
           <Text style={styles.compactSummaryLabel}>Pièce d'identité</Text>
           <Text style={styles.compactSummarySuccess}>Téléchargée ✓</Text>
         </View>
-
       </View>
 
       {/* Bloc des conditions amélioré */}
@@ -869,8 +872,7 @@ export default function BecomeProScreen() {
           </View>
           <View style={styles.termsTextContainer}>
             <Text style={styles.termsSubText}>
-              J'accepte les{' '}
-              <Text style={styles.termsLink}>conditions générales</Text> et la{' '}
+              J'accepte les <Text style={styles.termsLink}>conditions générales</Text> et la{' '}
               <Text style={styles.termsLink}>politique de confidentialité</Text> d'Eagle.
             </Text>
           </View>
@@ -881,7 +883,8 @@ export default function BecomeProScreen() {
       <View style={styles.infoMessage}>
         <Ionicons name="time-outline" size={20} color={Colors.primary.accent} />
         <Text style={styles.infoMessageText}>
-          Votre demande sera vérifiée sous <Text style={styles.infoMessageHighlight}>24-48h</Text>. Vous recevrez une notification une fois validée.
+          Votre demande sera vérifiée sous <Text style={styles.infoMessageHighlight}>24-48h</Text>.
+          Vous recevrez une notification une fois validée.
         </Text>
       </View>
     </Animated.View>
