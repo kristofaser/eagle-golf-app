@@ -28,7 +28,8 @@ export function AppProviders({ children }: AppProvidersProps) {
 }
 
 // Export des hooks pour utilisation simplifiée
-export { useAuth } from './AuthContext.refactored';
+// Note: useAuth doit être importé depuis /hooks/useAuth, pas depuis AuthContext.refactored
+// export { useAuth } from './AuthContext.refactored'; // Commenté pour éviter confusion
 export { useSession, useSessionUser } from './SessionContext';
 export { useProfile } from './UserContext';
 export {

@@ -138,6 +138,15 @@ function RootLayoutContent() {
                   }}
                 />
                 <Stack.Screen
+                  name="become-pro"
+                  options={{
+                    headerShown: false,
+                    presentation: 'modal',
+                    animation: 'slide_from_bottom',
+                    animationDuration: DURATIONS.MEDIUM,
+                  }}
+                />
+                <Stack.Screen
                   name="video-skill/upload/[skill]"
                   options={{
                     headerShown: true,
@@ -151,6 +160,15 @@ function RootLayoutContent() {
                       color: Colors.neutral.charcoal,
                       fontWeight: '600',
                     },
+                  }}
+                />
+                <Stack.Screen
+                  name="notifications"
+                  options={{
+                    headerShown: false,
+                    presentation: 'modal',
+                    animation: 'slide_from_bottom',
+                    animationDuration: DURATIONS.MEDIUM,
                   }}
                 />
               </Stack>

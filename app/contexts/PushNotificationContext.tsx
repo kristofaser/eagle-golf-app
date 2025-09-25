@@ -12,7 +12,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useNotificationRealtime } from '@/hooks/useNotificationRealtime';
-import { useAuth } from '@/contexts/AuthContext.refactored';
+import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
 
 interface PushNotificationContextValue {

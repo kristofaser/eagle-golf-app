@@ -17,6 +17,10 @@ interface UserContextValue {
   loadUserProfile: (userId: string) => Promise<AuthUser | null>;
   updateProfile: (updates: Partial<Profile>) => Promise<void>;
   deleteAccount: () => Promise<void>;
+  proRequestStatus: 'none' | 'pending' | 'approved' | 'rejected' | 'pro';
+  proRequest: any | null;
+  loadingProRequest: boolean;
+  refreshProRequestStatus: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextValue | undefined>(undefined);
@@ -32,6 +36,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const userOperation = useAsyncOperation<AuthUser | null>();
   const updateOperation = useAsyncOperation<Profile | null>();
   const deleteOperation = useAsyncOperation<boolean>();
+  const proRequestOperation = useAsyncOperation<any>();
 
   // Fonction interne pour charger le profil (stable pour éviter la boucle)
   const loadUserProfileInternal = useCallback(
@@ -255,12 +260,158 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user?.id, setUser, deleteOperation]);
 
+  // Fonction pour charger le statut de demande pro
+  const refreshProRequestStatus = useCallback(async () => {
+    logger.dev('🔄 refreshProRequestStatus called');
+
+    await proRequestOperation.execute(async () => {
+      if (!user?.id) {
+        logger.dev('❌ No user ID, returning none status');
+        return { status: 'none', request: null };
+      }
+
+      try {
+        // Vérifier si l'utilisateur est déjà pro
+        if (user?.profile?.user_type === 'pro') {
+          logger.dev('✅ User is already pro');
+          return { status: 'pro', request: null };
+        }
+
+        // Récupérer la dernière demande pro
+        logger.dev('📡 Fetching pro validation request for user:', user.id);
+        const { data: request, error } = await supabase
+          .from('pro_validation_requests')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error && error.code !== 'PGRST116') {
+          logger.error('❌ Erreur chargement demande pro:', error);
+          throw error;
+        }
+
+        if (!request) {
+          logger.dev('📭 No pro request found');
+          return { status: 'none', request: null };
+        }
+
+        logger.dev('📬 Pro request found:', { status: request.status, id: request.id });
+
+        // Si la demande est approuvée, recharger le profil complet pour mettre à jour user_type
+        if (request.status === 'approved') {
+          logger.dev('🎉 Demande pro approuvée, rechargement du profil complet');
+          // Recharger le profil pour obtenir le nouveau user_type
+          await loadUserProfile(user.id);
+          // Après rechargement, le user_type devrait être 'pro'
+          return { status: 'pro', request };
+        }
+
+        logger.dev('📋 Returning pro request status:', request.status || 'pending');
+        return { status: request.status || 'pending', request };
+      } catch (error) {
+        logger.error('❌ Erreur refreshProRequestStatus:', error);
+        return { status: 'none', request: null };
+      }
+    });
+  }, [user?.id, user?.profile?.user_type, proRequestOperation, loadUserProfile]);
+
+  // Charger le statut de demande pro au chargement et quand l'utilisateur change
+  useEffect(() => {
+    if (user?.id) {
+      refreshProRequestStatus();
+    }
+  }, [user?.id]); // Retirer refreshProRequestStatus des dépendances pour éviter la boucle
+
+  // Écouter les changements en temps réel sur pro_requests
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel('pro_validation_requests_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'pro_validation_requests',
+          filter: `user_id=eq.${user.id}`,
+        },
+        async (payload) => {
+          logger.dev('🔄 Pro request changé via realtime:', payload);
+          logger.dev('Event type:', payload.eventType);
+          logger.dev('New data:', payload.new);
+          logger.dev('Old data:', payload.old);
+
+          // Rafraîchir le statut quand la demande change
+          await refreshProRequestStatus();
+        }
+      )
+      .subscribe((status) => {
+        logger.dev('🔌 Subscription status pro_validation_requests:', status);
+      });
+
+    return () => {
+      logger.dev('🔌 Unsubscribing from pro_validation_requests channel');
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]); // Retirer refreshProRequestStatus des dépendances
+
+  // Écouter les changements sur le profil utilisateur (notamment user_type)
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel('profile_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`,
+        },
+        async (payload) => {
+          logger.dev('🔄 Profil changé via realtime:', payload);
+          logger.dev('Event type:', payload.eventType);
+          logger.dev('New profile data:', payload.new);
+          logger.dev('Old profile data:', payload.old);
+
+          // Recharger le profil complet quand il change
+          if (payload.new && payload.new.user_type !== user?.profile?.user_type) {
+            logger.dev('✅ Changement de user_type détecté:', {
+              old: user?.profile?.user_type,
+              new: payload.new.user_type
+            });
+            await loadUserProfile(user.id);
+            // Rafraîchir aussi le statut de demande pro
+            await refreshProRequestStatus();
+          } else {
+            logger.dev('ℹ️ Profil changé mais user_type inchangé');
+          }
+        }
+      )
+      .subscribe((status) => {
+        logger.dev('🔌 Subscription status profiles:', status);
+      });
+
+    return () => {
+      logger.dev('🔌 Unsubscribing from profiles channel');
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]); // Retirer les callbacks des dépendances
+
   const value: UserContextValue = {
     loading: userOperation.loading || updateOperation.loading || deleteOperation.loading,
     error: userOperation.error || updateOperation.error || deleteOperation.error,
     loadUserProfile,
     updateProfile,
     deleteAccount,
+    proRequestStatus: proRequestOperation.data?.status || 'none',
+    proRequest: proRequestOperation.data?.request || null,
+    loadingProRequest: proRequestOperation.loading,
+    refreshProRequestStatus,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

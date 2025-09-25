@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,6 +9,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,6 +18,8 @@ import Animated, {
   FadeInUp,
   useAnimatedStyle,
   withSpring,
+  withSequence,
+  withDelay,
   interpolate,
   useSharedValue,
 } from 'react-native-reanimated';
@@ -78,6 +81,7 @@ import { Colors, Spacing, Typography, BorderRadius, Elevation } from '@/constant
 import { Text } from '@/components/atoms';
 import { useUnifiedImagePicker, ImageResult } from '@/hooks/useImageUpload';
 import { documentUploadService, DocumentType } from '@/services/document-upload.service';
+import { supabase } from '@/utils/supabase/client';
 
 const STEPS = [
   { id: 1, label: 'Infos', icon: 'business' },
@@ -89,7 +93,7 @@ const STEPS = [
 export default function BecomeProScreen() {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
-  const { profile, loading, isAmateur, isPro } = useUser();
+  const { profile, loading, isAmateur, isPro, refreshProRequestStatus } = useUser();
 
   // État du stepper
   const [currentStep, setCurrentStep] = useState(1);
@@ -97,9 +101,20 @@ export default function BecomeProScreen() {
   const [isValidatingSiret, setIsValidatingSiret] = useState(false);
   const [siretValidationResult, setSiretValidationResult] = useState<any>(null);
   const [isUploadingDocument, setIsUploadingDocument] = useState(false);
+  const [canGoNext, setCanGoNext] = useState(false);
 
-  // Animation pour la progression
-  const progressAnimation = useSharedValue(0);
+  // Animations FAB
+  const fabScale = useSharedValue(0);
+  const fabTranslateY = useSharedValue(50);
+  const previousStep = useRef(0); // Initialisé à 0 pour déclencher l'animation au premier rendu
+  const previousTermsAccepted = useRef(false);
+
+  // Styles d'animation FAB
+  const fabAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: fabScale.value }, { translateY: fabTranslateY.value }],
+    };
+  });
 
   // Données du formulaire
   const [formData, setFormData] = useState({
@@ -145,21 +160,91 @@ export default function BecomeProScreen() {
     minWidth: 800, // Résolution minimale pour lisibilité
     minHeight: 600,
     showPermissionAlerts: true,
+    allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image', undefined], // Support étendu pour simulateur iOS
   });
 
-  React.useEffect(() => {
-    progressAnimation.value = withSpring((currentStep - 1) / (STEPS.length - 1), {
-      damping: 15,
-      stiffness: 100,
-    });
-  }, [currentStep]);
+  // Animation FAB au changement d'étape et checkbox
+  useEffect(() => {
+    // Détecter si on décoche la checkbox à l'étape 4
+    const isUncheckingTerms =
+      currentStep === 4 &&
+      previousTermsAccepted.current === true &&
+      formData.termsAccepted === false;
 
-  const animatedProgressStyle = useAnimatedStyle(() => {
-    const width = interpolate(progressAnimation.value, [0, 1], [0, 100], 'clamp');
-    return {
-      width: `${width}%`,
+    if (isUncheckingTerms) {
+      // Animation de fermeture quand on décoche
+      fabScale.value = withSpring(0, {
+        tension: 100,
+        friction: 8
+      });
+      fabTranslateY.value = withSpring(50, {
+        tension: 80,
+        friction: 10
+      });
+
+      previousTermsAccepted.current = formData.termsAccepted;
+      return;
+    }
+
+    // Déclencher l'animation d'ouverture si :
+    // 1. On change d'étape
+    // 2. On est à l'étape 4 et termsAccepted devient true
+    const shouldAnimate =
+      previousStep.current !== currentStep ||
+      (currentStep === 4 && formData.termsAccepted && !previousTermsAccepted.current);
+
+    if (shouldAnimate) {
+      // Reset animations
+      fabScale.value = 0;
+      fabTranslateY.value = 50;
+
+      // Animation d'entrée avec délai
+      const animationDelay = previousStep.current === currentStep ? 100 : 200;
+
+      if (currentStep === 4 && formData.termsAccepted) {
+        // Animation Victory pour l'étape finale et le bouton soumettre
+        fabScale.value = withDelay(
+          animationDelay,
+          withSequence(
+            withSpring(1.2, { duration: 300 }),
+            withSpring(0.95, { duration: 200 }),
+            withSpring(1, { duration: 300 })
+          )
+        );
+      } else if (currentStep < 4) {
+        // Animation Pop-in normale pour les autres étapes
+        fabScale.value = withDelay(
+          animationDelay,
+          withSpring(1, {
+            tension: 100,
+            friction: 8,
+          })
+        );
+      }
+
+      fabTranslateY.value = withDelay(
+        animationDelay,
+        withSpring(0, {
+          tension: 80,
+          friction: 10,
+        })
+      );
+
+      previousStep.current = currentStep;
+    }
+
+    // Mettre à jour la référence
+    previousTermsAccepted.current = formData.termsAccepted;
+  }, [currentStep, formData.termsAccepted]);
+
+  // Validation pour activer le bouton continuer
+  useEffect(() => {
+    const checkCanGoNext = async () => {
+      const isValid = await validateCurrentStep();
+      setCanGoNext(isValid);
     };
-  });
+    checkCanGoNext();
+  }, [currentStep, formData, siretValidationResult]);
 
   // Validation SIRET via API INSEE
   const validateSIRET = async (siret: string): Promise<boolean> => {
@@ -220,7 +305,7 @@ export default function BecomeProScreen() {
       console.log(`📷 Sélection document ${type}`);
 
       // Sélectionner l'image
-      const result = await imagePicker.showImagePicker();
+      const result = await imagePicker.selectImage();
 
       if (!result) {
         // Utilisateur a annulé
@@ -369,9 +454,7 @@ export default function BecomeProScreen() {
         break;
 
       case 4: // Validation
-        if (!formData.termsAccepted) {
-          newErrors.terms = 'Vous devez accepter les conditions';
-        }
+        // La validation des conditions est gérée visuellement
         break;
     }
 
@@ -451,13 +534,16 @@ export default function BecomeProScreen() {
         return;
       }
 
+      // Rafraîchir le statut pro avant de fermer
+      await refreshProRequestStatus();
+
       Alert.alert(
         'Demande Soumise avec Succès !',
         'Votre demande pour devenir professionnel a été envoyée à notre équipe de validation.\n\n⏱️ Délai de traitement : 24-48h\n📧 Vous recevrez une notification une fois validée.',
         [
           {
             text: 'Compris',
-            onPress: () => router.push('/profile/pro-status'),
+            onPress: () => router.back(),
           },
         ]
       );
@@ -468,53 +554,6 @@ export default function BecomeProScreen() {
       setIsLoading(false);
     }
   };
-
-  // Rendu du stepper
-  const renderStepper = () => (
-    <View style={styles.stepper}>
-      <View style={styles.stepperLine}>
-        <View style={styles.stepperProgress}>
-          <Animated.View style={[styles.stepperProgressFill, animatedProgressStyle]} />
-        </View>
-      </View>
-
-      <View style={styles.steps}>
-        {STEPS.map((step, index) => {
-          const isActive = step.id === currentStep;
-          const isCompleted = step.id < currentStep;
-
-          return (
-            <View key={step.id} style={styles.step}>
-              <View
-                style={[
-                  styles.stepCircle,
-                  isActive && styles.activeStepCircle,
-                  isCompleted && styles.completedStepCircle,
-                ]}
-              >
-                {isCompleted ? (
-                  <Ionicons name="checkmark" size={20} color={Colors.neutral.white} />
-                ) : (
-                  <Text style={[styles.stepNumber, isActive && styles.activeStepNumber]}>
-                    {step.id}
-                  </Text>
-                )}
-              </View>
-              <Text
-                style={[
-                  styles.stepLabel,
-                  isActive && styles.activeStepLabel,
-                  isCompleted && styles.completedStepLabel,
-                ]}
-              >
-                {step.label}
-              </Text>
-            </View>
-          );
-        })}
-      </View>
-    </View>
-  );
 
   // Rendu de l'étape 1 - SIRET
   const renderStep1 = () => (
@@ -782,43 +821,69 @@ export default function BecomeProScreen() {
   // Rendu de l'étape 4 - Validation
   const renderStep4 = () => (
     <Animated.View entering={FadeInUp} style={styles.stepContent}>
-      <ScrollView style={styles.form} showsVerticalScrollIndicator={false}>
-        <View style={styles.summarySection}>
-          <Text style={styles.summaryTitle}>Informations professionnelles</Text>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>SIRET</Text>
-            <Text style={styles.summaryValue}>{formData.siret}</Text>
+      {/* Récapitulatif compacté */}
+      <View style={styles.compactSummaryCard}>
+        <Text style={styles.compactSummaryTitle}>Récapitulatif de votre demande</Text>
+
+        {/* Informations sur 2 colonnes */}
+        <View style={styles.compactSummaryGrid}>
+          <View style={styles.compactSummaryCol}>
+            <View style={styles.compactSummaryRow}>
+              <Ionicons name="business-outline" size={16} color={Colors.neutral.iron} />
+              <Text style={styles.compactSummaryLabel}>SIRET</Text>
+            </View>
+            <Text style={styles.compactSummaryValue}>{formData.siret}</Text>
           </View>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Statut</Text>
-            <Text style={styles.summaryValue}>{formData.companyStatus}</Text>
-          </View>
-          <View style={[styles.summaryItem, styles.summaryItemLast]}>
-            <Text style={styles.summaryLabel}>Téléphone</Text>
-            <Text style={styles.summaryValue}>{formData.phoneNumber}</Text>
+
+          <View style={styles.compactSummaryCol}>
+            <View style={styles.compactSummaryRow}>
+              <Ionicons name="call-outline" size={16} color={Colors.neutral.iron} />
+              <Text style={styles.compactSummaryLabel}>Téléphone</Text>
+            </View>
+            <Text style={styles.compactSummaryValue}>{formData.phoneNumber}</Text>
           </View>
         </View>
 
-        <View style={styles.summarySection}>
-          <Text style={styles.summaryTitle}>Documents</Text>
-          <View style={[styles.summaryItem, styles.summaryItemLast]}>
-            <Text style={styles.summaryLabel}>Pièce d'identité</Text>
-            <Text style={styles.summaryValue}>✅ Téléchargée</Text>
-          </View>
+        {/* Documents et tarifs sur une ligne */}
+        <View style={styles.compactSummaryDivider} />
+
+        <View style={styles.compactSummaryRow}>
+          <Ionicons name="document-text-outline" size={16} color={Colors.semantic.success.default} />
+          <Text style={styles.compactSummaryLabel}>Pièce d'identité</Text>
+          <Text style={styles.compactSummarySuccess}>Téléchargée ✓</Text>
         </View>
 
-        <View style={styles.summarySection}>
-          <Text style={styles.summaryTitle}>Vos tarifs</Text>
-          <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>9 trous (1 joueur)</Text>
-            <Text style={styles.summaryValue}>{formData.price9Holes1Player}€</Text>
+      </View>
+
+      {/* Bloc des conditions amélioré */}
+      <View style={styles.termsCard}>
+        <TouchableOpacity
+          style={styles.termsCheckboxRow}
+          onPress={() => setFormData({ ...formData, termsAccepted: !formData.termsAccepted })}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.checkbox, formData.termsAccepted && styles.checkboxChecked]}>
+            {formData.termsAccepted && (
+              <Ionicons name="checkmark" size={14} color={Colors.neutral.white} />
+            )}
           </View>
-          <View style={[styles.summaryItem, styles.summaryItemLast]}>
-            <Text style={styles.summaryLabel}>18 trous (1 joueur)</Text>
-            <Text style={styles.summaryValue}>{formData.price18Holes1Player}€</Text>
+          <View style={styles.termsTextContainer}>
+            <Text style={styles.termsSubText}>
+              J'accepte les{' '}
+              <Text style={styles.termsLink}>conditions générales</Text> et la{' '}
+              <Text style={styles.termsLink}>politique de confidentialité</Text> d'Eagle.
+            </Text>
           </View>
-        </View>
-      </ScrollView>
+        </TouchableOpacity>
+      </View>
+
+      {/* Message d'information */}
+      <View style={styles.infoMessage}>
+        <Ionicons name="time-outline" size={20} color={Colors.primary.accent} />
+        <Text style={styles.infoMessageText}>
+          Votre demande sera vérifiée sous <Text style={styles.infoMessageHighlight}>24-48h</Text>. Vous recevrez une notification une fois validée.
+        </Text>
+      </View>
     </Animated.View>
   );
 
@@ -869,77 +934,90 @@ export default function BecomeProScreen() {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: 'Devenir Professionnel',
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color={Colors.neutral.charcoal} />
-            </TouchableOpacity>
-          ),
-        }}
-      />
-
-      <SafeAreaView style={styles.container}>
-        <KeyboardAvoidingView
-          style={styles.keyboardView}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-          {renderStepper()}
-
-          <ScrollView
-            style={styles.content}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.contentContainer}
+      {/* Header fixe avec indicateur de progression */}
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
+          <TouchableOpacity
+            onPress={handlePrevious}
+            style={[styles.navButton, currentStep === 1 && styles.navButtonDisabled]}
+            disabled={currentStep === 1}
           >
-            {renderStepContent()}
-          </ScrollView>
+            <Ionicons
+              name="arrow-back"
+              size={24}
+              color={currentStep === 1 ? Colors.neutral.mist : Colors.neutral.charcoal}
+            />
+          </TouchableOpacity>
 
-          {/* Bloc conditions sticky - seulement pour étape 4 */}
-          {currentStep === 4 && (
-            <View style={styles.stickyTermsContainer}>
-              <TouchableOpacity
-                style={styles.termsContainer}
-                onPress={() => setFormData({ ...formData, termsAccepted: !formData.termsAccepted })}
-              >
-                <View style={[styles.checkbox, formData.termsAccepted && styles.checkboxChecked]}>
-                  {formData.termsAccepted && (
-                    <Ionicons name="checkmark" size={16} color={Colors.neutral.white} />
-                  )}
-                </View>
-                <Text style={styles.termsText}>
-                  J'accepte les conditions générales d'utilisation et la politique de
-                  confidentialité
-                </Text>
-              </TouchableOpacity>
-              {errors.terms && <Text style={styles.errorText}>{errors.terms}</Text>}
-            </View>
-          )}
-
-          <View style={styles.footer}>
-            <TouchableOpacity
-              style={[styles.footerButton, styles.previousButton]}
-              onPress={handlePrevious}
-              disabled={currentStep === 1}
-            >
-              <Ionicons name="arrow-back" size={20} color={Colors.neutral.iron} />
-              <Text style={styles.previousButtonText}>Retour</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.footerButton, styles.nextButton]}
-              onPress={handleNext}
-              disabled={isLoading}
-            >
-              <Text style={styles.nextButtonText}>
-                {currentStep === STEPS.length ? 'Soumettre' : 'Continuer'}
-              </Text>
-              <Ionicons name="arrow-forward" size={20} color={Colors.neutral.white} />
-            </TouchableOpacity>
+          <View style={styles.stepIndicator}>
+            {STEPS.map((step) => (
+              <View
+                key={step.id}
+                style={[
+                  styles.stepDot,
+                  step.id === currentStep && styles.stepDotActive,
+                  step.id < currentStep && styles.stepDotCompleted,
+                ]}
+              />
+            ))}
           </View>
+
+          <TouchableOpacity onPress={() => router.back()} style={styles.navButton}>
+            <Ionicons name="close" size={24} color={Colors.neutral.charcoal} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* ScrollView unique pour tout le contenu */}
+      <ScrollView
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          {renderStepContent()}
         </KeyboardAvoidingView>
-      </SafeAreaView>
+      </ScrollView>
+
+      {/* FAB Bouton Continuer pour les étapes 1-3 */}
+      {currentStep < 4 && (
+        <Animated.View style={[styles.fabExtended, fabAnimatedStyle]}>
+          <TouchableOpacity
+            style={styles.fabButton}
+            onPress={handleNext}
+            disabled={!canGoNext || isLoading}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="arrow-forward" size={20} color={Colors.neutral.white} />
+            <Text style={styles.fabExtendedText}>Continuer</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+
+      {/* FAB Bouton Soumettre pour l'étape finale */}
+      {currentStep === 4 && formData.termsAccepted && (
+        <Animated.View style={[styles.fab, fabAnimatedStyle]}>
+          <TouchableOpacity
+            style={styles.fabButton}
+            onPress={handleSubmit}
+            disabled={isLoading}
+            activeOpacity={0.8}
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color={Colors.neutral.white} />
+            ) : (
+              <>
+                <Ionicons name="checkmark" size={24} color={Colors.neutral.white} />
+                <Text style={styles.fabText}>Soumettre</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </Animated.View>
+      )}
     </>
   );
 }
@@ -949,78 +1027,52 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.neutral.background,
   },
-  keyboardView: {
-    flex: 1,
-  },
-  stepper: {
+  header: {
     backgroundColor: Colors.neutral.white,
-    paddingVertical: Spacing.xl,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.ui.inputBorder,
+    borderBottomColor: Colors.neutral.pearl,
   },
-  stepperLine: {
-    position: 'absolute',
-    top: 50,
-    left: 60,
-    right: 60,
-    height: 2,
-    backgroundColor: Colors.neutral.mist,
-  },
-  stepperProgress: {
-    height: 2,
-    backgroundColor: Colors.neutral.mist,
-  },
-  stepperProgressFill: {
-    height: 2,
-    backgroundColor: Colors.primary.accent,
-  },
-  steps: {
+  headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.xl,
-  },
-  step: {
     alignItems: 'center',
   },
-  stepCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.neutral.mist,
+  navButton: {
+    width: 32,
+    height: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.s,
   },
-  activeStepCircle: {
+  navButtonDisabled: {
+    opacity: 0.3,
+  },
+  stepIndicator: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  stepDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: Colors.neutral.mist,
+  },
+  stepDotActive: {
     backgroundColor: Colors.primary.accent,
+    width: 24,
   },
-  completedStepCircle: {
-    backgroundColor: Colors.semantic.success,
-  },
-  stepNumber: {
-    fontSize: Typography.fontSize.body,
-    color: Colors.neutral.iron,
-    fontWeight: Typography.fontWeight.bold,
-  },
-  activeStepNumber: {
-    color: Colors.neutral.white,
-  },
-  stepLabel: {
-    fontSize: Typography.fontSize.caption,
-    color: Colors.neutral.iron,
-  },
-  activeStepLabel: {
-    color: Colors.primary.accent,
-    fontWeight: Typography.fontWeight.medium,
-  },
-  completedStepLabel: {
-    color: Colors.semantic.success,
+  stepDotCompleted: {
+    backgroundColor: Colors.primary.navy,
   },
   content: {
     flex: 1,
+    backgroundColor: Colors.neutral.white,
   },
-  contentContainer: {
-    paddingBottom: Spacing.xl,
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    paddingBottom: 150, // Plus d'espace pour le FAB
   },
   stepContent: {
     padding: Spacing.l,
@@ -1188,75 +1240,128 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.s,
     width: 60,
   },
-  summarySection: {
+  // Styles pour le récapitulatif compact
+  compactSummaryCard: {
     backgroundColor: Colors.neutral.white,
     padding: Spacing.m,
     borderRadius: BorderRadius.medium,
     marginBottom: Spacing.m,
-    ...Elevation.small,
+    borderWidth: 1,
+    borderColor: Colors.neutral.pearl,
   },
-  summaryTitle: {
+  compactSummaryTitle: {
     fontSize: Typography.fontSize.body,
     fontWeight: Typography.fontWeight.bold,
     color: Colors.neutral.charcoal,
     marginBottom: Spacing.m,
+    textAlign: 'center',
   },
-  summaryItem: {
+  compactSummaryGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: Spacing.s,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.ui.inputBorder,
+    marginBottom: Spacing.s,
   },
-  summaryItemLast: {
-    borderBottomWidth: 0,
+  compactSummaryCol: {
+    flex: 1,
   },
-  summaryLabel: {
-    fontSize: Typography.fontSize.body,
+  compactSummaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  compactSummaryLabel: {
+    fontSize: Typography.fontSize.caption,
     color: Colors.neutral.iron,
+  },
+  compactSummaryValue: {
+    fontSize: Typography.fontSize.body,
+    color: Colors.neutral.charcoal,
+    fontWeight: Typography.fontWeight.medium,
+    marginTop: 2,
+  },
+  compactSummarySuccess: {
+    fontSize: Typography.fontSize.caption,
+    color: Colors.semantic.success.default,
+    fontWeight: Typography.fontWeight.medium,
+    marginLeft: 'auto',
+  },
+  compactSummaryDivider: {
+    height: 1,
+    backgroundColor: Colors.neutral.pearl,
+    marginVertical: Spacing.s,
+  },
+  // Styles pour le bloc des conditions amélioré
+  termsCard: {
+    backgroundColor: Colors.neutral.white,
+    borderWidth: 1,
+    borderColor: Colors.neutral.pearl,
+    borderRadius: BorderRadius.medium,
+    padding: Spacing.m,
+    marginBottom: Spacing.m,
+  },
+  termsCheckboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.m,
+  },
+  termsTextContainer: {
+    flex: 1,
+  },
+  termsMainText: {
+    fontSize: Typography.fontSize.body,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.neutral.charcoal,
+    marginBottom: Spacing.xs,
+  },
+  termsSubText: {
+    fontSize: Typography.fontSize.caption,
+    color: Colors.neutral.iron,
+    lineHeight: 18,
+  },
+  termsLink: {
+    color: Colors.primary.accent,
+    fontWeight: Typography.fontWeight.medium,
+    textDecorationLine: 'underline',
+  },
+  // Message d'info simple
+  infoMessage: {
+    flexDirection: 'row',
+    backgroundColor: Colors.neutral.white,
+    padding: Spacing.m,
+    borderRadius: BorderRadius.medium,
+    marginBottom: Spacing.xxxl,
+    alignItems: 'center',
+    gap: Spacing.s,
+    borderWidth: 1,
+    borderColor: Colors.neutral.pearl,
+  },
+  infoMessageText: {
+    flex: 1,
+    fontSize: Typography.fontSize.caption,
+    color: Colors.neutral.charcoal,
+    lineHeight: 20,
+  },
+  infoMessageHighlight: {
+    fontWeight: Typography.fontWeight.semiBold,
+    color: Colors.primary.accent,
   },
   summaryValue: {
     fontSize: Typography.fontSize.body,
     color: Colors.neutral.charcoal,
     fontWeight: Typography.fontWeight.medium,
   },
-  stickyTermsContainer: {
-    backgroundColor: Colors.neutral.white,
-    paddingHorizontal: Spacing.l,
-    paddingTop: Spacing.m,
-    paddingBottom: Spacing.s,
-    borderTopWidth: 1,
-    borderTopColor: Colors.ui.inputBorder,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  termsContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: Spacing.s,
-  },
   checkbox: {
-    width: 24,
-    height: 24,
+    width: 20,
+    height: 20,
     borderWidth: 2,
-    borderColor: Colors.ui.inputBorder,
-    borderRadius: BorderRadius.small,
+    borderColor: Colors.neutral.course,
+    borderRadius: 4,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: Spacing.m,
   },
   checkboxChecked: {
     backgroundColor: Colors.primary.accent,
     borderColor: Colors.primary.accent,
-  },
-  termsText: {
-    flex: 1,
-    fontSize: Typography.fontSize.body,
-    color: Colors.neutral.charcoal,
-    lineHeight: 20,
   },
   feeInfo: {
     backgroundColor: Colors.primary.accent + '10',
@@ -1282,39 +1387,56 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 18,
   },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.l,
-    paddingVertical: Spacing.m,
-    backgroundColor: Colors.neutral.white,
-    borderTopWidth: 1,
-    borderTopColor: Colors.ui.inputBorder,
-    ...Elevation.small,
+  // Styles FAB étendu (continuer)
+  fabExtended: {
+    position: 'absolute',
+    bottom: 80,
+    alignSelf: 'center',
+    backgroundColor: Colors.primary.accent,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 28,
+    shadowColor: Colors.neutral.charcoal,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 12,
+    zIndex: 1000,
+    minWidth: 120,
   },
-  footerButton: {
+  fabExtendedText: {
+    color: Colors.neutral.white,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  fabButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.m,
-    borderRadius: BorderRadius.medium,
-    gap: Spacing.s,
+    justifyContent: 'center',
+    gap: 8,
   },
-  previousButton: {
-    backgroundColor: Colors.neutral.ball,
+  // Styles FAB rond (soumettre)
+  fab: {
+    position: 'absolute',
+    bottom: 80,
+    alignSelf: 'center',
+    backgroundColor: Colors.semantic.success.default,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 28,
+    shadowColor: Colors.semantic.success.default,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 12,
+    zIndex: 1000,
+    minWidth: 100,
   },
-  previousButtonText: {
-    fontSize: Typography.fontSize.body,
-    color: Colors.neutral.iron,
-    fontWeight: Typography.fontWeight.medium,
-  },
-  nextButton: {
-    backgroundColor: Colors.primary.accent,
-  },
-  nextButtonText: {
-    fontSize: Typography.fontSize.body,
+  fabText: {
+    fontSize: 15,
+    fontWeight: '600',
     color: Colors.neutral.white,
-    fontWeight: Typography.fontWeight.bold,
   },
   detectedStatus: {
     fontSize: Typography.fontSize.caption,

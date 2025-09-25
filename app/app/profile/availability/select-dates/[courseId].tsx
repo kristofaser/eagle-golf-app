@@ -8,11 +8,19 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
 import { Calendar, DateData, LocaleConfig } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius } from '@/constants/theme';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  withSequence,
+  withDelay,
+} from 'react-native-reanimated';
 import { useAuth } from '@/hooks/useAuth';
 import { golfParcoursService, GolfParcours } from '@/services/golf-parcours.service';
 import { proAvailabilityService } from '@/services/pro-availability.service';
@@ -70,6 +78,20 @@ export default function SelectDatesScreen() {
   const [conflictDates, setConflictDates] = useState<string[]>([]);
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().split('T')[0]);
 
+  // Animations FAB
+  const fabScale = useSharedValue(0);
+  const fabTranslateY = useSharedValue(50);
+  const fabOpacity = useSharedValue(0);
+  const previousSelectedCount = useRef(selectedDates.length);
+
+  // Style d'animation FAB
+  const fabAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: fabScale.value }, { translateY: fabTranslateY.value }],
+      opacity: fabOpacity.value,
+    };
+  });
+
   // Déterminer le mode et pré-remplir les dates si en mode édition
   const isEditMode = params.mode === 'edit';
   const existingDates = params.existingDates ? JSON.parse(params.existingDates) : [];
@@ -83,6 +105,41 @@ export default function SelectDatesScreen() {
       setSelectedDates(existingDates);
     }
   }, [isEditMode]);
+
+  // Animation FAB au changement de sélection
+  useEffect(() => {
+    if (selectedDates.length !== previousSelectedCount.current || isEditMode) {
+      // Animation d'entrée avec délai
+      const animationDelay = 200;
+
+      if (selectedDates.length > 0 || isEditMode) {
+        fabScale.value = withDelay(
+          animationDelay,
+          withSpring(1, {
+            damping: 15,
+            stiffness: 150,
+          })
+        );
+        fabTranslateY.value = withDelay(
+          animationDelay,
+          withSpring(0, {
+            damping: 15,
+            stiffness: 100,
+          })
+        );
+        fabOpacity.value = withDelay(
+          animationDelay,
+          withTiming(1, { duration: 200 })
+        );
+      } else {
+        fabScale.value = withSpring(0);
+        fabTranslateY.value = withSpring(50);
+        fabOpacity.value = withTiming(0, { duration: 200 });
+      }
+
+      previousSelectedCount.current = selectedDates.length;
+    }
+  }, [selectedDates.length, isEditMode]);
 
   const loadGolfCourse = async () => {
     if (!params.courseId) return;
@@ -126,7 +183,7 @@ export default function SelectDatesScreen() {
     selectedDates.forEach((date) => {
       marked[date] = {
         selected: true,
-        selectedColor: Colors.primary.accent,
+        selectedColor: Colors.primary.navy,
         selectedTextColor: Colors.neutral.white,
       };
     });
@@ -154,11 +211,11 @@ export default function SelectDatesScreen() {
       marked[today] = {
         customStyles: {
           container: {
-            borderColor: Colors.primary.accent,
-            borderWidth: 1,
+            borderColor: Colors.primary.electric,
+            borderWidth: 2,
           },
           text: {
-            color: Colors.primary.accent,
+            color: Colors.primary.electric,
             fontWeight: 'bold',
           },
         },
@@ -436,54 +493,74 @@ export default function SelectDatesScreen() {
             )}
           </View>
 
-          {/* Instructions */}
-          <View style={styles.instructionsContainer}>
-            <Ionicons name="information-circle-outline" size={20} color={Colors.primary.accent} />
-            <Text style={styles.instructionsText}>
-              {isEditMode
-                ? 'Modifiez les dates où vous serez disponible sur ce parcours'
-                : 'Sélectionnez les dates où vous serez disponible sur ce parcours'}
-            </Text>
-          </View>
 
-          {/* Légende */}
-          <View style={styles.legendContainer}>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendColor, styles.legendSelected]} />
-              <Text style={styles.legendText}>Sélectionné</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendColor, styles.legendConflict]} />
-              <Text style={styles.legendText}>Occupé ailleurs</Text>
-            </View>
-          </View>
 
           {/* Calendrier React Native Calendars */}
-          <Calendar
-            key={currentMonth}
-            current={currentMonth}
-            markedDates={markedDates}
-            markingType="custom"
-            onDayPress={onDayPress}
-            onMonthChange={(month) => setCurrentMonth(month.dateString)}
-            firstDay={1}
-            minDate={new Date().toISOString().split('T')[0]}
-            theme={{
-              backgroundColor: Colors.neutral.white,
-              calendarBackground: Colors.neutral.white,
-              selectedDayBackgroundColor: Colors.primary.accent,
-              selectedDayTextColor: Colors.neutral.white,
-              todayTextColor: Colors.primary.accent,
-              dayTextColor: Colors.neutral.charcoal,
-              textDisabledColor: Colors.neutral.mist,
-              monthTextColor: Colors.neutral.charcoal,
-              arrowColor: Colors.primary.accent,
-              textMonthFontWeight: '600',
-              textDayFontSize: 14,
-              textMonthFontSize: 16,
-              textDayHeaderFontSize: 12,
-            }}
-          />
+          <View style={styles.calendarSection}>
+            <Calendar
+              key={currentMonth}
+              current={currentMonth}
+              markedDates={markedDates}
+              markingType="custom"
+              onDayPress={onDayPress}
+              onMonthChange={(month) => setCurrentMonth(month.dateString)}
+              firstDay={1}
+              minDate={new Date().toISOString().split('T')[0]}
+              hideArrows={false}
+              enableSwipeMonths={true}
+              theme={{
+                backgroundColor: Colors.neutral.white,
+                calendarBackground: Colors.neutral.white,
+                textSectionTitleColor: Colors.neutral.slate,
+                selectedDayBackgroundColor: Colors.primary.navy,
+                selectedDayTextColor: Colors.neutral.white,
+                todayTextColor: Colors.primary.electric,
+                dayTextColor: Colors.neutral.charcoal,
+                textDisabledColor: Colors.neutral.mist,
+                dotColor: Colors.primary.electric,
+                selectedDotColor: Colors.neutral.white,
+                arrowColor: Colors.primary.navy,
+                monthTextColor: Colors.neutral.charcoal,
+                textDayFontFamily: 'System',
+                textMonthFontFamily: 'System',
+                textDayHeaderFontFamily: 'System',
+                textDayFontWeight: '500',
+                textMonthFontWeight: '700',
+                textDayHeaderFontWeight: '600',
+                textDayFontSize: 16,
+                textMonthFontSize: 18,
+                textDayHeaderFontSize: 12,
+                'stylesheet.calendar.header': {
+                  week: {
+                    marginTop: 5,
+                    marginBottom: 10,
+                    flexDirection: 'row',
+                    justifyContent: 'space-around',
+                  },
+                  monthText: {
+                    fontSize: 18,
+                    fontWeight: '700',
+                    color: Colors.neutral.charcoal,
+                    margin: 10,
+                  },
+                },
+                'stylesheet.day.basic': {
+                  base: {
+                    width: 40,
+                    height: 40,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  },
+                  text: {
+                    marginTop: 0,
+                    fontSize: 16,
+                    fontWeight: '500',
+                    color: Colors.neutral.charcoal,
+                  },
+                },
+              }}
+            />
+          </View>
 
           {/* Navigation rapide par mois (mode édition uniquement) */}
           {isEditMode && monthsWithDates.length > 0 && (
@@ -504,39 +581,36 @@ export default function SelectDatesScreen() {
           )}
         </ScrollView>
 
-        {/* Bouton de sauvegarde */}
-        <View style={styles.saveButtonContainer}>
-          <TouchableOpacity
-            style={[
-              styles.saveButton,
-              isEditMode && selectedDates.length === 0 ? styles.deleteButton : null,
-              saving && styles.saveButtonDisabled,
-              !isEditMode && selectedDates.length === 0 && styles.saveButtonDisabled,
-            ]}
-            onPress={handleSave}
-            disabled={saving || (!isEditMode && selectedDates.length === 0)}
-          >
-            {saving ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <>
-                <Ionicons
-                  name={isEditMode && selectedDates.length === 0 ? 'trash-outline' : 'checkmark'}
-                  size={20}
-                  color="white"
-                />
-                <Text style={styles.saveButtonText}>
-                  {isEditMode && selectedDates.length === 0
-                    ? 'Supprimer les disponibilités'
-                    : isEditMode
-                      ? `Mettre à jour${selectedDates.length > 0 ? ` (${selectedDates.length})` : ''}`
-                      : `Confirmer${selectedDates.length > 0 ? ` (${selectedDates.length})` : ''}`}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
       </SafeAreaView>
+
+      {/* FAB Bouton Mettre à jour */}
+      <Animated.View style={[styles.fabExtended, fabAnimatedStyle]}>
+        <TouchableOpacity
+          style={styles.fabButton}
+          onPress={handleSave}
+          disabled={saving || (!isEditMode && selectedDates.length === 0)}
+          activeOpacity={0.8}
+        >
+          {saving ? (
+            <ActivityIndicator color={Colors.neutral.white} size="small" />
+          ) : (
+            <>
+              <Ionicons
+                name={isEditMode && selectedDates.length === 0 ? 'trash-outline' : 'checkmark'}
+                size={20}
+                color={Colors.neutral.white}
+              />
+              <Text style={styles.fabExtendedText}>
+                {isEditMode && selectedDates.length === 0
+                  ? 'Supprimer'
+                  : isEditMode
+                    ? 'Mettre à jour'
+                    : 'Confirmer'}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </Animated.View>
     </>
   );
 }
@@ -550,7 +624,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100, // Espace pour le bouton
+    paddingBottom: 120, // Espace pour le bouton FAB
   },
   loadingContainer: {
     flex: 1,
@@ -565,8 +639,14 @@ const styles = StyleSheet.create({
   courseInfoContainer: {
     backgroundColor: Colors.neutral.white,
     padding: Spacing.m,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.ui.inputBorder,
+    marginHorizontal: Spacing.m,
+    marginTop: Spacing.m,
+    borderRadius: BorderRadius.medium,
+    shadowColor: Colors.neutral.charcoal,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   courseName: {
     fontSize: Typography.fontSize.h3,
@@ -583,46 +663,6 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSize.body,
     color: Colors.ui.subtleGray,
   },
-  instructionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.ui.lightBackground,
-    padding: Spacing.m,
-    gap: Spacing.s,
-  },
-  instructionsText: {
-    flex: 1,
-    fontSize: 14,
-    color: Colors.neutral.charcoal,
-  },
-  legendContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: Colors.neutral.white,
-    padding: Spacing.m,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.ui.inputBorder,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  legendColor: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
-  legendSelected: {
-    backgroundColor: Colors.primary.accent,
-  },
-  legendConflict: {
-    backgroundColor: Colors.semantic.error,
-  },
-  legendText: {
-    fontSize: Typography.fontSize.caption,
-    color: Colors.neutral.charcoal,
-  },
   monthNavigationList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -631,7 +671,7 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.m,
   },
   monthNavigationBadge: {
-    backgroundColor: Colors.primary.accent,
+    backgroundColor: Colors.primary.navy,
     paddingHorizontal: Spacing.m,
     paddingVertical: Spacing.s,
     borderRadius: BorderRadius.medium,
@@ -646,41 +686,44 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSize.caption,
     fontWeight: Typography.fontWeight.semiBold,
   },
-  saveButtonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+  calendarSection: {
     backgroundColor: Colors.neutral.white,
-    paddingHorizontal: Spacing.m,
-    paddingTop: Spacing.m,
-    paddingBottom: Spacing.xl,
-    borderTopWidth: 1,
-    borderTopColor: Colors.ui.inputBorder,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
+    borderRadius: 16,
+    padding: 12,
+    marginVertical: Spacing.m,
+    marginHorizontal: Spacing.m,
+    shadowColor: Colors.neutral.charcoal,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  saveButton: {
-    backgroundColor: Colors.primary.accent,
+  // Styles FAB étendu (comme booking-modal)
+  fabExtended: {
+    position: 'absolute',
+    bottom: 30,
+    alignSelf: 'center',
+    backgroundColor: Colors.primary.navy,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 28,
+    shadowColor: Colors.neutral.charcoal,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 12,
+    zIndex: 1000,
+    minWidth: 140,
+  },
+  fabExtendedText: {
+    color: Colors.neutral.white,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  fabButton: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: Spacing.m,
-    borderRadius: BorderRadius.medium,
-    gap: Spacing.s,
-  },
-  deleteButton: {
-    backgroundColor: Colors.semantic.error,
-  },
-  saveButtonDisabled: {
-    opacity: 0.5,
-  },
-  saveButtonText: {
-    color: 'white',
-    fontSize: Typography.fontSize.body,
-    fontWeight: Typography.fontWeight.semiBold,
+    justifyContent: 'center',
+    gap: 8,
   },
 });

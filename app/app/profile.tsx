@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { useUser } from '@/hooks/useUser';
-import { LoadingScreen, ErrorScreen } from '@/components/atoms';
+import { useNotificationCount } from '@/hooks/useNotificationCount';
+import { LoadingScreen, ErrorScreen, Text } from '@/components/atoms';
 import { ProProfile } from '@/components/organisms/ProProfile';
 import { AmateurProfile } from '@/components/organisms/AmateurProfile';
 import { FullProfile } from '@/services/profile.service';
@@ -17,6 +17,7 @@ export default function ProfileScreen() {
   const params = useLocalSearchParams();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { isPro, profile, amateurProfile, proProfile, loading: userLoading } = useUser();
+  const { unreadCount } = useNotificationCount();
 
   // Récupérer le paramètre pour ouvrir une section spécifique
   const openSection = params.openSection as string;
@@ -114,12 +115,33 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           ),
           headerRight: () => (
-            <TouchableOpacity
-              onPress={() => router.push('/profile/settings')}
-              style={styles.headerButton}
-            >
-              <Ionicons name="settings-outline" size={24} color={Colors.neutral.charcoal} />
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <TouchableOpacity
+                onPress={() => router.push('/notifications')}
+                style={styles.headerButton}
+              >
+                <View>
+                  <Ionicons name="notifications-outline" size={24} color={Colors.neutral.charcoal} />
+                  {unreadCount > 0 && (
+                    <View style={styles.badge}>
+                      <Text
+                        variant="caption"
+                        color="white"
+                        style={styles.badgeText}
+                      >
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => router.push('/profile/settings')}
+                style={styles.headerButton}
+              >
+                <Ionicons name="settings-outline" size={24} color={Colors.neutral.charcoal} />
+              </TouchableOpacity>
+            </View>
           ),
         }}
       />
@@ -147,5 +169,23 @@ const styles = StyleSheet.create({
   headerButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
+  },
+  badge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: Colors.semantic.error.default,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: Colors.neutral.white,
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });

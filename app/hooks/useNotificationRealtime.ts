@@ -83,7 +83,13 @@ export function useNotificationRealtime(
     isPushAvailable = false,
   } = options;
 
-  const { addNotification, incrementUnreadCount } = useUIStore();
+  const {
+    addNotification,
+    incrementUnreadCount,
+    markNotificationAsRead,
+    decrementUnreadCount,
+    removeNotification
+  } = useUIStore();
   const channelRef = useRef<any>(null);
   const currentAppState = useRef<AppStateStatus>(AppState.currentState);
 
@@ -190,13 +196,38 @@ export function useNotificationRealtime(
 
       // Si la notification vient d'être marquée comme lue
       if (!oldNotification.read_at && notification.read_at) {
-        // Logique pour décrémenter le compteur sera gérée par useNotificationBadge
         if (debug) {
-          logger.dev('📖 Notification marquée comme lue:', notification.id);
+          logger.dev('📖 Notification marquée comme lue via realtime:', notification.id);
         }
+
+        // Mettre à jour le store UI pour synchroniser l'affichage
+        markNotificationAsRead(notification.id);
+        decrementUnreadCount();
       }
     },
-    [userId, onNotificationUpdated, debug]
+    [userId, onNotificationUpdated, debug, markNotificationAsRead, decrementUnreadCount]
+  );
+
+  const handleNotificationDelete = useCallback(
+    async (payload: any) => {
+      const notification: NotificationItem = payload.old;
+
+      if (debug) {
+        logger.dev('🗑️ Realtime Notification - DELETE:', {
+          userId,
+          deleted: notification,
+        });
+      }
+
+      // Supprimer du store UI
+      removeNotification(notification.id);
+
+      // Décrémenter le compteur si la notification n'était pas lue
+      if (!notification.read_at) {
+        decrementUnreadCount();
+      }
+    },
+    [userId, debug, removeNotification, decrementUnreadCount]
   );
 
   useEffect(() => {
@@ -236,6 +267,16 @@ export function useNotificationRealtime(
         },
         handleNotificationUpdate
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE', // Notifications supprimées
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        handleNotificationDelete
+      )
       .subscribe((status) => {
         if (debug) {
           logger.dev('🔗 Realtime Notifications: Statut subscription:', status);
@@ -255,7 +296,7 @@ export function useNotificationRealtime(
         channelRef.current = null;
       }
     };
-  }, [userId, handleNewNotification, handleNotificationUpdate, debug]);
+  }, [userId, handleNewNotification, handleNotificationUpdate, handleNotificationDelete, debug]);
 
   // Fonction utilitaire pour forcer une reconnexion
   const reconnect = useCallback(() => {

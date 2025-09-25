@@ -204,10 +204,36 @@ export default function ExperiencesScreen() {
         if (error) throw error;
 
         if (profile?.pro_profiles) {
-          // Parser les expériences depuis JSON
-          const existingExperiences = profile.pro_profiles.experience
-            ? JSON.parse(profile.pro_profiles.experience)
-            : [];
+          // Gérer les différents formats possibles de données
+          let existingExperiences = [];
+
+          if (profile.pro_profiles.experience) {
+            const exp = profile.pro_profiles.experience;
+
+            // Si c'est déjà un tableau, l'utiliser directement
+            if (Array.isArray(exp)) {
+              existingExperiences = exp;
+            }
+            // Si c'est une chaîne, essayer de la parser
+            else if (typeof exp === 'string') {
+              try {
+                existingExperiences = JSON.parse(exp);
+                // Vérifier que le résultat est bien un tableau
+                if (!Array.isArray(existingExperiences)) {
+                  existingExperiences = [];
+                }
+              } catch (e) {
+                console.error('Erreur parsing experience:', e);
+                existingExperiences = [];
+              }
+            }
+            // Si c'est un objet (ancien format), le convertir
+            else if (typeof exp === 'object' && !Array.isArray(exp)) {
+              // Ignorer l'ancien format d'objet avec compteurs
+              existingExperiences = [];
+            }
+          }
+
           setExperiences(existingExperiences);
         }
       } catch (error) {
@@ -254,7 +280,7 @@ export default function ExperiencesScreen() {
 
       const { error } = await profileService.updateProfile(user.id, {
         proProfile: {
-          experience: JSON.stringify(experiencesToSave),
+          experience: experiencesToSave, // Envoyer directement le tableau, pas de JSON.stringify
         }
       });
 

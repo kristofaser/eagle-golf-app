@@ -43,17 +43,31 @@ const getExperienceLabel = (type: string) => {
 };
 
 export const ExperienceSection = memo<ExperienceSectionProps>(({ experience }) => {
-  // Parse JSON si c'est une string
+  // Gérer les différents formats possibles de données
   let experienceData: ExperienceItem[] = [];
 
-  if (typeof experience === 'string') {
-    try {
-      experienceData = JSON.parse(experience);
-    } catch {
-      return null;
+  if (experience) {
+    // Si c'est déjà un tableau, l'utiliser directement
+    if (Array.isArray(experience)) {
+      experienceData = experience;
     }
-  } else if (Array.isArray(experience)) {
-    experienceData = experience;
+    // Si c'est une chaîne, essayer de la parser
+    else if (typeof experience === 'string') {
+      try {
+        const parsed = JSON.parse(experience);
+        // Vérifier que le résultat est bien un tableau
+        if (Array.isArray(parsed)) {
+          experienceData = parsed;
+        }
+      } catch {
+        // En cas d'erreur de parsing, considérer comme vide
+        experienceData = [];
+      }
+    }
+    // Si c'est un objet (ancien format), l'ignorer
+    else if (typeof experience === 'object' && !Array.isArray(experience)) {
+      experienceData = [];
+    }
   }
 
   if (!experienceData || experienceData.length === 0) {

@@ -9,16 +9,23 @@ import {
   Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withDelay,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
-import { Location05Icon, UserIcon, UserMultipleIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
+import { Location05Icon, UserIcon, UserMultipleIcon, UserGroupIcon, TrophyIcon } from '@hugeicons/core-free-icons';
 import { Colors, Spacing, Typography, BorderRadius, Elevation } from '@/constants/theme';
 import { Text, LoadingScreen, Avatar } from '@/components/atoms';
 import { FullProfile } from '@/services/profile.service';
 import { bookingService, BookingWithDetails } from '@/services/booking.service';
 import { CancelBookingBottomSheet } from './CancelBookingBottomSheet';
 import { AmateurProfileEditBottomSheet } from './AmateurProfileEditBottomSheet';
+import { useUser } from '@/hooks/useUser';
 
 const DEFAULT_AVATAR =
   'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=400&h=400&fit=crop&crop=center';
@@ -44,10 +51,23 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
   );
   const [editBottomSheetVisible, setEditBottomSheetVisible] = useState(false);
 
+  // Hook pour gérer le statut de la demande pro
+  const { proRequestStatus, refreshProRequestStatus } = useUser();
+  const isPending = proRequestStatus === 'pending';
+  const isRejected = proRequestStatus === 'rejected';
+
+  // Rafraîchir le statut quand le composant est monté ou focusé
+  useEffect(() => {
+    refreshProRequestStatus();
+  }, []);
+
   const handleRefresh = async () => {
     setRefreshing(true);
-    await onRefresh();
-    await loadBookings();
+    await Promise.all([
+      onRefresh(),
+      loadBookings(),
+      refreshProRequestStatus() // Rafraîchir aussi le statut pro
+    ]);
     setRefreshing(false);
   };
 
@@ -126,10 +146,14 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
         )
       : {};
 
-  const mostPlayedCourse =
-    Object.keys(favoriteGolfCourse).length > 0
-      ? Object.entries(favoriteGolfCourse).sort((a, b) => b[1] - a[1])[0][0]
-      : 'Aucun';
+  const mostPlayedCourse = (() => {
+    const entries = Object.entries(favoriteGolfCourse);
+    if (entries.length > 0) {
+      const sorted = entries.sort((a, b) => b[1] - a[1]);
+      return sorted[0] ? sorted[0][0] : 'Aucun';
+    }
+    return 'Aucun';
+  })();
 
   const handleFindPros = () => {
     router.push('/(tabs)/pros');
@@ -200,6 +224,42 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
     return count === 1 ? '1 joueur' : `${count} joueurs`;
   };
 
+  // Handler pour le FAB Become Pro
+  const handleBecomeProPress = () => {
+    router.push('/become-pro');
+  };
+
+  // FAB animation values
+  const fabScale = useSharedValue(0);
+  const fabTranslateY = useSharedValue(50);
+
+  // FAB animation style
+  const fabAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: fabScale.value },
+      { translateY: fabTranslateY.value }
+    ],
+  }));
+
+  // Animate FAB on mount
+  useEffect(() => {
+    fabScale.value = withDelay(
+      300,
+      withSpring(1, {
+        tension: 100,
+        friction: 8,
+      })
+    );
+
+    fabTranslateY.value = withDelay(
+      300,
+      withSpring(0, {
+        tension: 80,
+        friction: 8,
+      })
+    );
+  }, []);
+
   if (loadingBookings) {
     return <LoadingScreen message="Chargement de votre profil..." />;
   }
@@ -262,9 +322,12 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
             )}
           </View>
 
-          {upcomingBookings && upcomingBookings.length > 0 ? (
+          {Array.isArray(upcomingBookings) && upcomingBookings.length > 0 ? (
             <View style={styles.bookingsContainer}>
-              {upcomingBookings.slice(0, showAllBookings ? upcomingBookings.length : 5).map((booking) => (
+              {upcomingBookings
+                .slice(0, showAllBookings ? upcomingBookings.length : 5)
+                .filter(booking => booking != null)
+                .map((booking) => (
                 <View
                   key={booking.id}
                   style={[
@@ -384,6 +447,46 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
         onClose={handleCloseEditBottomSheet}
         onProfileUpdated={handleProfileUpdated}
       />
+
+      {/* FAB dynamique selon le statut de la demande Pro */}
+      {proRequestStatus !== 'approved' && (
+        <Animated.View
+          style={[
+            styles.fab,
+            fabAnimatedStyle,
+            {
+              backgroundColor:
+                proRequestStatus === 'pending' ? Colors.semantic.warning.default :
+                proRequestStatus === 'rejected' ? Colors.neutral.iron :
+                Colors.semantic.success.default
+            }
+          ]}
+        >
+          <TouchableOpacity
+            style={styles.fabButton}
+            onPress={handleBecomeProPress}
+            activeOpacity={0.8}
+            disabled={proRequestStatus === 'pending'}
+          >
+            <View style={styles.fabContent}>
+              <Ionicons
+                name={
+                  proRequestStatus === 'pending' ? 'time-outline' :
+                  proRequestStatus === 'rejected' ? 'refresh-outline' :
+                  'trophy-outline'
+                }
+                size={20}
+                color={Colors.neutral.white}
+              />
+              <Text variant="body" color="white" weight="semiBold">
+                {proRequestStatus === 'pending' ? 'En attente' :
+                 proRequestStatus === 'rejected' ? 'Réessayer' :
+                 'Devenir Pro'}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
 
     </View>
   );
@@ -589,5 +692,33 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
     paddingHorizontal: Spacing.l,
     lineHeight: 22,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    minWidth: 140,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.semantic.success.default,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.neutral.charcoal,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 12,
+    paddingHorizontal: 20,
+  },
+  fabButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+  },
+  fabContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
 });

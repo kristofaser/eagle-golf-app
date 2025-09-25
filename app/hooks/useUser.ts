@@ -9,7 +9,14 @@ import { useSessionContext } from '@/contexts/SessionContext';
 export function useUser() {
   const user = useSessionUser();
   const profile = useProfile();
-  const { updateProfile, loading: userLoading } = useUserContext();
+  const {
+    updateProfile,
+    loading: userLoading,
+    proRequestStatus,
+    proRequest,
+    loadingProRequest,
+    refreshProRequestStatus
+  } = useUserContext();
   const { loading: sessionLoading } = useSessionContext();
 
   const loading = userLoading || sessionLoading;
@@ -87,5 +94,9 @@ export function useUser() {
     specialties,
     experienceLevel,
     updateProfile,
+    proRequestStatus,
+    proRequest,
+    loadingProRequest,
+    refreshProRequestStatus,
   };
 }

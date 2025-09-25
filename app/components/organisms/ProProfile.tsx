@@ -25,6 +25,7 @@ import { Text, LoadingScreen, Avatar } from '@/components/atoms';
 import { FullProfile } from '@/services/profile.service';
 import { bookingService, Booking } from '@/services/booking.service';
 import { CancelBookingBottomSheet } from './CancelBookingBottomSheet';
+import { ProProfileEditBottomSheet } from './ProProfileEditBottomSheet';
 
 const DEFAULT_AVATAR =
   'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=400&h=400&fit=crop&crop=center';
@@ -89,6 +90,7 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
   const [loadingBookings, setLoadingBookings] = useState(true);
   const [cancelBottomSheetVisible, setCancelBottomSheetVisible] = useState(false);
   const [selectedBookingToCancel, setSelectedBookingToCancel] = useState<Booking | null>(null);
+  const [editBottomSheetVisible, setEditBottomSheetVisible] = useState(false);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -296,7 +298,16 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
   }
 
   const handleEditProfile = () => {
-    router.push('/profile/pro-settings');
+    setEditBottomSheetVisible(true);
+  };
+
+  const handleCloseEditBottomSheet = () => {
+    setEditBottomSheetVisible(false);
+  };
+
+  const handleProfileUpdated = async () => {
+    await onRefresh();
+    await loadBookings();
   };
 
   return (
@@ -544,6 +555,14 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
         userType="pro"
         onClose={handleCloseCancelBottomSheet}
         onConfirmCancel={handleConfirmCancel}
+      />
+
+      {/* BottomSheet d'édition du profil */}
+      <ProProfileEditBottomSheet
+        profile={profile}
+        visible={editBottomSheetVisible}
+        onClose={handleCloseEditBottomSheet}
+        onProfileUpdated={handleProfileUpdated}
       />
     </View>
   );
