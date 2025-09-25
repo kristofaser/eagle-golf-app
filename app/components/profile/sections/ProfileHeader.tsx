@@ -95,7 +95,7 @@ export const ProfileHeader = memo<ProfileHeaderProps>(
             <Ionicons
               name={isFavorite ? 'heart' : 'heart-outline'}
               size={28}
-              color={isFavorite ? Colors.semantic.error : 'black'}
+              color={isFavorite ? Colors.semantic.error.default : 'black'}
               accessibilityElementsHidden={true}
             />
           </TouchableOpacity>
@@ -139,7 +139,7 @@ export const ProfileHeader = memo<ProfileHeaderProps>(
             <Ionicons
               name={isFavorite ? 'heart' : 'heart-outline'}
               size={28}
-              color={isFavorite ? Colors.semantic.error : 'white'}
+              color={isFavorite ? Colors.semantic.error.default : 'white'}
               accessibilityElementsHidden={true}
             />
           </TouchableOpacity>

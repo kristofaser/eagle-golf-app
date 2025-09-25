@@ -297,15 +297,9 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   section: {
-    backgroundColor: Colors.neutral.white,
     borderRadius: 12,
     marginBottom: 16,
     padding: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   sectionTitle: {
     fontSize: 20,

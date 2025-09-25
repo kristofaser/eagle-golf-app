@@ -3,13 +3,10 @@ import {
   StyleSheet,
   ScrollView,
   SafeAreaView,
-  TouchableOpacity,
-  ActivityIndicator,
   Text,
-  Alert,
 } from 'react-native';
-import React, { useState, useEffect } from 'react';
-import { Colors } from '@/constants/theme';
+import React, { useState, useEffect, useRef } from 'react';
+import { Colors, Spacing } from '@/constants/theme';
 import { ProPricingManager } from '@/components/organisms/ProPricingManager';
 import { useAuth } from '@/hooks/useAuth';
 import { Stack, router } from 'expo-router';
@@ -17,75 +14,86 @@ import { pricingService, ProPricing } from '@/services/pricing.service';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUserContext } from '@/contexts/UserContext';
 import { useProProfileTab } from '@/contexts/ProProfileContext';
+import { Ionicons } from '@expo/vector-icons';
 
 function PricingContent() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { loadUserProfile } = useUserContext();
   const { setActiveTab } = useProProfileTab();
-  const [prices, setPrices] = useState<Record<string, string>>({});
-  const [saving, setSaving] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    // Cleanup des timers au démontage
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, []);
 
   if (!user) {
     return null;
   }
 
-  const handlePricesChange = (newPrices: Record<string, string>) => {
-    setPrices(newPrices);
-  };
-
-  const handleSave = async () => {
-    // Validation
-    const hasEmptyPrices = Object.values(prices).some((p) => !p || p === '0');
-    if (hasEmptyPrices) {
-      Alert.alert('Erreur', 'Veuillez renseigner tous les tarifs');
-      return;
+  const handleAutoSave = async (prices: Record<string, string>) => {
+    // Clear le timer de debounce précédent
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
     }
 
-    setSaving(true);
-    try {
-      const pricingData: ProPricing[] = [];
+    // Debounce de 1 seconde pour éviter trop de requêtes
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        const pricingData: ProPricing[] = [];
 
-      // Construire les données de tarification
-      [9, 18].forEach((holes) => {
-        [1, 2, 3].forEach((players) => {
-          const key = `${holes}_${players}`;
-          const price = parseFloat(prices[key] || '0');
-          if (price > 0) {
-            pricingData.push({
-              holes: holes as 9 | 18,
-              players_count: players as 1 | 2 | 3,
-              price,
-            });
-          }
+        // Construire les données de tarification
+        [9, 18].forEach((holes) => {
+          [1, 2, 3].forEach((players) => {
+            const key = `${holes}_${players}`;
+            const price = parseFloat(prices[key] || '0');
+            if (price > 0) {
+              pricingData.push({
+                holes: holes as 9 | 18,
+                players_count: players as 1 | 2 | 3,
+                price,
+              });
+            }
+          });
         });
-      });
 
-      const success = await pricingService.updateProPricing(user.id, pricingData);
+        // Ne sauvegarder que s'il y a au moins un prix valide
+        if (pricingData.length > 0) {
+          const success = await pricingService.updateProPricing(user.id, pricingData);
 
-      if (success) {
-        // Invalider les queries React Query pour forcer le rechargement du profil
-        await queryClient.invalidateQueries({ queryKey: ['proProfile'] });
-        // Invalider spécifiquement les tarifs de cet utilisateur
-        await queryClient.invalidateQueries({ queryKey: ['proPricing', user.id] });
+          if (success) {
+            // Invalider les queries React Query
+            await queryClient.invalidateQueries({ queryKey: ['profile'] });
+            await queryClient.invalidateQueries({ queryKey: ['proPricing', user.id] });
 
-        // Recharger le profil utilisateur dans le contexte
-        await loadUserProfile(user.id);
+            // Recharger le profil utilisateur dans le contexte
+            await loadUserProfile(user.id);
 
-        // Activer l'onglet services
-        setActiveTab('services');
+            // Afficher le message "Sauvegardé"
+            setShowSaved(true);
 
-        // Fermer la modal immédiatement
-        router.back();
-      } else {
-        Alert.alert('Erreur', 'Impossible de mettre à jour les tarifs');
+            // Clear le timer précédent s'il existe
+            if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+
+            // Cacher le message après 2 secondes
+            saveTimerRef.current = setTimeout(() => {
+              setShowSaved(false);
+            }, 2000);
+
+            // Activer l'onglet services
+            setActiveTab('services');
+          }
+        }
+      } catch (error) {
+        console.error('Erreur sauvegarde automatique tarifs:', error);
       }
-    } catch (error) {
-      console.error('Erreur sauvegarde tarifs:', error);
-      Alert.alert('Erreur', 'Une erreur est survenue');
-    } finally {
-      setSaving(false);
-    }
+    }, 1000);
   };
 
   return (
@@ -97,6 +105,14 @@ function PricingContent() {
         }}
       />
       <SafeAreaView style={styles.container}>
+        {/* Indicateur flottant de sauvegarde */}
+        {showSaved && (
+          <View style={styles.savedIndicator}>
+            <Ionicons name="checkmark-circle" size={16} color={Colors.semantic.success.default} />
+            <Text style={styles.savedText}>Sauvegardé</Text>
+          </View>
+        )}
+
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
@@ -104,24 +120,10 @@ function PricingContent() {
           <ProPricingManager
             proId={user.id}
             isEditable={true}
-            onPricesChange={handlePricesChange}
+            onPricesChange={handleAutoSave}
             hideButton={true}
           />
         </ScrollView>
-
-        <View style={styles.stickyButtonContainer}>
-          <TouchableOpacity
-            style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-            onPress={handleSave}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={styles.saveButtonText}>Enregistrer les tarifs</Text>
-            )}
-          </TouchableOpacity>
-        </View>
       </SafeAreaView>
     </>
   );
@@ -137,37 +139,29 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.neutral.background,
   },
   scrollContent: {
-    paddingBottom: 100, // Espace pour le bouton
+    paddingBottom: 20, // Espace normal sans bouton
   },
-  stickyButtonContainer: {
+  savedIndicator: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: Colors.neutral.white,
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 30,
-    borderTopWidth: 1,
-    borderTopColor: Colors.shadows.light,
+    top: 20,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.s,
+    paddingHorizontal: Spacing.m,
+    backgroundColor: Colors.neutral.charcoal,
+    borderRadius: 20,
+    zIndex: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
   },
-  saveButton: {
-    backgroundColor: Colors.primary.accent,
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveButtonText: {
-    color: 'white',
-    fontSize: 16,
+  savedText: {
+    marginLeft: 4,
+    fontSize: 14,
+    color: Colors.neutral.white,
     fontWeight: '600',
   },
 });

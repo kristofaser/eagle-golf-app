@@ -7,6 +7,7 @@ import { SessionProvider } from './SessionContext';
 import { UserProvider } from './UserContext';
 import { AuthProvider } from './AuthContext.refactored';
 import { PushNotificationProvider } from './PushNotificationContext';
+import { FavoritesMigrationProvider } from './FavoritesMigrationProvider';
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -17,7 +18,9 @@ export function AppProviders({ children }: AppProvidersProps) {
     <SessionProvider>
       <UserProvider>
         <AuthProvider>
-          <PushNotificationProvider>{children}</PushNotificationProvider>
+          <FavoritesMigrationProvider>
+            <PushNotificationProvider>{children}</PushNotificationProvider>
+          </FavoritesMigrationProvider>
         </AuthProvider>
       </UserProvider>
     </SessionProvider>
@@ -33,18 +36,3 @@ export {
   usePushNotificationStatus,
   usePushNotificationActions,
 } from './PushNotificationContext';
-
-// Hook combiné pour accès complet (compatibilité avec ancien code)
-export function useAuthState() {
-  const session = useSession();
-  const user = useSessionUser();
-  const profile = useProfile();
-
-  return {
-    session,
-    user,
-    profile,
-    isAuthenticated: !!session,
-    loading: false, // Géré individuellement dans chaque contexte
-  };
-}

@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter, usePathname } from 'expo-router';
 import { useAuth } from './useAuth';
 import { courseAlertService } from '@/services/course-alert.service';
 import { logger } from '@/utils/logger';
@@ -15,6 +17,8 @@ export interface CourseAlertPreferences {
 
 export const useCourseAlert = (golfCourseId: string) => {
   const { user } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
   const [isEnabled, setIsEnabled] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +29,32 @@ export const useCourseAlert = (golfCourseId: string) => {
       loadPreferences();
     }
   }, [user?.id, golfCourseId]);
+
+  // Fonction pour afficher l'alerte de connexion requise
+  const showAuthRequiredAlert = useCallback(() => {
+    Alert.alert(
+      'Connexion requise',
+      'Créez un compte Eagle pour être averti quand un pro sera disponible sur ce parcours',
+      [
+        { text: 'Continuer à explorer', style: 'cancel' },
+        {
+          text: 'Se connecter',
+          onPress: () => router.push({
+            pathname: '/(auth)/login' as any,
+            params: { returnTo: pathname }
+          })
+        },
+        {
+          text: "S'inscrire",
+          onPress: () => router.push({
+            pathname: '/(auth)/register' as any,
+            params: { returnTo: pathname }
+          }),
+          style: 'default'
+        }
+      ]
+    );
+  }, [router, pathname]);
 
   const loadPreferences = async () => {
     try {
@@ -126,6 +156,12 @@ export const useCourseAlert = (golfCourseId: string) => {
 
   const toggleAlert = useCallback(
     async (newValue?: boolean) => {
+      // Vérifier l'authentification avant de procéder
+      if (!user?.id) {
+        showAuthRequiredAlert();
+        return false;
+      }
+
       const targetValue = newValue !== undefined ? newValue : !isEnabled;
 
       setIsEnabled(targetValue);
@@ -139,7 +175,7 @@ export const useCourseAlert = (golfCourseId: string) => {
 
       return success;
     },
-    [isEnabled, savePreferences]
+    [isEnabled, savePreferences, user?.id, showAuthRequiredAlert]
   );
 
   const clearPreferences = async () => {

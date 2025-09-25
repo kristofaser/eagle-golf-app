@@ -330,33 +330,57 @@ export default function SelectDatesScreen() {
 
     setSaving(true);
     try {
-      const success = isEditMode
-        ? await proAvailabilityService.updateProAvailabilities(
-            user.id,
-            params.courseId,
-            selectedDates
-          )
-        : await proAvailabilityService.createProAvailabilities(
-            user.id,
-            params.courseId,
-            selectedDates
-          );
-
-      if (success) {
-        const actionText = isEditMode ? 'modifiée' : 'ajoutée';
-        const actionTextPlural = isEditMode ? 'modifiées' : 'ajoutées';
-        Alert.alert(
-          'Succès',
-          `${selectedDates.length} disponibilité${selectedDates.length > 1 ? 's' : ''} ${selectedDates.length > 1 ? actionTextPlural : actionText} avec succès`,
-          [
-            {
-              text: 'OK',
-              onPress: () => router.navigate('/profile/availability/'),
-            },
-          ]
+      if (isEditMode) {
+        // Utiliser la méthode intelligente qui retourne plus de détails
+        const result = await proAvailabilityService.updateProAvailabilitiesIntelligent(
+          user.id,
+          params.courseId,
+          selectedDates
         );
+
+        if (result.success) {
+          const actionText = 'modifiée';
+          const actionTextPlural = 'modifiées';
+          Alert.alert(
+            'Succès',
+            `${selectedDates.length} disponibilité${selectedDates.length > 1 ? 's' : ''} ${selectedDates.length > 1 ? actionTextPlural : actionText} avec succès`,
+            [
+              {
+                text: 'OK',
+                onPress: () => router.navigate('/profile/availability/'),
+              },
+            ]
+          );
+        } else {
+          // Afficher le message d'erreur détaillé
+          Alert.alert(
+            'Attention',
+            result.error || 'Impossible de mettre à jour les disponibilités',
+            [{ text: 'Compris', style: 'default' }]
+          );
+        }
       } else {
-        Alert.alert('Erreur', 'Impossible de sauvegarder vos disponibilités');
+        // Création normale pour les nouvelles disponibilités
+        const success = await proAvailabilityService.createProAvailabilities(
+          user.id,
+          params.courseId,
+          selectedDates
+        );
+
+        if (success) {
+          Alert.alert(
+            'Succès',
+            `${selectedDates.length} disponibilité${selectedDates.length > 1 ? 's' : ''} ajoutée${selectedDates.length > 1 ? 's' : ''} avec succès`,
+            [
+              {
+                text: 'OK',
+                onPress: () => router.navigate('/profile/availability/'),
+              },
+            ]
+          );
+        } else {
+          Alert.alert('Erreur', 'Impossible de créer les disponibilités');
+        }
       }
     } catch (error) {
       console.error('Erreur sauvegarde disponibilités:', error);

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +20,40 @@ export default function ProfileScreen() {
 
   // Récupérer le paramètre pour ouvrir une section spécifique
   const openSection = params.openSection as string;
+
+  // Construire le FullProfile à partir des données disponibles
+  // IMPORTANT: Ce hook doit être appelé avant tout return conditionnel
+  const fullProfile: FullProfile = useMemo(() => {
+    if (!profile) {
+      // Retourner un profil par défaut si pas encore chargé
+      return {
+        id: '',
+        created_at: '',
+        updated_at: '',
+        first_name: '',
+        last_name: '',
+        user_type: 'amateur',
+        city: '',
+        phone: null,
+        avatar_url: null,
+        amateur_profiles: null,
+        pro_profiles: null,
+        email: null,
+      };
+    }
+
+    return {
+      ...profile,
+      amateur_profiles: amateurProfile || null,
+      pro_profiles: proProfile || null,
+      email: user?.email || null,
+    };
+  }, [profile, amateurProfile, proProfile, user?.email]);
+
+  const handleRefresh = async () => {
+    // Recharger les données du profil si nécessaire
+    // Pour l'instant, les données sont déjà dans le context
+  };
 
   // Si non connecté, retourner à l'accueil
   if (!isAuthenticated) {
@@ -47,18 +81,10 @@ export default function ProfileScreen() {
     );
   }
 
-  const handleRefresh = async () => {
-    // Recharger les données du profil si nécessaire
-    // Pour l'instant, les données sont déjà dans le context
-  };
-
-  // Construire le FullProfile à partir des données disponibles
-  const fullProfile: FullProfile = {
-    ...profile,
-    amateur_profiles: amateurProfile,
-    pro_profiles: proProfile,
-    email: user.email,
-  };
+  // Vérifier que le profil a un ID valide
+  if (!fullProfile.id) {
+    return <LoadingScreen message="Initialisation du profil..." />;
+  }
 
   return (
     <>

@@ -1,13 +1,12 @@
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { profileService, FullProfile } from '@/services/profile.service';
 import { bookingService, AvailabilityWithDetails } from '@/services/booking.service';
 import { pricingService, ProPricing } from '@/services/pricing.service';
-import {
-  profileAggregatedService,
-  AggregatedProProfile,
-} from '@/services/profile-aggregated.service';
+import { profileAggregatedService } from '@/services/profile-aggregated.service';
 import { useAppStore } from '@/stores/useAppStore';
+import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
+import type { Router } from 'expo-router';
 
 interface ProProfileData {
   profile: FullProfile;
@@ -40,7 +39,7 @@ export function useProProfile(profileId: string, enabled = true) {
           availabilities: aggregatedData.availabilities,
           pricing: aggregatedData.pricing,
         };
-      } catch (error) {
+      } catch {
         // Fallback sur les appels séparés en cas d'erreur
         const [profileResult, availabilitiesResult, pricingResult] = await Promise.allSettled([
           profileService.getFullProfile(profileId),
@@ -75,7 +74,7 @@ export function useProProfile(profileId: string, enabled = true) {
   });
 
   // Fonction pour précharger un profil
-  const prefetchProfile = async (targetProfileId: string) => {
+  const prefetchProfile = (targetProfileId: string) => {
     // Vérifier si déjà en cache
     const cached = queryClient.getQueryData(['proProfile', targetProfileId]);
     if (cached) {
@@ -84,7 +83,7 @@ export function useProProfile(profileId: string, enabled = true) {
     }
 
     logger.dev(`📦 Préchargement du profil: ${targetProfileId}`);
-    await queryClient.prefetchQuery({
+    void queryClient.prefetchQuery({
       queryKey: ['proProfile', targetProfileId],
       queryFn: async () => {
         const [profileResult, availabilitiesResult, pricingResult] = await Promise.allSettled([
@@ -112,7 +111,7 @@ export function useProProfile(profileId: string, enabled = true) {
 
   // Invalider le cache pour forcer le rechargement
   const invalidateProfile = () => {
-    queryClient.invalidateQueries({ queryKey: ['proProfile', profileId] });
+    void queryClient.invalidateQueries({ queryKey: ['proProfile', profileId] });
   };
 
   return {
@@ -169,13 +168,29 @@ export function usePrefetchProfiles() {
   return { prefetchProfiles };
 }
 
-// Hook pour gérer les favoris des pros - connecté au store Zustand
-export function useProFavorite(profileId: string) {
+// Hook pour gérer les favoris des pros - connecté au store Zustand avec protection auth
+export function useProFavorite(profileId: string, router?: Router, currentPath?: string) {
   const { favoritePros, toggleFavoritePro } = useAppStore();
+  const { isAuthenticated } = useAuth();
+
+  const handleToggleFavorite = () => {
+    if (!isAuthenticated) {
+      if (router && currentPath) {
+        // Import dynamique pour éviter les erreurs de dépendance circulaire
+        void import('@/utils/authAlerts').then(({ showFavoriteAuthAlert }) => {
+          showFavoriteAuthAlert(router, currentPath);
+        });
+      }
+      return;
+    }
+
+    // Utilisateur connecté, exécuter le toggle normalement
+    toggleFavoritePro(profileId);
+  };
 
   return {
     isFavorite: favoritePros.includes(profileId),
-    toggleFavorite: () => toggleFavoritePro(profileId),
+    toggleFavorite: handleToggleFavorite,
     isToggling: false, // Plus besoin d'état de loading avec Zustand
   };
 }

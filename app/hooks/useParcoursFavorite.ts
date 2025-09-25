@@ -5,15 +5,35 @@
  * Similaire à useProFavorite mais pour les parcours de golf.
  */
 import { useAppStore } from '@/stores/useAppStore';
+import { useAuth } from '@/hooks/useAuth';
+import type { Router } from 'expo-router';
 
 /**
- * Hook pour gérer les favoris des parcours - connecté au store Zustand
+ * Hook pour gérer les favoris des parcours - connecté au store Zustand avec protection auth
  *
  * @param parcoursId - ID du parcours de golf
+ * @param router - Expo router instance for navigation (optional)
+ * @param currentPath - Current path for returnTo parameter (optional)
  * @returns {Object} État et actions pour les favoris
  */
-export function useParcoursFavorite(parcoursId: string) {
+export function useParcoursFavorite(parcoursId: string, router?: Router, currentPath?: string) {
   const { favoriteParcours, toggleFavoriteParcours } = useAppStore();
+  const { isAuthenticated } = useAuth();
+
+  const handleToggleFavorite = () => {
+    if (!isAuthenticated) {
+      if (router && currentPath) {
+        // Import dynamique pour éviter les erreurs de dépendance circulaire
+        void import('@/utils/authAlerts').then(({ showFavoriteAuthAlert }) => {
+          showFavoriteAuthAlert(router, currentPath);
+        });
+      }
+      return;
+    }
+
+    // Utilisateur connecté, exécuter le toggle normalement
+    toggleFavoriteParcours(parcoursId);
+  };
 
   return {
     /**
@@ -25,7 +45,7 @@ export function useParcoursFavorite(parcoursId: string) {
      * Toggle l'état favori du parcours
      * Ajoute ou retire le parcours des favoris
      */
-    toggleFavorite: () => toggleFavoriteParcours(parcoursId),
+    toggleFavorite: handleToggleFavorite,
 
     /**
      * Indique si une action de toggle est en cours

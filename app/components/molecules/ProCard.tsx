@@ -6,9 +6,10 @@ import { Colors, BorderRadius, Spacing } from '@/constants/theme';
 import { Text, Icon } from '@/components/atoms';
 import { JoueurData, CardLayout } from './ContentCard';
 import { useResponsiveCardSize } from '@/hooks/useResponsiveCardSize';
-import { IMAGE_CONFIG, RESPONSIVE_CONFIG } from '@/utils/constants/animations';
+import { RESPONSIVE_CONFIG } from '@/utils/constants/animations';
 import { useProProfile, useProFavorite } from '@/hooks/useProProfile';
 import { formatDistance } from '@/utils/location';
+import { useRouter, usePathname } from 'expo-router';
 
 interface ProCardProps {
   data: JoueurData;
@@ -57,9 +58,11 @@ const ProCardComponent: React.FC<ProCardProps> = ({
   showDeleteButton = false,
 }) => {
   const viewRef = useRef<View>(null);
+  const router = useRouter();
+  const pathname = usePathname();
   const { cardWidth, cardHeight } = useResponsiveCardSize();
   const { prefetchProfile } = useProProfile(data.id, false);
-  const { isFavorite, toggleFavorite, isToggling } = useProFavorite(data.id);
+  const { isFavorite, toggleFavorite, isToggling } = useProFavorite(data.id, router, pathname);
   const [hasHovered, setHasHovered] = useState(false);
 
   const handlePress = useCallback(() => {
@@ -76,13 +79,13 @@ const ProCardComponent: React.FC<ProCardProps> = ({
   const handlePressIn = useCallback(() => {
     if (!hasHovered) {
       setHasHovered(true);
-      prefetchProfile(data.id);
+      void prefetchProfile(data.id);
       onHover?.(data.id);
     }
   }, [hasHovered, data.id, prefetchProfile, onHover]);
 
   const handleFavoritePress = useCallback(
-    (e: any) => {
+    (e: { stopPropagation: () => void }) => {
       e.stopPropagation();
       if (!isToggling) {
         toggleFavorite();
@@ -109,7 +112,7 @@ const ProCardComponent: React.FC<ProCardProps> = ({
           {/* Image à gauche - propre sans overlays */}
           <View style={styles.horizontalImageContainer}>
             <Image
-              source={{ uri: data.imageUrl }}
+              source={data.imageUrl ? { uri: data.imageUrl } : undefined}
               style={styles.horizontalImage}
               cachePolicy="memory-disk"
               transition={200}
@@ -163,21 +166,6 @@ const ProCardComponent: React.FC<ProCardProps> = ({
                 {data.distance !== undefined && ` • ${formatDistance(data.distance)}`}
               </Text>
             </View>
-
-            {/* Note */}
-            {data.rating && (
-              <View style={styles.horizontalRatingContainer}>
-                <Icon name="star" size={12} color={Colors.primary.accent} family="FontAwesome" />
-                <Text
-                  variant="caption"
-                  color="charcoal"
-                  weight="medium"
-                  style={styles.horizontalRatingText}
-                >
-                  {data.rating.toFixed(1)}
-                </Text>
-              </View>
-            )}
           </View>
 
           {/* Bouton favori ou supprimer */}
@@ -201,13 +189,13 @@ const ProCardComponent: React.FC<ProCardProps> = ({
             accessibilityState={{ selected: !showDeleteButton && isFavorite }}
           >
             {showDeleteButton ? (
-              <Ionicons name="trash-outline" size={20} color={Colors.semantic.error} />
+              <Ionicons name="trash-outline" size={20} color={Colors.semantic.error.default} />
             ) : (
               <View style={[styles.heartContainer, isToggling && styles.heartAnimating]}>
                 <Ionicons
                   name="heart"
                   size={20}
-                  color={isFavorite ? Colors.semantic.error : Colors.neutral.course}
+                  color={isFavorite ? Colors.semantic.error.default : Colors.neutral.course}
                 />
                 <Ionicons
                   name="heart-outline"
@@ -229,7 +217,7 @@ const ProCardComponent: React.FC<ProCardProps> = ({
         {/* Image avec coeur favori */}
         <View style={[styles.imageContainer, { height: cardHeight }]}>
           <Image
-            source={{ uri: data.imageUrl }}
+            source={data.imageUrl ? { uri: data.imageUrl } : undefined}
             style={styles.image}
             cachePolicy="memory-disk"
             transition={200}
@@ -254,7 +242,7 @@ const ProCardComponent: React.FC<ProCardProps> = ({
               <Ionicons
                 name="heart"
                 size={22}
-                color={isFavorite ? Colors.semantic.error : Colors.ui.favoriteHeart}
+                color={isFavorite ? Colors.semantic.error.default : Colors.ui.favoriteHeart}
               />
               <Ionicons
                 name="heart-outline"
@@ -284,16 +272,6 @@ const ProCardComponent: React.FC<ProCardProps> = ({
               </Text>
             </View>
           )}
-
-          {/* Note en bas à gauche */}
-          {data.rating && (
-            <View style={styles.ratingContainer}>
-              <Icon name="star" size={12} color={Colors.neutral.white} family="FontAwesome" />
-              <Text variant="caption" color="ball" weight="medium" style={styles.ratingText}>
-                {data.rating.toFixed(1)}
-              </Text>
-            </View>
-          )}
         </View>
 
         {/* Informations sous l'image */}
@@ -317,7 +295,6 @@ export const ProCard = memo(ProCardComponent, (prevProps, nextProps) => {
     prevProps.data.title === nextProps.data.title &&
     prevProps.data.imageUrl === nextProps.data.imageUrl &&
     prevProps.data.isAvailable === nextProps.data.isAvailable &&
-    prevProps.data.rating === nextProps.data.rating &&
     prevProps.data.distance === nextProps.data.distance &&
     prevProps.data.division === nextProps.data.division &&
     prevProps.isHidden === nextProps.isHidden &&
@@ -344,7 +321,7 @@ const styles = StyleSheet.create({
   },
   favoriteButton: {
     position: 'absolute',
-    top: Spacing.s,
+    top: Spacing.xs,
     right: Spacing.s,
     width: 44,
     height: 44,
@@ -361,21 +338,6 @@ const styles = StyleSheet.create({
   },
   heartOutline: {
     position: 'absolute',
-  },
-  ratingContainer: {
-    position: 'absolute',
-    bottom: Spacing.s,
-    left: Spacing.s,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.small,
-  },
-  ratingText: {
-    marginLeft: Spacing.xxs,
-    fontSize: 11,
   },
   infoContainer: {
     paddingTop: Spacing.s,
@@ -409,11 +371,11 @@ const styles = StyleSheet.create({
   },
   divisionBadge: {
     position: 'absolute',
-    top: Spacing.s + 11, // Centrer avec le bouton favori (44px de haut / 2 - 22px de badge / 2)
+    top: Spacing.xs + 11, // Centrer avec le bouton favori (44px de haut / 2 - 22px de badge / 2)
     left: Spacing.s,
     paddingHorizontal: Spacing.xs,
     paddingVertical: 4,
-    borderRadius: BorderRadius.small,
+    borderRadius: BorderRadius.medium,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -424,8 +386,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   divisionText: {
-    fontSize: 8,
-    letterSpacing: 0.3,
+    fontSize: 10,
+    letterSpacing: 0.2,
+    lineHeight: 12,
+    textAlign: 'center',
   },
   // Styles horizontaux
   horizontalPressable: {
@@ -474,27 +438,23 @@ const styles = StyleSheet.create({
   horizontalDivisionBadge: {
     alignSelf: 'flex-start',
     paddingHorizontal: Spacing.s,
-    paddingVertical: 3,
-    borderRadius: 6,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.medium,
     marginBottom: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   horizontalDivisionText: {
-    fontSize: 11,
-    letterSpacing: 0.5,
+    fontSize: 10,
+    letterSpacing: 0.2,
+    lineHeight: 12,
+    textAlign: 'center',
   },
   horizontalLocationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xxs,
     marginBottom: Spacing.xs,
-  },
-  horizontalRatingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xxs,
-  },
-  horizontalRatingText: {
-    fontSize: 12,
   },
   horizontalFavoriteButton: {
     position: 'absolute',

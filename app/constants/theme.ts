@@ -58,42 +58,43 @@ export const Colors = {
     dark: 'rgba(0, 0, 0, 0.12)',
   },
 
-  // Division System (pour ProCard et classifications)
+  // Division System (synchronisé avec Supabase DB)
   division: {
-    'European Tour': {
-      background: '#FFD700', // Or
-      text: '#B8860B', // Or foncé
-      border: '#F4D03F',
-    },
+    // Divisions officielles de la base de données
     'DP World Tour': {
       background: '#E6F3FF', // Bleu clair
       text: '#0066CC', // Bleu foncé
       border: '#B3D9FF',
     },
-    'Challenge Tour': {
-      background: '#E8F5E8', // Vert clair
-      text: '#2E7D32', // Vert foncé
-      border: '#A5D6A7',
+    'HotelPlanner Tour': {
+      background: '#FFF8E1', // Jaune clair
+      text: '#F57F17', // Jaune foncé
+      border: '#FFE082',
     },
     'Alps Tour': {
       background: '#FFF3E0', // Orange clair
       text: '#E65100', // Orange foncé
       border: '#FFCC80',
     },
-    'Pro Golf Tour': {
+    'Ladies European Tour': {
+      background: '#FCE4EC', // Rose clair
+      text: '#C2185B', // Rose foncé
+      border: '#F8BBD9',
+    },
+    'Circuit Français': {
+      background: '#E8EAF6', // Indigo clair
+      text: '#3F51B5', // Indigo foncé
+      border: '#C5CAE9',
+    },
+    'Challenge Tour': {
+      background: '#E8F5E8', // Vert clair
+      text: '#2E7D32', // Vert foncé
+      border: '#A5D6A7',
+    },
+    'Elite Tour': {
       background: '#F3E5F5', // Violet clair
       text: '#7B1FA2', // Violet foncé
       border: '#CE93D8',
-    },
-    National: {
-      background: '#E3F2FD', // Bleu clair
-      text: '#1565C0', // Bleu foncé
-      border: '#90CAF9',
-    },
-    Regional: {
-      background: '#F1F8E9', // Vert très clair
-      text: '#388E3C', // Vert foncé
-      border: '#C8E6C9',
     },
     default: {
       background: '#F5F5F5', // Gris clair

@@ -59,11 +59,14 @@ export const Avatar: React.FC<AvatarProps> = ({
     name || (user?.profile ? `${user.profile.first_name} ${user.profile.last_name}`.trim() : '');
 
   const initials = displayName
-    .split(' ')
-    .map((word) => word[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+    ? displayName
+        .split(' ')
+        .filter((word) => word.length > 0)
+        .map((word) => word[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    : '?';
 
   const handleImageError = (error: any) => {
     console.warn('Avatar image failed to load:', error);

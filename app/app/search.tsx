@@ -10,7 +10,7 @@ import {
   FlatList,
   Modal,
 } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
+import { useRouter, Stack, usePathname } from 'expo-router';
 import { Text } from '@/components/atoms';
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 import { ProCard } from '@/components/molecules/ProCard';
@@ -26,6 +26,83 @@ import { CircleAvatar } from '@/components/atoms/CircleAvatar';
 import { CourseAlertToggle } from '@/components/molecules/CourseAlertToggle';
 import { DivisionBadge } from '@/components/atoms/DivisionBadge';
 import { useAppStore } from '@/stores/useAppStore';
+import { useProFavorite } from '@/hooks/useProProfile';
+
+// Composant pour chaque pro dans la modal (nécessaire pour utiliser les hooks)
+const ModalProItem = ({ item, onPress }: { item: any; onPress: (item: any) => void }) => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { isFavorite, toggleFavorite } = useProFavorite(item.id, router, pathname);
+  const worldRanking = item.pro_profiles?.world_ranking;
+
+  return (
+    <TouchableOpacity
+      key={item.id}
+      style={styles.modalProCard}
+      onPress={() => onPress(item)}
+      activeOpacity={0.7}
+    >
+      {/* Avatar */}
+      <CircleAvatar
+        avatarUrl={item.avatar_url}
+        firstName={item.first_name}
+        lastName={item.last_name}
+        size={40}
+        style={styles.modalProAvatar}
+      />
+
+      {/* Informations principales */}
+      <View style={styles.modalProInfo}>
+        <View style={styles.modalProMainInfo}>
+          <Text
+            variant="h4"
+            color="charcoal"
+            numberOfLines={1}
+            style={styles.modalProName}
+          >
+            {item.first_name} {item.last_name}
+          </Text>
+
+          <View style={styles.modalProBadges}>
+            <DivisionBadge
+              division={item.pro_profiles?.division}
+              size="small"
+              style={styles.modalDivisionBadge}
+            />
+
+            {worldRanking && (
+              <Text variant="caption" color="course" style={styles.modalWorldRanking}>
+                RW: {worldRanking}
+              </Text>
+            )}
+          </View>
+        </View>
+      </View>
+
+      {/* Actions */}
+      <View style={styles.modalProActions}>
+        {/* Bouton Favoris */}
+        <TouchableOpacity
+          onPress={(e) => {
+            e.stopPropagation();
+            toggleFavorite();
+          }}
+          style={styles.modalFavoriteButton}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons
+            name={isFavorite ? 'heart' : 'heart-outline'}
+            size={20}
+            color={isFavorite ? Colors.semantic.error.default : Colors.neutral.course}
+          />
+        </TouchableOpacity>
+
+        {/* Flèche navigation */}
+        <Ionicons name="chevron-forward" size={16} color={Colors.neutral.course} />
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 type SearchCategory = 'all' | 'pros' | 'courses';
 
@@ -39,6 +116,7 @@ interface TransformedProData extends JoueurData {
 
 export default function SearchScreen() {
   const router = useRouter();
+  const pathname = usePathname();
   const inputRef = useRef<TextInput>(null);
 
   // Hook de recherche principal
@@ -60,8 +138,8 @@ export default function SearchScreen() {
   // Hook de géolocalisation
   const { location: userLocation } = useGeolocation();
 
-  // Hook favoris
-  const { favoritePros, toggleFavoritePro } = useAppStore();
+  // Hook favoris - garder pour la compatibilité avec le code existant
+  const { favoritePros } = useAppStore();
 
   // État pour la modal pros disponibles
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -639,77 +717,9 @@ export default function SearchScreen() {
           ) : (
             <FlatList
               data={availablePros}
-              renderItem={({ item }) => {
-                const isFavorite = favoritePros.includes(item.id);
-                const worldRanking = item.pro_profiles?.world_ranking;
-
-                return (
-                  <TouchableOpacity
-                    style={styles.modalProCard}
-                    onPress={() => handleModalProPress(item)}
-                    activeOpacity={0.7}
-                  >
-                    {/* Avatar */}
-                    <CircleAvatar
-                      avatarUrl={item.avatar_url}
-                      firstName={item.first_name}
-                      lastName={item.last_name}
-                      size={40}
-                      style={styles.modalProAvatar}
-                    />
-
-                    {/* Informations principales */}
-                    <View style={styles.modalProInfo}>
-                      <View style={styles.modalProMainInfo}>
-                        <Text
-                          variant="h4"
-                          color="charcoal"
-                          numberOfLines={1}
-                          style={styles.modalProName}
-                        >
-                          {item.first_name} {item.last_name}
-                        </Text>
-
-                        <View style={styles.modalProBadges}>
-                          <DivisionBadge
-                            division={item.pro_profiles?.division}
-                            size="small"
-                            style={styles.modalDivisionBadge}
-                          />
-
-                          {worldRanking && (
-                            <Text variant="caption" color="course" style={styles.modalWorldRanking}>
-                              RW: {worldRanking}
-                            </Text>
-                          )}
-                        </View>
-                      </View>
-                    </View>
-
-                    {/* Actions */}
-                    <View style={styles.modalProActions}>
-                      {/* Bouton Favoris */}
-                      <TouchableOpacity
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          toggleFavoritePro(item.id);
-                        }}
-                        style={styles.modalFavoriteButton}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      >
-                        <Ionicons
-                          name={isFavorite ? 'heart' : 'heart-outline'}
-                          size={20}
-                          color={isFavorite ? Colors.semantic.error.default : Colors.neutral.course}
-                        />
-                      </TouchableOpacity>
-
-                      {/* Flèche navigation */}
-                      <Ionicons name="chevron-forward" size={20} color={Colors.neutral.course} />
-                    </View>
-                  </TouchableOpacity>
-                );
-              }}
+              renderItem={({ item }) => (
+                <ModalProItem item={item} onPress={handleModalProPress} />
+              )}
               keyExtractor={(item) => item.id}
               contentContainerStyle={styles.modalList}
               showsVerticalScrollIndicator={false}

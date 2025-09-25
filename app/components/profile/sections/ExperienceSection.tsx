@@ -6,16 +6,57 @@ import { DURATIONS } from '@/constants/animations';
 import { profileStyles, sectionColors } from '../styles/profileStyles';
 
 interface ExperienceItem {
-  type: 'winner' | 'top5' | 'top10' | 'top20' | 'top30';
+  type: 'winner' | 'top5' | 'top10' | 'top20' | 'top30' | 'top40' | 'top50' | 'top60';
   description: string;
 }
 
 interface ExperienceSectionProps {
-  experience?: ExperienceItem[] | null;
+  experience?: ExperienceItem[] | string | null;
 }
 
+const getExperienceEmoji = (type: string) => {
+  const emojis: Record<string, string> = {
+    'winner': '🏆',
+    'top5': '🥇',
+    'top10': '🥈',
+    'top20': '🥉',
+    'top30': '📊',
+    'top40': '📈',
+    'top50': '📋',
+    'top60': '📝'
+  };
+  return emojis[type] || '🏌️';
+};
+
+const getExperienceLabel = (type: string) => {
+  const labels: Record<string, string> = {
+    'winner': 'Victoire',
+    'top5': 'Top 5',
+    'top10': 'Top 10',
+    'top20': 'Top 20',
+    'top30': 'Top 30',
+    'top40': 'Top 40',
+    'top50': 'Top 50',
+    'top60': 'Top 60'
+  };
+  return labels[type] || type.toUpperCase();
+};
+
 export const ExperienceSection = memo<ExperienceSectionProps>(({ experience }) => {
-  if (!experience || !Array.isArray(experience) || experience.length === 0) {
+  // Parse JSON si c'est une string
+  let experienceData: ExperienceItem[] = [];
+
+  if (typeof experience === 'string') {
+    try {
+      experienceData = JSON.parse(experience);
+    } catch {
+      return null;
+    }
+  } else if (Array.isArray(experience)) {
+    experienceData = experience;
+  }
+
+  if (!experienceData || experienceData.length === 0) {
     return null;
   }
 
@@ -37,22 +78,11 @@ export const ExperienceSection = memo<ExperienceSectionProps>(({ experience }) =
       />
 
       <View style={profileStyles.experienceList}>
-        {experience.map((exp: ExperienceItem, index: number) => (
+        {experienceData.map((exp: ExperienceItem, index: number) => (
           <View key={index} style={profileStyles.experienceItem}>
-            <View
-              style={[
-                profileStyles.experienceBadge,
-                exp.type === 'winner' && profileStyles.winnerBadge,
-                exp.type === 'top5' && profileStyles.top5Badge,
-                exp.type === 'top10' && profileStyles.top10Badge,
-                exp.type === 'top20' && profileStyles.top20Badge,
-                exp.type === 'top30' && profileStyles.top30Badge,
-              ]}
-            >
-              <Ionicons name={exp.type === 'winner' ? 'trophy' : 'medal'} size={14} color="white" />
-              <Text style={profileStyles.experienceBadgeText}>
-                {exp.type === 'winner' ? 'Victoire' : exp.type.toUpperCase()}
-              </Text>
+            <View style={profileStyles.experienceBadgeContainer}>
+              <Text style={profileStyles.experienceEmoji}>{getExperienceEmoji(exp.type)}</Text>
+              <Text style={profileStyles.experienceLabel}>{getExperienceLabel(exp.type)}</Text>
             </View>
             <Text style={profileStyles.experienceDescription}>{exp.description}</Text>
           </View>

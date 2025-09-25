@@ -42,13 +42,19 @@ class ProfileService extends BaseService {
 
   /**
    * Récupère un profil complet avec toutes les données (amateur ou pro)
+   * Optimisé avec une seule requête JOIN
    */
   async getFullProfile(userId: string): Promise<ServiceResponse<FullProfile>> {
     try {
-      // Récupérer le profil de base
+      // Récupérer le profil avec les données spécifiques en une seule requête
+      // Utilisation de !left pour forcer une jointure LEFT JOIN qui retourne toujours les données si elles existent
       const { data: profile, error: profileError } = await this.supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          amateur_profiles!left(*),
+          pro_profiles!left(*)
+        `)
         .eq('id', userId)
         .single();
 
@@ -59,36 +65,14 @@ class ProfileService extends BaseService {
         };
       }
 
-      // Récupérer l'email depuis auth.users
-      const {
-        data: { user },
-      } = await this.supabase.auth.admin
-        .getUserById(userId)
-        .catch(() => ({ data: { user: null } }));
-
+      // Construire le profil complet
+      // Avec !left, Supabase retourne directement l'objet ou null, pas un tableau
       const fullProfile: FullProfile = {
         ...profile,
-        email: profile.email || user?.email || null,
+        email: profile.email || null, // Utiliser uniquement l'email du profil
+        amateur_profiles: profile.amateur_profiles || null,
+        pro_profiles: profile.pro_profiles || null,
       };
-
-      // Récupérer les données spécifiques selon le type
-      if (profile.user_type === 'amateur') {
-        const { data: amateurProfile } = await this.supabase
-          .from('amateur_profiles')
-          .select('*')
-          .eq('user_id', userId)
-          .single();
-
-        fullProfile.amateur_profiles = amateurProfile;
-      } else if (profile.user_type === 'pro') {
-        const { data: proProfile } = await this.supabase
-          .from('pro_profiles')
-          .select('*')
-          .eq('user_id', userId)
-          .single();
-
-        fullProfile.pro_profiles = proProfile;
-      }
 
       return {
         data: fullProfile,
@@ -112,7 +96,7 @@ class ProfileService extends BaseService {
         .select(
           `
           *,
-          pro_profiles(*)
+          pro_profiles!left(*)
         `
         )
         .eq('id', userId)
@@ -131,7 +115,7 @@ class ProfileService extends BaseService {
         .select(
           `
           *,
-          amateur_profiles!inner(*)
+          amateur_profiles!left(*)
         `
         )
         .eq('id', userId)
@@ -153,7 +137,7 @@ class ProfileService extends BaseService {
       .select(
         `
         *,
-        pro_profiles!inner(*)
+        pro_profiles!left(*)
       `,
         { count: 'exact' }
       )
@@ -301,7 +285,7 @@ class ProfileService extends BaseService {
         .select(
           `
           *,
-          pro_profiles!inner(*)
+          pro_profiles!left(*)
         `
         )
         .in('id', proIds)

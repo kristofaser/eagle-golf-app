@@ -326,22 +326,137 @@ export const proAvailabilityService = {
   },
 
   /**
+   * Met à jour intelligemment les disponibilités d'un pro sur un parcours
+   * - Conserve les disponibilités avec des réservations
+   * - Supprime uniquement les disponibilités sans réservations
+   * - Ajoute les nouvelles dates
+   */
+  async updateProAvailabilitiesIntelligent(
+    proId: string,
+    golfCourseId: string,
+    newDates: string[]
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('🔄 [updateProAvailabilitiesIntelligent] Début mise à jour intelligente:', {
+        proId,
+        golfCourseId,
+        newDatesCount: newDates.length,
+      });
+
+      // 1. Récupérer toutes les disponibilités existantes
+      const { data: existingAvailabilities, error: fetchError } = await supabase
+        .from('pro_availabilities')
+        .select('id, date')
+        .eq('pro_id', proId)
+        .eq('golf_course_id', golfCourseId);
+
+      if (fetchError) {
+        console.error('❌ Erreur récupération disponibilités existantes:', fetchError);
+        return { success: false, error: 'Erreur lors de la récupération des disponibilités' };
+      }
+
+      const existingDates = existingAvailabilities?.map((a) => a.date) || [];
+      console.log('📋 Dates existantes:', existingDates);
+      console.log('📋 Nouvelles dates demandées:', newDates);
+
+      // 2. Identifier les dates à ajouter, supprimer et conserver
+      const datesToAdd = newDates.filter((date) => !existingDates.includes(date));
+      const datesToRemove = existingDates.filter((date) => !newDates.includes(date));
+      const datesToKeep = existingDates.filter((date) => newDates.includes(date));
+
+      console.log('➕ Dates à ajouter:', datesToAdd);
+      console.log('➖ Dates à supprimer:', datesToRemove);
+      console.log('✅ Dates à conserver:', datesToKeep);
+
+      // 3. Pour les dates à supprimer, vérifier qu'il n'y a pas de réservations
+      if (datesToRemove.length > 0) {
+        // Récupérer les IDs des disponibilités à supprimer
+        const availabilitiesToRemove = existingAvailabilities?.filter((a) =>
+          datesToRemove.includes(a.date)
+        ) || [];
+        const idsToRemove = availabilitiesToRemove.map((a) => a.id);
+
+        if (idsToRemove.length > 0) {
+          // Vérifier s'il y a des réservations sur ces disponibilités
+          const { count: bookingsCount, error: bookingCheckError } = await supabase
+            .from('bookings')
+            .select('*', { count: 'exact', head: true })
+            .in('availability_id', idsToRemove)
+            .in('status', ['pending', 'confirmed']);
+
+          if (bookingCheckError) {
+            console.error('❌ Erreur vérification réservations:', bookingCheckError);
+            return { success: false, error: 'Erreur lors de la vérification des réservations' };
+          }
+
+          if (bookingsCount && bookingsCount > 0) {
+            console.log(`⚠️ ${bookingsCount} réservation(s) active(s) empêche(nt) la suppression`);
+            return {
+              success: false,
+              error: `Impossible de supprimer certaines disponibilités car ${bookingsCount} réservation(s) sont en cours. Annulez d'abord les réservations concernées.`,
+            };
+          }
+
+          // Supprimer les disponibilités sans réservations
+          const { error: deleteError } = await supabase
+            .from('pro_availabilities')
+            .delete()
+            .in('id', idsToRemove);
+
+          if (deleteError) {
+            console.error('❌ Erreur suppression disponibilités:', deleteError);
+            return { success: false, error: 'Erreur lors de la suppression des disponibilités' };
+          }
+
+          console.log(`✅ ${idsToRemove.length} disponibilité(s) supprimée(s)`);
+        }
+      }
+
+      // 4. Ajouter les nouvelles dates
+      if (datesToAdd.length > 0) {
+        const newAvailabilities = datesToAdd.map((date) => ({
+          pro_id: proId,
+          golf_course_id: golfCourseId,
+          date,
+          start_time: '09:00',
+          end_time: '17:00',
+          max_players: 4,
+          current_bookings: 0,
+        }));
+
+        const { error: insertError } = await supabase
+          .from('pro_availabilities')
+          .insert(newAvailabilities);
+
+        if (insertError) {
+          console.error('❌ Erreur création disponibilités:', insertError);
+          // Si c'est une erreur de duplication, on peut l'ignorer
+          if (insertError.code !== '23505') {
+            return { success: false, error: 'Erreur lors de la création des nouvelles disponibilités' };
+          }
+        }
+
+        console.log(`✅ ${datesToAdd.length} nouvelle(s) disponibilité(s) créée(s)`);
+      }
+
+      console.log('✅ Mise à jour intelligente terminée avec succès');
+      return { success: true };
+    } catch (error) {
+      console.error('💥 Erreur mise à jour intelligente disponibilités:', error);
+      return { success: false, error: 'Une erreur inattendue est survenue' };
+    }
+  },
+
+  /**
    * Met à jour les disponibilités d'un pro sur un parcours
+   * Utilise maintenant la méthode intelligente qui gère les réservations existantes
    */
   async updateProAvailabilities(
     proId: string,
     golfCourseId: string,
     dates: string[]
   ): Promise<boolean> {
-    try {
-      // Supprimer les anciennes disponibilités
-      await this.deleteProAvailabilitiesByCourse(proId, golfCourseId);
-
-      // Créer les nouvelles disponibilités
-      return await this.createProAvailabilities(proId, golfCourseId, dates);
-    } catch (error) {
-      console.error('Erreur mise à jour disponibilités:', error);
-      return false;
-    }
+    const result = await this.updateProAvailabilitiesIntelligent(proId, golfCourseId, dates);
+    return result.success;
   },
 };

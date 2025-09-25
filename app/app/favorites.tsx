@@ -103,7 +103,6 @@ export default function FavoritesScreen() {
             meilleurResultat: 'Victoire professionnelle',
             victoires: 1,
             tarif: '', // Sera r\u00e9cup\u00e9r\u00e9 depuis pro_pricing
-            rating: null, // Pas de rating dans pro_profiles
             isPremium: false, // \u00c0 d\u00e9terminer selon les prix dans pro_pricing
             isAvailable: profile.pro_profiles?.[0]?.is_globally_available || false,
             division: profile.pro_profiles?.[0]?.division || 'Alps Tour',

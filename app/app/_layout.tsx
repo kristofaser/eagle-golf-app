@@ -24,6 +24,7 @@ import { ProProfileProvider } from '@/contexts/ProProfileContext';
 import { StripeProviderWrapper } from '@/contexts/StripeContext';
 import '@/utils/polyfills';
 import { DURATIONS, EASING_CURVES } from '@/constants/animations';
+import { Colors } from '@/constants/theme';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -40,11 +41,12 @@ SplashScreen.preventAutoHideAsync();
 
 function RootLayoutContent() {
   return (
-    <StripeProviderWrapper>
-      <AppProviders>
-        <ProProfileProvider>
-          <BottomSheetModalProvider>
-            <OverlayProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <StripeProviderWrapper>
+        <AppProviders>
+          <ProProfileProvider>
+            <BottomSheetModalProvider>
+              <OverlayProvider>
               <Stack
                 screenOptions={{
                   headerShown: false,
@@ -66,6 +68,32 @@ function RootLayoutContent() {
                 />
                 <Stack.Screen
                   name="profile/availability"
+                  options={{
+                    headerShown: false,
+                    presentation: 'modal',
+                    animation: 'slide_from_bottom',
+                    animationDuration: DURATIONS.MEDIUM,
+                  }}
+                />
+                <Stack.Screen
+                  name="profile/pro-settings"
+                  options={{
+                    headerShown: true,
+                    title: 'Mes Skills',
+                    presentation: 'modal',
+                    animation: 'slide_from_bottom',
+                    animationDuration: DURATIONS.MEDIUM,
+                    headerStyle: {
+                      backgroundColor: '#FFFFFF',
+                    },
+                    headerTitleStyle: {
+                      color: '#1A1A1A',
+                      fontWeight: '600',
+                    },
+                  }}
+                />
+                <Stack.Screen
+                  name="profile/experiences"
                   options={{
                     headerShown: false,
                     presentation: 'modal',
@@ -109,13 +137,30 @@ function RootLayoutContent() {
                     animationDuration: DURATIONS.MEDIUM,
                   }}
                 />
+                <Stack.Screen
+                  name="video-skill/upload/[skill]"
+                  options={{
+                    headerShown: true,
+                    presentation: 'modal',
+                    animation: 'slide_from_bottom',
+                    animationDuration: DURATIONS.MEDIUM,
+                    headerStyle: {
+                      backgroundColor: Colors.neutral.white,
+                    },
+                    headerTitleStyle: {
+                      color: Colors.neutral.charcoal,
+                      fontWeight: '600',
+                    },
+                  }}
+                />
               </Stack>
               <StatusBar style="auto" />
-            </OverlayProvider>
-          </BottomSheetModalProvider>
-        </ProProfileProvider>
-      </AppProviders>
-    </StripeProviderWrapper>
+              </OverlayProvider>
+            </BottomSheetModalProvider>
+          </ProProfileProvider>
+        </AppProviders>
+      </StripeProviderWrapper>
+    </GestureHandlerRootView>
   );
 }
 
@@ -152,10 +197,8 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <RootLayoutContent />
-      </QueryClientProvider>
-    </GestureHandlerRootView>
+    <QueryClientProvider client={queryClient}>
+      <RootLayoutContent />
+    </QueryClientProvider>
   );
 }

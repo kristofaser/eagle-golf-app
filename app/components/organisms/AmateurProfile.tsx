@@ -18,6 +18,7 @@ import { Text, LoadingScreen, Avatar } from '@/components/atoms';
 import { FullProfile } from '@/services/profile.service';
 import { bookingService, BookingWithDetails } from '@/services/booking.service';
 import { CancelBookingBottomSheet } from './CancelBookingBottomSheet';
+import { AmateurProfileEditBottomSheet } from './AmateurProfileEditBottomSheet';
 
 const DEFAULT_AVATAR =
   'https://images.unsplash.com/photo-1535131749006-b7f58c99034b?w=400&h=400&fit=crop&crop=center';
@@ -41,6 +42,7 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
   const [selectedBookingToCancel, setSelectedBookingToCancel] = useState<BookingWithDetails | null>(
     null
   );
+  const [editBottomSheetVisible, setEditBottomSheetVisible] = useState(false);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -167,6 +169,18 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
     setSelectedBookingToCancel(null);
   };
 
+  const handleEditProfile = () => {
+    setEditBottomSheetVisible(true);
+  };
+
+  const handleCloseEditBottomSheet = () => {
+    setEditBottomSheetVisible(false);
+  };
+
+  const handleProfileUpdated = async () => {
+    await loadBookings();
+  };
+
   // Fonction pour obtenir l'icône selon le nombre de joueurs
   const getPlayerIcon = (numberOfPlayers: number | null) => {
     switch (numberOfPlayers) {
@@ -193,13 +207,13 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
   return (
     <View style={styles.container}>
       {/* Profile Header */}
-      <View style={styles.profileHeader}>
+      <TouchableOpacity style={styles.profileHeader} onPress={handleEditProfile} activeOpacity={0.9}>
         <View style={styles.avatarContainer}>
           <Avatar
             imageUrl={profile.avatar_url}
             name={`${profile.first_name} ${profile.last_name}`}
-            size="large"
-            variant="elevated"
+            size="medium"
+            borderWidth={0}
           />
         </View>
         <View style={styles.profileInfo}>
@@ -207,24 +221,25 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
             {profile.first_name} {profile.last_name}
           </Text>
           <View style={styles.profileMeta}>
+            {/* Handicap */}
             {profile.amateur_profiles?.handicap !== null && (
-              <>
-                <Text variant="body" color="iron">
-                  Handicap {profile.amateur_profiles?.handicap || 'N/A'}
-                </Text>
-                <Text variant="body" color="iron">
-                  {' '}
-                  •{' '}
-                </Text>
-              </>
+              <Text variant="caption" color="charcoal" weight="medium">
+                Handicap {profile.amateur_profiles?.handicap}
+              </Text>
             )}
-            <Text variant="body" color="iron">
-              {totalGamesPlayed} partie{totalGamesPlayed !== 1 ? 's' : ''} jouée
-              {totalGamesPlayed !== 1 ? 's' : ''}
-            </Text>
+
+            {/* Numéro de licence */}
+            {profile.amateur_profiles?.license_number && (
+              <Text variant="caption" color="charcoal" weight="medium">
+                Licence {profile.amateur_profiles.license_number}
+              </Text>
+            )}
           </View>
         </View>
-      </View>
+        <View style={styles.editIcon}>
+          <Ionicons name="chevron-forward" size={20} color={Colors.neutral.iron} />
+        </View>
+      </TouchableOpacity>
 
       <ScrollView
         ref={scrollViewRef}
@@ -361,6 +376,15 @@ export function AmateurProfile({ profile, onRefresh, openSection }: AmateurProfi
         onClose={handleCloseCancelBottomSheet}
         onConfirmCancel={handleConfirmCancel}
       />
+
+      {/* Modal d'édition du profil */}
+      <AmateurProfileEditBottomSheet
+        profile={profile}
+        visible={editBottomSheetVisible}
+        onClose={handleCloseEditBottomSheet}
+        onProfileUpdated={handleProfileUpdated}
+      />
+
     </View>
   );
 }
@@ -373,29 +397,58 @@ const styles = StyleSheet.create({
   profileHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.l,
-    paddingVertical: Spacing.l,
+    paddingLeft: 0, // Pas de padding côté avatar
+    paddingRight: Spacing.l,
+    paddingVertical: 0, // Pas de padding vertical
+    height: 68, // Hauteur de la capsule
+    marginHorizontal: Spacing.m,
+    marginVertical: Spacing.s,
     backgroundColor: Colors.neutral.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.neutral.mist,
+    borderTopLeftRadius: 34, // Rayon identique à l'avatar
+    borderBottomLeftRadius: 34,
+    borderTopRightRadius: 34,
+    borderBottomRightRadius: 34,
+    ...Elevation.small,
+    shadowColor: Colors.neutral.charcoal,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   avatarContainer: {
     width: 68,
     height: 68,
     borderRadius: 34,
-    borderWidth: 2,
-    borderColor: Colors.primary.accent,
+    borderWidth: 0, // Pas de bordure pour fusion parfaite
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.m,
+    marginLeft: 0, // Aligné parfaitement
+    backgroundColor: 'transparent', // Transparent pour fusion
   },
   profileInfo: {
     flex: 1,
   },
   profileMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: Spacing.xxs,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    marginTop: 0, // Suppression de l'espace
+    gap: Spacing.xxs,
+  },
+  infoChip: {
+    backgroundColor: Colors.neutral.cloud,
+    paddingHorizontal: Spacing.s,
+    paddingVertical: Spacing.xxs / 2,
+    borderRadius: BorderRadius.small,
+    borderWidth: 1,
+    borderColor: Colors.neutral.mist,
+  },
+  editIcon: {
+    marginLeft: 'auto',
+    paddingLeft: Spacing.s,
   },
   content: {
     flex: 1,

@@ -108,7 +108,6 @@ export const useProsStore = create<ProsState>()(
                 meilleurResultat: proProfile.certifications?.join(', ') || 'Certifié PGA',
                 victoires: Math.floor(Math.random() * 10) + 1,
                 tarif: '120€', // Prix par défaut, sera remplacé par les vrais prix depuis pro_pricing
-                rating: 4.5 + Math.random() * 0.5,
                 isPremium: false, // À déterminer selon les prix dans pro_pricing
                 isAvailable: false, // TODO: Charger les disponibilités
               };

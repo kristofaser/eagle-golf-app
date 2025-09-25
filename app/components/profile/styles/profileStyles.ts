@@ -308,6 +308,20 @@ export const profileStyles = StyleSheet.create({
     color: Colors.neutral.iron,
     lineHeight: 20,
   },
+  experienceBadgeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  experienceEmoji: {
+    fontSize: 20,
+    marginRight: 6,
+  },
+  experienceLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.neutral.charcoal,
+  },
 
   // Booking footer styles
   bookingButtonContainer: {

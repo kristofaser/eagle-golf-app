@@ -18,7 +18,7 @@ export interface CardLayout {
 export interface CardData {
   id: string;
   title: string;
-  imageUrl: string;
+  imageUrl: string | null;
   type?: 'parcours' | 'joueur';
 }
 
@@ -35,7 +35,6 @@ export interface JoueurData extends CardData {
   meilleurResultat: string;
   victoires: number;
   tarif: string;
-  rating?: number;
   isPremium?: boolean;
   isAvailable?: boolean;
   division?: string;
