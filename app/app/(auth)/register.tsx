@@ -3,7 +3,6 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   Keyboard,
   TouchableWithoutFeedback,
 } from 'react-native';
@@ -14,6 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePublicRoute } from '@/hooks/useProtectedRoute';
 import { Text, Input, Button, EagleLogo } from '@/components/atoms';
 import { Colors, Spacing, Typography } from '@/constants/theme';
+import { UniversalAlert } from '@/utils/alert';
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -75,13 +75,12 @@ export default function RegisterScreen() {
       console.error('Erreur inscription:', error);
 
       if (error.message?.includes('Trop de tentatives')) {
-        Alert.alert(
+        UniversalAlert.error(
           'Limite atteinte',
-          "Vous avez effectué trop de tentatives d'inscription. Veuillez patienter quelques minutes avant de réessayer.",
-          [{ text: 'OK' }]
+          "Vous avez effectué trop de tentatives d'inscription. Veuillez patienter quelques minutes avant de réessayer."
         );
       } else if (error.message?.includes('déjà utilisée')) {
-        Alert.alert(
+        UniversalAlert.show(
           'Email déjà utilisé',
           'Cette adresse email est déjà associée à un compte. Essayez de vous connecter ou utilisez une autre adresse.',
           [
@@ -90,7 +89,7 @@ export default function RegisterScreen() {
           ]
         );
       } else {
-        Alert.alert('Erreur', error.message || "Une erreur est survenue lors de l'inscription");
+        UniversalAlert.error('Erreur', error.message || "Une erreur est survenue lors de l'inscription");
       }
     } finally {
       setIsLoading(false);
@@ -130,7 +129,7 @@ export default function RegisterScreen() {
                     value={firstName}
                     onChangeText={setFirstName}
                     placeholder="John"
-                    {...(errors.firstName && { error: errors.firstName })}
+                    {...(errors.firstName ? { error: errors.firstName } : {})}
                     autoCapitalize="words"
                   />
                 </View>
@@ -140,7 +139,7 @@ export default function RegisterScreen() {
                     value={lastName}
                     onChangeText={setLastName}
                     placeholder="Doe"
-                    {...(errors.lastName && { error: errors.lastName })}
+                    {...(errors.lastName ? { error: errors.lastName } : {})}
                     autoCapitalize="words"
                   />
                 </View>
@@ -153,7 +152,7 @@ export default function RegisterScreen() {
                 placeholder="john.doe@example.com"
                 keyboardType="email-address"
                 autoCapitalize="none"
-                {...(errors.email && { error: errors.email })}
+                {...(errors.email ? { error: errors.email } : {})}
               />
 
               <Button

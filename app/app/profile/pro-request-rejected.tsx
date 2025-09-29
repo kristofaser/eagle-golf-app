@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +10,7 @@ import {
   formatRequestDate,
   getDaysSinceRequest,
 } from '@/services/pro-request-status.service';
+import { UniversalAlert } from '@/utils/alert';
 
 interface ProRequestRejectedScreenProps {
   request: ProRequestStatus;
@@ -28,7 +29,7 @@ export default function ProRequestRejectedScreen({
   // const daysSinceValidation = getDaysSinceRequest(request.validated_at || request.created_at);
 
   const handleNewRequest = () => {
-    Alert.alert(
+    UniversalAlert.show(
       'Nouvelle demande',
       "Voulez-vous soumettre une nouvelle demande professionnelle ? Assurez-vous d'avoir corrigé les points mentionnés dans les remarques.",
       [
@@ -39,7 +40,7 @@ export default function ProRequestRejectedScreen({
   };
 
   const handleContactSupport = () => {
-    Alert.alert(
+    UniversalAlert.show(
       'Contacter le support',
       "Voulez-vous contacter notre équipe support pour plus d'informations sur le refus ?",
       [

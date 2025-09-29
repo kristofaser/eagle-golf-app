@@ -10,8 +10,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
-  Alert,
 } from 'react-native';
+import { UniversalAlert } from '@/utils/alert';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius } from '@/constants/theme';
@@ -95,7 +95,7 @@ export const ProAvailabilityCalendar: React.FC<ProAvailabilityCalendarProps> = (
       setOriginalAvailabilities(new Map(availMap));
     } catch (err) {
       console.error('Erreur chargement disponibilités:', err);
-      Alert.alert('Erreur', 'Impossible de charger vos disponibilités');
+      UniversalAlert.error('Erreur', 'Impossible de charger vos disponibilités');
     } finally {
       setLoading(false);
     }
@@ -137,7 +137,7 @@ export const ProAvailabilityCalendar: React.FC<ProAvailabilityCalendarProps> = (
 
     // Ne pas permettre de modifier si c'est déjà réservé
     if (currentAvailability?.is_booked) {
-      Alert.alert('Créneau réservé', 'Ce créneau a déjà été réservé et ne peut pas être modifié');
+      UniversalAlert.info('Créneau réservé', 'Ce créneau a déjà été réservé et ne peut pas être modifié');
       return;
     }
 

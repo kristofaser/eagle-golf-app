@@ -17,13 +17,16 @@
  */
 
 import { useState, useCallback } from 'react';
-import { Alert } from 'react-native';
+import { Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import { useAsyncOperation } from './useAsyncOperation';
 import { profileService } from '@/services/profile.service';
 import { useUser } from './useUser';
 import { logger } from '@/utils/logger';
 import { supabase } from '@/utils/supabase/client';
+import { UniversalAlert } from '@/utils/alert';
+import { prepareFormDataForUpload, isValidUploadUri, uriToBlob } from './uploadHelpers';
 
 // ============================================
 // Types et Interfaces
@@ -39,6 +42,31 @@ export interface ImageResult {
   base64?: string;
 }
 
+// ============================================
+// Utilitaires de normalisation MIME
+// ============================================
+
+/**
+ * Normalise les types MIME pour gérer les variations entre plateformes
+ * Ex: image/jpg -> image/jpeg
+ */
+const normalizeMimeType = (mimeType?: string): string => {
+  if (!mimeType) return 'image/jpeg'; // Défaut sécurisé
+
+  const normalized = mimeType.toLowerCase().trim();
+
+  // Normalisation des variations communes
+  const mimeMap: Record<string, string> = {
+    'image/jpg': 'image/jpeg',
+    'image/pjpeg': 'image/jpeg',
+    'image/x-png': 'image/png',
+    'image/x-citrix-jpeg': 'image/jpeg',
+    'image/x-citrix-png': 'image/png',
+  };
+
+  return mimeMap[normalized] || normalized;
+};
+
 export interface ImageUploadConfig {
   // === Options de sélection ===
   source?: 'camera' | 'gallery' | 'both'; // défaut: 'both'
@@ -52,6 +80,13 @@ export interface ImageUploadConfig {
   minWidth?: number; // défaut: 150px
   minHeight?: number; // défaut: 150px
   allowedTypes?: string[]; // défaut: ['image/jpeg', 'image/png']
+
+  // === Compression ===
+  enableCompression?: boolean; // défaut: true
+  compressionMaxWidth?: number; // défaut: 1200px
+  compressionMaxHeight?: number; // défaut: 1200px
+  compressionQuality?: number; // 0-1, défaut: 0.85
+  outputFormat?: 'jpeg' | 'png' | 'webp'; // défaut: 'jpeg'
 
   // === Upload Supabase ===
   uploadTo?: 'profile' | 'custom' | null; // défaut: null (pas d'upload)
@@ -85,7 +120,19 @@ const DEFAULT_CONFIG: Required<
   maxFileSize: 5 * 1024 * 1024, // 5MB
   minWidth: 150,
   minHeight: 150,
-  allowedTypes: ['image/jpeg', 'image/png'],
+  allowedTypes: [
+    'image/jpeg',
+    'image/jpg',    // Variation commune
+    'image/png',
+    'image/webp',   // Format moderne et léger
+    'image/heic',   // Format Apple
+    'image/heif',   // Format Apple
+  ],
+  enableCompression: true,
+  compressionMaxWidth: 1200,
+  compressionMaxHeight: 1200,
+  compressionQuality: 0.85,
+  outputFormat: 'jpeg',
   uploadTo: null,
   bucket: 'avatars',
   path: '',
@@ -131,7 +178,7 @@ export function useImageUpload(config: ImageUploadConfig = {}) {
       const allGranted = permissions.every((p) => p.status === 'granted');
 
       if (!allGranted && finalConfig.showPermissionAlerts) {
-        Alert.alert(
+        UniversalAlert.show(
           'Permissions requises',
           "Cette application a besoin d'accéder à votre caméra et/ou galerie.",
           [{ text: 'OK' }]
@@ -151,6 +198,16 @@ export function useImageUpload(config: ImageUploadConfig = {}) {
 
   const validateImage = useCallback(
     (image: ImageResult): { isValid: boolean; error?: string } => {
+      // Log en développement pour débugger les types MIME
+      if (__DEV__) {
+        logger.dev('Image validation:', {
+          type: image.type,
+          normalizedType: normalizeMimeType(image.type),
+          fileSize: image.fileSize,
+          dimensions: `${image.width}x${image.height}`,
+        });
+      }
+
       // Validation taille fichier
       if (image.fileSize && image.fileSize > finalConfig.maxFileSize) {
         const maxMB = (finalConfig.maxFileSize / (1024 * 1024)).toFixed(1);
@@ -165,9 +222,14 @@ export function useImageUpload(config: ImageUploadConfig = {}) {
         };
       }
 
-      // Validation type
-      if (image.type && !finalConfig.allowedTypes.includes(image.type)) {
-        return { isValid: false, error: "Format d'image non supporté" };
+      // Validation type avec normalisation
+      const normalizedType = normalizeMimeType(image.type);
+      if (!finalConfig.allowedTypes.includes(normalizedType)) {
+        // Message d'erreur plus explicite
+        return {
+          isValid: false,
+          error: "Format accepté : JPG, PNG, WebP, HEIC"
+        };
       }
 
       return { isValid: true };
@@ -197,7 +259,7 @@ export function useImageUpload(config: ImageUploadConfig = {}) {
       uri: asset.uri,
       width: asset.width,
       height: asset.height,
-      type: asset.type,
+      type: normalizeMimeType(asset.type),
       fileSize: asset.fileSize,
       fileName: asset.fileName,
       base64: asset.base64,
@@ -223,12 +285,108 @@ export function useImageUpload(config: ImageUploadConfig = {}) {
       uri: asset.uri,
       width: asset.width,
       height: asset.height,
-      type: asset.type || 'image/jpeg',
+      type: normalizeMimeType(asset.type || 'image/jpeg'),
       fileSize: asset.fileSize,
       fileName: asset.fileName,
       base64: asset.base64,
     };
   }, [finalConfig, requestPermissions]);
+
+  // ============================================
+  // Compression d'image
+  // ============================================
+
+  const compressImage = useCallback(
+    async (image: ImageResult): Promise<ImageResult> => {
+      // Si la compression est désactivée, retourner l'image originale
+      if (!finalConfig.enableCompression) {
+        logger.dev('Compression désactivée, utilisation de l\'image originale');
+        return image;
+      }
+
+      try {
+        // Calculer les nouvelles dimensions en gardant le ratio
+        const { width, height } = image;
+        const maxWidth = finalConfig.compressionMaxWidth;
+        const maxHeight = finalConfig.compressionMaxHeight;
+
+        let newWidth = width;
+        let newHeight = height;
+
+        // Ne pas agrandir les images plus petites
+        if (width > maxWidth || height > maxHeight) {
+          const widthRatio = maxWidth / width;
+          const heightRatio = maxHeight / height;
+          const ratio = Math.min(widthRatio, heightRatio);
+
+          newWidth = Math.round(width * ratio);
+          newHeight = Math.round(height * ratio);
+        }
+
+        // Déterminer le format de sortie
+        let saveFormat: ImageManipulator.SaveFormat;
+        switch (finalConfig.outputFormat) {
+          case 'png':
+            saveFormat = ImageManipulator.SaveFormat.PNG;
+            break;
+          case 'webp':
+            saveFormat = ImageManipulator.SaveFormat.WEBP;
+            break;
+          default:
+            saveFormat = ImageManipulator.SaveFormat.JPEG;
+        }
+
+        // Log avant compression
+        if (__DEV__) {
+          logger.dev('Compression d\'image:', {
+            original: `${width}x${height}`,
+            nouveau: `${newWidth}x${newHeight}`,
+            format: finalConfig.outputFormat,
+            qualité: finalConfig.compressionQuality,
+          });
+        }
+
+        // Appliquer la compression
+        const manipulatorResult = await ImageManipulator.manipulateAsync(
+          image.uri,
+          [
+            {
+              resize: {
+                width: newWidth,
+                height: newHeight,
+              },
+            },
+          ],
+          {
+            compress: finalConfig.compressionQuality,
+            format: saveFormat,
+          }
+        );
+
+        // Créer le nouvel ImageResult
+        const compressedImage: ImageResult = {
+          uri: manipulatorResult.uri,
+          width: manipulatorResult.width || newWidth,
+          height: manipulatorResult.height || newHeight,
+          type: `image/${finalConfig.outputFormat}`,
+          // La taille du fichier n'est pas disponible directement, mais sera réduite
+          fileSize: image.fileSize ? Math.round(image.fileSize * 0.3) : undefined,
+          fileName: image.fileName?.replace(/\.[^/.]+$/, `.${finalConfig.outputFormat}`),
+        };
+
+        if (__DEV__) {
+          logger.dev('Image compressée avec succès');
+        }
+
+        return compressedImage;
+      } catch (error) {
+        logger.error('Erreur lors de la compression:', error);
+        // En cas d'erreur, retourner l'image originale
+        return image;
+      }
+    },
+    [finalConfig]
+  );
 
   // ============================================
   // Upload vers Supabase
@@ -286,7 +444,7 @@ export function useImageUpload(config: ImageUploadConfig = {}) {
       } else {
         // Mode 'both' - afficher un menu
         image = await new Promise<ImageResult | null>((resolve) => {
-          Alert.alert(finalConfig.title, undefined, [
+          UniversalAlert.show(finalConfig.title, undefined, [
             {
               text: finalConfig.cancelButtonText,
               style: 'cancel',
@@ -309,21 +467,36 @@ export function useImageUpload(config: ImageUploadConfig = {}) {
       // Validation
       const validation = validateImage(image);
       if (!validation.isValid) {
-        Alert.alert('Image invalide', validation.error);
+        UniversalAlert.show('Image invalide', validation.error);
         return null;
       }
 
-      setSelectedImage(image);
+      // Compression de l'image
+      let finalImage = image;
+      if (finalConfig.enableCompression) {
+        try {
+          // Afficher un message pendant la compression
+          if (__DEV__) {
+            logger.dev('Optimisation de l\'image en cours...');
+          }
+          finalImage = await compressImage(image);
+        } catch (error) {
+          logger.error('Erreur compression, utilisation image originale:', error);
+          // Continue avec l'image originale en cas d'erreur
+        }
+      }
+
+      setSelectedImage(finalImage);
 
       // Callback
-      config.onImageSelected?.(image);
+      config.onImageSelected?.(finalImage);
 
       // Upload automatique si configuré
       if (finalConfig.autoUpload && finalConfig.uploadTo) {
-        await uploadImage(image);
+        await uploadImage(finalImage);
       }
 
-      return image;
+      return finalImage;
     });
   }, [
     imageOperation,
@@ -331,6 +504,7 @@ export function useImageUpload(config: ImageUploadConfig = {}) {
     takePhoto,
     pickFromGallery,
     validateImage,
+    compressImage,
     config.onImageSelected,
   ]);
 
@@ -341,7 +515,7 @@ export function useImageUpload(config: ImageUploadConfig = {}) {
 
       if (finalConfig.confirmBeforeUpload) {
         return new Promise((resolve) => {
-          Alert.alert('Confirmer', 'Voulez-vous utiliser cette image ?', [
+          UniversalAlert.show('Confirmer', 'Voulez-vous utiliser cette image ?', [
             { text: 'Annuler', style: 'cancel', onPress: () => resolve(null) },
             {
               text: 'Confirmer',
@@ -469,6 +643,10 @@ export const useProfileUpload = () =>
     autoUpload: false,
     confirmBeforeUpload: true,
     title: 'Photo de profil',
+    enableCompression: true,
+    compressionMaxWidth: 800,
+    compressionMaxHeight: 800,
+    compressionQuality: 0.85,
   });
 
 // Remplace useSimpleProfileUpload
@@ -481,7 +659,7 @@ export const useSimpleProfileUpload = () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission requise', "L'accès à la galerie est nécessaire.");
+        UniversalAlert.show('Permission requise', "L'accès à la galerie est nécessaire.");
         return;
       }
 
@@ -494,12 +672,26 @@ export const useSimpleProfileUpload = () => {
 
       if (!result.canceled && result.assets?.[0]) {
         const asset = result.assets[0];
-        setTempImageUri(asset.uri);
+
+        // Compression de l'image de profil
+        try {
+          const compressed = await ImageManipulator.manipulateAsync(
+            asset.uri,
+            [{ resize: { width: 800, height: 800 } }],
+            { compress: 0.85, format: ImageManipulator.SaveFormat.JPEG }
+          );
+          setTempImageUri(compressed.uri);
+          logger.dev('Image compressed successfully for profile');
+        } catch (compressionError) {
+          logger.warn('Compression failed, using original image:', compressionError);
+          setTempImageUri(asset.uri);
+        }
+
         setHasSelectedImage(true);
       }
     } catch (error) {
       logger.error('Erreur sélection image:', error);
-      Alert.alert('Erreur', "Impossible de sélectionner l'image");
+      UniversalAlert.show('Erreur', "Impossible de sélectionner l'image");
     }
   }, []);
 
@@ -512,29 +704,61 @@ export const useSimpleProfileUpload = () => {
         const fileName = `${userId}-${Date.now()}.jpg`;
 
         logger.dev('Uploading image from URI:', tempImageUri);
+        logger.dev('Platform:', Platform.OS);
 
-        // Utiliser FormData pour React Native (méthode simple et fiable)
-        const formData = new FormData();
-        const photo = {
-          uri: tempImageUri,
-          type: 'image/jpeg',
-          name: fileName,
-        } as any;
+        // Valider l'URI avant l'upload
+        if (!isValidUploadUri(tempImageUri)) {
+          throw new Error('Invalid image URI for upload');
+        }
 
-        formData.append('file', photo);
+        let avatarUrl: string | null = null;
 
-        logger.dev('FormData created with photo:', photo.name);
+        if (Platform.OS === 'web') {
+          // Sur web, utiliser uploadAvatar avec un File/Blob
+          logger.dev('[Web] Using uploadAvatar with Blob conversion');
 
-        // Upload via ProfileService
-        const { data: avatarUrl, error } = await profileService.uploadAvatarWithFormData(
-          userId,
-          formData,
-          fileName
-        );
+          // Convertir l'URI en Blob
+          const blob = await uriToBlob(tempImageUri);
 
-        if (error) {
-          logger.error('Upload error:', error);
-          throw error;
+          // Créer un File à partir du Blob
+          const file = new File([blob], fileName, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          });
+
+          logger.dev('[Web] File created:', { name: file.name, size: file.size, type: file.type });
+
+          // Upload via ProfileService.uploadAvatar (qui accepte File/Blob)
+          const { data, error } = await profileService.uploadAvatar(userId, file);
+
+          if (error) {
+            throw error;
+          }
+
+          avatarUrl = data;
+        } else {
+          // Sur mobile, utiliser uploadAvatarWithFormData avec FormData natif
+          logger.dev('[Native] Using uploadAvatarWithFormData');
+
+          const formData = await prepareFormDataForUpload({
+            uri: tempImageUri,
+            fileName: fileName,
+            mimeType: 'image/jpeg',
+          });
+
+          logger.dev('[Native] FormData prepared');
+
+          const { data, error } = await profileService.uploadAvatarWithFormData(
+            userId,
+            formData,
+            fileName
+          );
+
+          if (error) {
+            throw error;
+          }
+
+          avatarUrl = data;
         }
 
         logger.dev('Upload successful, URL:', avatarUrl);

@@ -72,7 +72,7 @@ export const BookingFAB = memo<BookingFABProps>(({ price, players, onPress, isAu
         accessibilityRole="button"
         accessibilityLabel={
           isAuthenticated
-            ? `Réserver une leçon pour ${players} ${players === 1 ? 'joueur' : 'joueurs'} - Total: ${price > 0 ? `${price * players} euros` : 'prix sur devis'}`
+            ? `Réserver une leçon pour ${players} ${players === 1 ? 'joueur' : 'joueurs'} - Total: ${price > 0 ? `${price} euros` : 'prix sur devis'}`
             : 'Se connecter pour réserver'
         }
         accessibilityHint="Appuyez pour configurer et réserver votre leçon"
@@ -82,7 +82,7 @@ export const BookingFAB = memo<BookingFABProps>(({ price, players, onPress, isAu
 
         {/* Prix total */}
         {price > 0 ? (
-          <Text style={styles.priceText}>{price * players}€</Text>
+          <Text style={styles.priceText}>{price}€</Text>
         ) : (
           <Text style={styles.priceText}>Sur devis</Text>
         )}

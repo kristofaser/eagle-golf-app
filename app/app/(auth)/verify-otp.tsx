@@ -7,7 +7,6 @@ import {
   Platform,
   TouchableOpacity,
   TextInput,
-  Alert,
   Vibration,
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
@@ -16,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/hooks/useAuth';
 import { Text, Button, EagleLogo } from '@/components/atoms';
 import { Colors, Spacing, Typography } from '@/constants/theme';
+import { UniversalAlert } from '@/utils/alert';
 
 export default function VerifyOtpScreen() {
   const router = useRouter();
@@ -169,10 +169,10 @@ export default function VerifyOtpScreen() {
       setError('');
       setCode(['', '', '', '', '', '']);
 
-      Alert.alert('Code envoyé', 'Un nouveau code a été envoyé à votre email');
+      UniversalAlert.success('Code envoyé', 'Un nouveau code a été envoyé à votre email');
       inputRefs.current[0]?.focus();
     } catch (error: any) {
-      Alert.alert('Erreur', 'Impossible de renvoyer le code. Réessayez plus tard.');
+      UniversalAlert.error('Erreur', 'Impossible de renvoyer le code. Réessayez plus tard.');
     } finally {
       setIsLoading(false);
     }
@@ -180,7 +180,7 @@ export default function VerifyOtpScreen() {
 
   // Changer d'email
   const handleChangeEmail = () => {
-    Alert.alert(
+    UniversalAlert.show(
       "Changer d'email",
       "Voulez-vous recommencer l'inscription avec une autre adresse email ?",
       [

@@ -37,8 +37,13 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
+    },
+    "notification": {
+      "icon": "./assets/images/icon.png",
+      "color": "#3b82f6",
+      "vapidPublicKey": "BLT5peZNwenTKrPXxRn-oVmgDtjfbUowOsXO_um-hs_oiG9r2CGHg1bvyqo4Q8-dlmnNwj3P5p1XVJ_7Ko1I6GQ"
     },
     "plugins": [
       "expo-router",

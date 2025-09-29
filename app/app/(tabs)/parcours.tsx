@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { StyleSheet, View, RefreshControl, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -150,6 +151,7 @@ function ParcoursScreen() {
   // Fermer la bottomsheet quand on quitte cet écran
   useFocusEffect(
     useCallback(() => {
+  const Container = Platform.OS === 'web' ? View : SafeAreaView;
       return () => {
         // Cette fonction s'exécute quand l'écran perd le focus
         handleBottomSheetClose();
@@ -262,8 +264,9 @@ function ParcoursScreen() {
     return <ErrorScreen error={error} onRetry={loadCourses} />;
   }
 
+  const Container = Platform.OS === 'web' ? View : SafeAreaView;
   return (
-    <SafeAreaView style={styles.container} edges={[]}>
+    <Container style={styles.container} edges={[]}>
       {viewMode === 'list' ? (
         <View style={styles.container}>
           <FlashList
@@ -312,7 +315,7 @@ function ParcoursScreen() {
           onClose={handleBottomSheetClose}
         />
       )}
-    </SafeAreaView>
+    </Container>
   );
 }
 

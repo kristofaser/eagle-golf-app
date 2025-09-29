@@ -125,8 +125,23 @@ export function usePushNotifications(
         logger.dev('📱 usePushNotifications: Demande permissions...');
       }
 
-      // Vérifier si on est sur un appareil physique
-      if (!Device.isDevice) {
+      // Sur web, vérifier si VAPID est configuré
+      if (Platform.OS === 'web') {
+        const vapidKey = Constants.expoConfig?.notification?.vapidPublicKey;
+        if (!vapidKey) {
+          if (debug) {
+            logger.dev('ℹ️ usePushNotifications: Skip permissions web - VAPID non configuré');
+          }
+          setState((prev) => ({
+            ...prev,
+            permission: 'undetermined' as Notifications.PermissionStatus,
+          }));
+          return false;
+        }
+      }
+
+      // Vérifier si on est sur un appareil physique (mobile seulement)
+      if (Platform.OS !== 'web' && !Device.isDevice) {
         setState((prev) => ({
           ...prev,
           error: 'Les push notifications ne fonctionnent que sur un appareil physique',
@@ -180,6 +195,22 @@ export function usePushNotifications(
         logger.dev('🔑 usePushNotifications: Récupération token...');
       }
 
+      // Sur web, les notifications push nécessitent VAPID
+      if (Platform.OS === 'web') {
+        const vapidKey = Constants.expoConfig?.notification?.vapidPublicKey;
+        if (!vapidKey) {
+          if (debug) {
+            logger.dev('ℹ️ usePushNotifications: Push notifications non configurées pour web (VAPID requis)');
+          }
+          // Ne pas considérer comme une erreur, juste non supporté
+          return null;
+        }
+
+        // Pour le web, nous devons gérer les subscriptions différemment
+        // Expo génère toujours un token même sur web, mais nous devrons
+        // aussi stocker la subscription Web Push native plus tard
+      }
+
       // Configuration du projet (nécessaire pour EAS)
       const projectId = Constants.expoConfig?.extra?.eas?.projectId;
 
@@ -197,6 +228,14 @@ export function usePushNotifications(
 
       return tokenData.data;
     } catch (err) {
+      // Sur web, ne pas logger comme erreur si c'est lié à VAPID
+      if (Platform.OS === 'web' && err instanceof Error && err.message.includes('vapidPublicKey')) {
+        if (debug) {
+          logger.dev('ℹ️ usePushNotifications: Push web non disponible (VAPID non configuré)');
+        }
+        return null;
+      }
+
       logger.error('❌ Erreur récupération token push:', err);
       setState((prev) => ({
         ...prev,
@@ -518,8 +557,10 @@ export function usePushNotifications(
     requestPermission,
 
     // Helpers
-    isSupported: Device.isDevice,
-    canRegister: !!userId && Device.isDevice,
+    isSupported: Platform.OS === 'web' ? !!Constants.expoConfig?.notification?.vapidPublicKey : Device.isDevice,
+    canRegister: Platform.OS === 'web'
+      ? !!userId && !!Constants.expoConfig?.notification?.vapidPublicKey
+      : !!userId && Device.isDevice,
   };
 }
 

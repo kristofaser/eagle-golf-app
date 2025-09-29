@@ -23,8 +23,11 @@ export const pricingService = {
       return [];
     }
 
-    // Les prix sont maintenant stockés directement en euros
-    return data || [];
+    // Convertir les prix de centimes en euros
+    return (data || []).map(pricing => ({
+      ...pricing,
+      price: pricing.price / 100
+    }));
   },
 
   /**
@@ -48,8 +51,8 @@ export const pricingService = {
       return null;
     }
 
-    // Les prix sont maintenant stockés directement en euros
-    return data?.price ?? null;
+    // Convertir le prix de centimes en euros
+    return data?.price ? data.price / 100 : null;
   },
 
   /**
@@ -60,12 +63,12 @@ export const pricingService = {
       // Supprimer les anciens tarifs
       await supabase.from('pro_pricing').delete().eq('pro_id', proId);
 
-      // Insérer les nouveaux tarifs (déjà en euros)
+      // Insérer les nouveaux tarifs (convertir euros en centimes pour le stockage)
       const pricingData = pricing.map((p) => ({
         pro_id: proId,
         holes: p.holes,
         players_count: p.players_count,
-        price: p.price, // Prix déjà en euros
+        price: p.price * 100, // Convertir euros en centimes
       }));
 
       const { error } = await supabase.from('pro_pricing').insert(pricingData);

@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { UniversalAlert } from '@/utils/alert';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { VideoView, useVideoPlayer } from 'expo-video';
@@ -68,12 +69,12 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
         });
 
         if (asset.size && asset.size > 50 * 1024 * 1024) {
-          Alert.alert('Erreur', 'La vidéo ne peut pas dépasser 50MB');
+          UniversalAlert.error('Erreur', 'La vidéo ne peut pas dépasser 50MB');
           return;
         }
 
         if (asset.size === 0) {
-          Alert.alert('Erreur', 'Le fichier sélectionné est vide');
+          UniversalAlert.error('Erreur', 'Le fichier sélectionné est vide');
           return;
         }
 
@@ -81,7 +82,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
       }
     } catch (error) {
       logger.error('Erreur lors de la sélection', error);
-      Alert.alert('Erreur', 'Impossible de sélectionner la vidéo');
+      UniversalAlert.error('Erreur', 'Impossible de sélectionner la vidéo');
     }
   }, []);
 
@@ -91,7 +92,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
       if (status !== 'granted') {
-        Alert.alert(
+        UniversalAlert.info(
           'Permission requise',
           "L'accès à la galerie est nécessaire pour sélectionner une vidéo"
         );
@@ -120,12 +121,12 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
 
         // Vérifier la taille du fichier (limite à 50MB)
         if (asset.fileSize && asset.fileSize > 50 * 1024 * 1024) {
-          Alert.alert('Erreur', 'La vidéo ne peut pas dépasser 50MB');
+          UniversalAlert.error('Erreur', 'La vidéo ne peut pas dépasser 50MB');
           return;
         }
 
         if (asset.fileSize === 0) {
-          Alert.alert('Erreur', 'Le fichier sélectionné est vide');
+          UniversalAlert.error('Erreur', 'Le fichier sélectionné est vide');
           return;
         }
 
@@ -133,7 +134,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
       }
     } catch (error) {
       logger.error('Erreur lors de la sélection depuis la galerie', error);
-      Alert.alert('Erreur', 'Impossible de sélectionner la vidéo depuis la galerie');
+      UniversalAlert.error('Erreur', 'Impossible de sélectionner la vidéo depuis la galerie');
     }
   }, []);
 
@@ -215,12 +216,12 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
 
       onVideoUploaded?.(skillKey, publicUrl);
       logger.dev('UPLOAD TERMINÉ AVEC SUCCÈS !');
-      Alert.alert('Succès', 'Vidéo uploadée avec succès !');
+      UniversalAlert.success('Succès', 'Vidéo uploadée avec succès !');
     } catch (error) {
       logger.error('ERREUR UPLOAD SCALEWAY', error);
       logger.error('Stack trace:', error instanceof Error ? error.stack : 'Pas de stack trace');
       updateUploadProgress(0, false);
-      Alert.alert(
+      UniversalAlert.error(
         'Erreur',
         `Impossible d'uploader la vidéo: ${error instanceof Error ? error.message : 'Erreur inconnue'}`
       );
@@ -230,7 +231,7 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
   const deleteVideo = useCallback(async () => {
     if (!user) return;
 
-    Alert.alert('Supprimer la vidéo', 'Êtes-vous sûr de vouloir supprimer cette vidéo ?', [
+    UniversalAlert.show('Supprimer la vidéo', 'Êtes-vous sûr de vouloir supprimer cette vidéo ?', [
       { text: 'Annuler', style: 'cancel' },
       {
         text: 'Supprimer',
@@ -247,10 +248,10 @@ export const SingleVideoUploadManager: React.FC<SingleVideoUploadManagerProps> =
             await s3.deleteObject(deleteParams).promise();
 
             onVideoDeleted?.(skillKey);
-            Alert.alert('Succès', 'Vidéo supprimée');
+            UniversalAlert.success('Succès', 'Vidéo supprimée');
           } catch (error) {
             logger.error('Erreur suppression Scaleway', error);
-            Alert.alert('Erreur', 'Impossible de supprimer la vidéo');
+            UniversalAlert.error('Erreur', 'Impossible de supprimer la vidéo');
           }
         },
       },

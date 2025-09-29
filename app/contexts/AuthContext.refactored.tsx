@@ -5,9 +5,10 @@
  * ✅ REFACTORISÉ avec useAsyncOperation - Élimine la duplication loading/error
  */
 import React, { createContext, useContext, useCallback } from 'react';
-import { Alert, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import * as Linking from 'expo-linking';
 import { supabase } from '@/utils/supabase/client';
+import { UniversalAlert } from '@/utils/alert';
 import { SignUpData, AuthProvider as AuthProviderType } from '@/utils/supabase/auth.types';
 import { useSessionContext } from './SessionContext';
 import { useUserContext } from './UserContext';
@@ -75,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return result;
     } catch (error) {
       // Gestion d'erreur avec message utilisateur
-      Alert.alert('Erreur de connexion', error.message);
+      UniversalAlert.error('Erreur de connexion', error.message);
       throw error;
     }
   }, []);
@@ -115,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Gestion d'erreur avec message utilisateur
     if (!result && authOperation.error) {
-      Alert.alert('Erreur de connexion', authOperation.error.message);
+      UniversalAlert.error('Erreur de connexion', authOperation.error.message);
       throw authOperation.error;
     }
   }, []);
@@ -135,11 +136,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
-      Alert.alert('Email envoyé', 'Vérifiez votre boîte mail pour vous connecter');
+      UniversalAlert.success('Email envoyé', 'Vérifiez votre boîte mail pour vous connecter');
     });
 
     if (!result && authOperation.error) {
-      Alert.alert('Erreur', authOperation.error.message);
+      UniversalAlert.error('Erreur', authOperation.error.message);
       throw authOperation.error;
     }
   }, []);
@@ -250,7 +251,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (amateurError && amateurError.code !== '23505') {
                   console.error('❌ Erreur création profil amateur différée:', amateurError);
                   // Ne pas throw ici car on est dans un setTimeout
-                  Alert.alert(
+                  UniversalAlert.error(
                     'Erreur de profil',
                     'Votre profil principal a été créé mais le profil amateur a échoué. Contactez le support.'
                   );
@@ -313,7 +314,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (!result && authOperation.error) {
-      Alert.alert('Erreur', authOperation.error.message);
+      UniversalAlert.error('Erreur', authOperation.error.message);
       throw authOperation.error;
     }
   }, [setSession]);

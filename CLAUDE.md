@@ -5,10 +5,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Repository Structure
 
 Eagle is a monorepo containing two main applications:
-- `app/` - React Native mobile application using Expo
+- `app/` - React Native mobile application using Expo (includes web version via Expo Web)
 - `admin/` - Next.js 15 backoffice web application
 
 Each application has its own package.json, dependencies, and build system.
+
+**Note**: The mobile app (`app/`) supports iOS, Android, and Web platforms through Expo. The web version is generated using Expo Web (React Native Web), ensuring 100% code reuse across all platforms.
 
 ## Development Commands
 
@@ -19,7 +21,7 @@ npm install
 npm start                    # Start Expo development server
 npm run android             # Run on Android device/emulator
 npm run ios                 # Run on iOS device/simulator
-npm run web                 # Run web version
+npm run web                 # Run web version (Expo Web - React Native Web)
 npm test                    # Run Jest tests
 npm run test:watch          # Run tests in watch mode
 npm run test:coverage       # Run tests with coverage report

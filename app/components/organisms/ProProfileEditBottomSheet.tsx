@@ -3,12 +3,13 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   ScrollView,
   Modal,
   SafeAreaView,
   Platform,
 } from 'react-native';
+import { UniversalAlert } from '@/utils/alert';
+import { toast } from '@/utils/toast';
 import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius } from '@/constants/theme';
@@ -77,7 +78,7 @@ export function ProProfileEditBottomSheet({
 
   const handleSave = async () => {
     if (!user?.id) {
-      Alert.alert('Erreur', 'Utilisateur non connecté');
+      UniversalAlert.error('Erreur', 'Utilisateur non connecté');
       return;
     }
 
@@ -87,7 +88,7 @@ export function ProProfileEditBottomSheet({
     if (worldRanking) {
       const rankingNum = parseInt(worldRanking);
       if (isNaN(rankingNum) || rankingNum < 1) {
-        Alert.alert('Erreur', 'Le classement mondial doit être un nombre positif');
+        UniversalAlert.error('Erreur', 'Le classement mondial doit être un nombre positif');
         return;
       }
     }
@@ -102,7 +103,7 @@ export function ProProfileEditBottomSheet({
           avatarUrl = await uploadProfileImage(user.id);
         } catch (uploadError) {
           console.error('Erreur upload image:', uploadError);
-          Alert.alert(
+          UniversalAlert.info(
             'Attention',
             "L'image n'a pas pu être uploadée, mais les autres modifications seront sauvegardées."
           );
@@ -136,18 +137,12 @@ export function ProProfileEditBottomSheet({
         console.log('Erreur rafraîchissement session/profil:', refreshError);
       }
 
-      Alert.alert('Succès', 'Vos informations ont été mises à jour', [
-        {
-          text: 'OK',
-          onPress: () => {
-            onProfileUpdated();
-            onClose();
-          },
-        },
-      ]);
+      toast.success('Mis à jour !');
+      onProfileUpdated();
+      onClose();
     } catch (error) {
       console.error('Erreur mise à jour profil:', error);
-      Alert.alert('Erreur', 'Impossible de mettre à jour le profil');
+      UniversalAlert.error('Erreur', 'Impossible de mettre à jour le profil');
     } finally {
       setIsLoading(false);
     }

@@ -6,7 +6,6 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { Link, useFocusEffect } from 'expo-router';
@@ -14,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { proAvailabilityService, ProAvailabilityGroup } from '@/services/pro-availability.service';
+import { UniversalAlert } from '@/utils/alert';
 
 export default function AvailabilityScreen() {
   const { user } = useAuth();
@@ -38,7 +38,7 @@ export default function AvailabilityScreen() {
       setAvailabilityGroups(groups);
     } catch (error) {
       console.error('Erreur chargement disponibilités:', error);
-      Alert.alert('Erreur', 'Impossible de charger vos disponibilités');
+      UniversalAlert.error('Erreur', 'Impossible de charger vos disponibilités');
     } finally {
       setLoading(false);
     }
@@ -56,7 +56,7 @@ export default function AvailabilityScreen() {
       courseName,
     });
 
-    Alert.alert(
+    UniversalAlert.show(
       'Supprimer les disponibilités',
       `Êtes-vous sûr de vouloir supprimer toutes vos disponibilités sur ${courseName} ?`,
       [
@@ -79,15 +79,9 @@ export default function AvailabilityScreen() {
 
               if (hasBookings) {
                 console.log('🚫 [handleDeleteGroup] Suppression bloquée - réservations existantes');
-                Alert.alert(
+                UniversalAlert.info(
                   'Impossible de supprimer',
-                  `Vous avez ${bookingsCount} réservation${bookingsCount > 1 ? 's' : ''} validée${bookingsCount > 1 ? 's' : ''} ou en attente sur ce parcours.\n\nVous ne pouvez pas supprimer vos disponibilités tant que des réservations sont actives.`,
-                  [
-                    {
-                      text: 'Compris',
-                      style: 'default',
-                    },
-                  ]
+                  `Vous avez ${bookingsCount} réservation${bookingsCount > 1 ? 's' : ''} validée${bookingsCount > 1 ? 's' : ''} ou en attente sur ce parcours.\n\nVous ne pouvez pas supprimer vos disponibilités tant que des réservations sont actives.`
                 );
                 return;
               }
@@ -108,11 +102,11 @@ export default function AvailabilityScreen() {
                 loadAvailabilities();
               } else {
                 console.log('❌ [handleDeleteGroup] Échec suppression');
-                Alert.alert('Erreur', 'Impossible de supprimer les disponibilités');
+                UniversalAlert.error('Erreur', 'Impossible de supprimer les disponibilités');
               }
             } catch (error) {
               console.error('💥 [handleDeleteGroup] Erreur lors de la suppression:', error);
-              Alert.alert('Erreur', 'Une erreur est survenue lors de la suppression');
+              UniversalAlert.error('Erreur', 'Une erreur est survenue lors de la suppression');
             }
           },
         },

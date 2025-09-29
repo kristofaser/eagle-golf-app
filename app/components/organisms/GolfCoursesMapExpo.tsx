@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { StyleSheet, View, ActivityIndicator, Platform } from 'react-native';
-import MapView, { Region, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { Colors, Spacing } from '@/constants/theme';
 import { GolfParcours } from '@/services/golf-parcours.service';
@@ -34,10 +33,32 @@ export function GolfCoursesMapExpo({
   selectedCourseId,
   onMapPress,
 }: GolfCoursesMapExpoProps) {
-  const mapRef = useRef<MapView>(null);
+  // Sur web, afficher un placeholder simple
+  if (Platform.OS === 'web') {
+    return (
+      <View style={styles.container}>
+        <View style={styles.webPlaceholder}>
+          <Text variant="h3" color="charcoal" style={styles.placeholderTitle}>
+            🗺️ Carte des Parcours
+          </Text>
+          <Text variant="body" color="iron" style={styles.placeholderText}>
+            {allGolfs.length} parcours de golf disponibles
+          </Text>
+          <Text variant="caption" color="iron" style={styles.placeholderNote}>
+            La vue carte sera disponible dans la prochaine version web
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Import conditionnel pour éviter les erreurs sur web
+  const { MapView, Region, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Marker } = require('react-native-maps');
+
+  const mapRef = useRef<typeof MapView>(null);
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
-  const [region, setRegion] = useState<Region>(INITIAL_REGION);
+  const [region, setRegion] = useState<typeof Region>(INITIAL_REGION);
 
   // Géolocalisation au démarrage
   useEffect(() => {
@@ -233,5 +254,24 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: Spacing.m,
     textAlign: 'center',
+  },
+  webPlaceholder: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.neutral.background,
+    padding: Spacing.xl,
+  },
+  placeholderTitle: {
+    marginBottom: Spacing.m,
+    textAlign: 'center',
+  },
+  placeholderText: {
+    marginBottom: Spacing.s,
+    textAlign: 'center',
+  },
+  placeholderNote: {
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });

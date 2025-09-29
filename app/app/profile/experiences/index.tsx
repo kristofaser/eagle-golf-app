@@ -4,7 +4,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   Modal,
   TextInput,
   Keyboard,
@@ -17,6 +16,7 @@ import { Text, LoadingScreen } from '@/components/atoms';
 import { Colors, Spacing, Typography, BorderRadius } from '@/constants/theme';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUserContext } from '@/contexts/UserContext';
+import { UniversalAlert } from '@/utils/alert';
 
 // Types pour les expériences
 const EXPERIENCE_TYPES = [
@@ -238,7 +238,7 @@ export default function ExperiencesScreen() {
         }
       } catch (error) {
         console.error('Erreur lors du chargement:', error);
-        Alert.alert('Erreur', 'Impossible de charger les données');
+        UniversalAlert.error('Erreur', 'Impossible de charger les données');
       } finally {
         setLoading(false);
       }
@@ -254,7 +254,7 @@ export default function ExperiencesScreen() {
   };
 
   const handleDeleteExperience = async (index: number) => {
-    Alert.alert(
+    UniversalAlert.show(
       'Supprimer l\'expérience',
       'Êtes-vous sûr de vouloir supprimer cette expérience ?',
       [
@@ -296,7 +296,7 @@ export default function ExperiencesScreen() {
 
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
-      Alert.alert('Erreur', 'Impossible de sauvegarder les modifications');
+      UniversalAlert.error('Erreur', 'Impossible de sauvegarder les modifications');
     } finally {
       setSaving(false);
     }

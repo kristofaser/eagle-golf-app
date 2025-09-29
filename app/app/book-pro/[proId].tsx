@@ -4,7 +4,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,6 +11,7 @@ import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { LocaleConfig } from 'react-native-calendars';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius, Elevation } from '@/constants/theme';
+import { UniversalAlert } from '@/utils/alert';
 import { Text } from '@/components/atoms';
 import { useAuth } from '@/hooks/useAuth';
 import { profileService } from '@/services/profile.service';
@@ -21,7 +21,7 @@ import { bookingService } from '@/services/booking.service';
 import { amateurAvailabilityService } from '@/services/amateur-availability.service';
 import { paymentService } from '@/services/payment.service';
 import { PaymentSheet } from '@/components/organisms/PaymentSheet';
-import { useStripe } from '@stripe/stripe-react-native';
+import { Platform } from 'react-native';
 import { supabase } from '@/utils/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { useAsyncOperation } from '@/hooks/useAsyncOperation';
@@ -83,7 +83,9 @@ export default function BookProScreen() {
   const { proId, proName, players: initialPlayers, courseId, courseName } = useLocalSearchParams();
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
-  const { initPaymentSheet, presentPaymentSheet, retrievePaymentIntent } = useStripe();
+  // Import conditionnel pour éviter les erreurs sur web
+  const stripe = Platform.OS !== 'web' ? require('@stripe/stripe-react-native').useStripe() : null;
+  const { initPaymentSheet, presentPaymentSheet, retrievePaymentIntent } = stripe || {};
   const insets = useSafeAreaInsets();
 
   // ✅ HOOKS REFACTORISÉS - Gestion d'état centralisée
@@ -349,7 +351,7 @@ export default function BookProScreen() {
 
     if (!user) {
       console.error('❌ Aucun utilisateur connecté');
-      Alert.alert('Erreur', 'Vous devez être connecté pour réserver');
+      UniversalAlert.error('Erreur', 'Vous devez être connecté pour réserver');
       return;
     }
 
@@ -362,7 +364,7 @@ export default function BookProScreen() {
 
       // Vérifier que l'utilisateur ne réserve pas avec lui-même
       if (userProfile.id === proId) {
-        Alert.alert('Action impossible', 'Vous ne pouvez pas réserver une partie avec vous-même.');
+        UniversalAlert.error('Action impossible', 'Vous ne pouvez pas réserver une partie avec vous-même.');
         throw new Error('Réservation avec soi-même interdite');
       }
 
@@ -471,18 +473,9 @@ export default function BookProScreen() {
 
       // Afficher le message de succès avec un délai pour s'assurer que l'état est mis à jour
       setTimeout(() => {
-        Alert.alert(
+        UniversalAlert.success(
           'Paiement réussi !',
-          'Votre paiement a été traité avec succès. Votre réservation sera automatiquement confirmée dans quelques secondes.',
-          [
-            {
-              text: 'OK',
-              onPress: () => {
-                console.log('🎯 Alert OK pressé');
-                // Ne pas référencer bookingState.currentStep ici car c'est une closure
-              },
-            },
-          ]
+          'Votre paiement a été traité avec succès. Votre réservation sera automatiquement confirmée dans quelques secondes.'
         );
       }, 100); // Petit délai pour s'assurer que l'état React est mis à jour
 
@@ -491,7 +484,7 @@ export default function BookProScreen() {
       return;
     } catch (error: any) {
       console.error('❌ Erreur dans handlePaymentSuccess:', error);
-      Alert.alert(
+      UniversalAlert.error(
         'Erreur',
         error.message || 'Une erreur est survenue après le paiement. Contactez le support.'
       );
@@ -499,14 +492,14 @@ export default function BookProScreen() {
   };
 
   const handlePaymentError = (error: string) => {
-    Alert.alert('Erreur de paiement', error);
+    UniversalAlert.error('Erreur de paiement', error);
   };
 
   // Nouvelle fonction handlePayment pour Option 2
   const handlePayment = async () => {
     // Vérification de connexion au moment du paiement
     if (!isAuthenticated || !user) {
-      Alert.alert(
+      UniversalAlert.show(
         'Connexion requise',
         'Créez un compte Eagle pour finaliser votre réservation',
         [
@@ -1029,7 +1022,7 @@ export default function BookProScreen() {
 
   const handleClose = () => {
     if (bookingState.currentStep > 1 && bookingState.currentStep < 5) {
-      Alert.alert('Annuler la réservation ?', 'Votre réservation en cours sera perdue.', [
+      UniversalAlert.show('Annuler la réservation ?', 'Votre réservation en cours sera perdue.', [
         { text: 'Continuer', style: 'cancel' },
         {
           text: 'Annuler la réservation',

@@ -6,9 +6,9 @@ import {
   TouchableOpacity,
   ScrollView,
   Switch,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
+import { UniversalAlert } from '@/utils/alert';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius } from '@/constants/theme';
 import { proAvailabilityService } from '@/services/pro-availability.service';
@@ -93,7 +93,7 @@ export function ProAvailabilityManager({
       }
     } catch (error) {
       console.error('Erreur chargement disponibilités:', error);
-      Alert.alert('Erreur', 'Impossible de charger vos disponibilités');
+      UniversalAlert.error('Erreur', 'Impossible de charger vos disponibilités');
     } finally {
       setLoading(false);
     }
@@ -184,7 +184,7 @@ export function ProAvailabilityManager({
     // Simuler la sauvegarde
     setTimeout(() => {
       setSaving(false);
-      Alert.alert('Succès', 'Vos disponibilités ont été mises à jour');
+      UniversalAlert.success('Succès', 'Vos disponibilités ont été mises à jour');
       onSave?.(data);
     }, 1000);
   };

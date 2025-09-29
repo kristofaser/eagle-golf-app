@@ -38,3 +38,4 @@ yarn-error.*
 
 # Site vitrine (dossier séparé)
 site-vitrine/
+.vercel

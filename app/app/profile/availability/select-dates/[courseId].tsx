@@ -6,7 +6,6 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Stack, useLocalSearchParams, router } from 'expo-router';
@@ -24,6 +23,7 @@ import Animated, {
 import { useAuth } from '@/hooks/useAuth';
 import { golfParcoursService, GolfParcours } from '@/services/golf-parcours.service';
 import { proAvailabilityService } from '@/services/pro-availability.service';
+import { UniversalAlert } from '@/utils/alert';
 
 // Configuration du calendrier en français
 LocaleConfig.locales['fr'] = {
@@ -155,7 +155,7 @@ export default function SelectDatesScreen() {
       setGolfCourse(response.data);
     } catch (error) {
       console.error('Erreur chargement parcours:', error);
-      Alert.alert('Erreur', 'Impossible de charger les détails du parcours');
+      UniversalAlert.error('Erreur', 'Impossible de charger les détails du parcours');
       router.back();
     } finally {
       setLoading(false);
@@ -291,13 +291,13 @@ export default function SelectDatesScreen() {
     const isDeleteAction = isEditMode && selectedDates.length === 0;
 
     if (!isEditMode && selectedDates.length === 0) {
-      Alert.alert('Attention', 'Veuillez sélectionner au moins une date');
+      UniversalAlert.info('Attention', 'Veuillez sélectionner au moins une date');
       return;
     }
 
     // Confirmation pour la suppression
     if (isDeleteAction) {
-      Alert.alert(
+      UniversalAlert.show(
         'Supprimer les disponibilités',
         `Êtes-vous sûr de vouloir supprimer toutes vos disponibilités sur ${params.courseName || 'ce parcours'} ?`,
         [
@@ -340,15 +340,9 @@ export default function SelectDatesScreen() {
 
       if (hasBookings) {
         console.log('🚫 [performDelete] Suppression bloquée - réservations existantes');
-        Alert.alert(
+        UniversalAlert.info(
           'Impossible de supprimer',
-          `Vous avez ${bookingsCount} réservation${bookingsCount > 1 ? 's' : ''} validée${bookingsCount > 1 ? 's' : ''} ou en attente sur ce parcours.\n\nVous ne pouvez pas supprimer vos disponibilités tant que des réservations sont actives.`,
-          [
-            {
-              text: 'Compris',
-              style: 'default',
-            },
-          ]
+          `Vous avez ${bookingsCount} réservation${bookingsCount > 1 ? 's' : ''} validée${bookingsCount > 1 ? 's' : ''} ou en attente sur ce parcours.\n\nVous ne pouvez pas supprimer vos disponibilités tant que des réservations sont actives.`
         );
         return;
       }
@@ -364,7 +358,7 @@ export default function SelectDatesScreen() {
 
       if (success) {
         console.log('✅ [performDelete] Suppression réussie');
-        Alert.alert('Succès', 'Disponibilités supprimées avec succès', [
+        UniversalAlert.show('Succès', 'Disponibilités supprimées avec succès', [
           {
             text: 'OK',
             onPress: () => router.navigate('/profile/availability/'),
@@ -372,11 +366,11 @@ export default function SelectDatesScreen() {
         ]);
       } else {
         console.log('❌ [performDelete] Échec suppression');
-        Alert.alert('Erreur', 'Impossible de supprimer les disponibilités');
+        UniversalAlert.error('Erreur', 'Impossible de supprimer les disponibilités');
       }
     } catch (error) {
       console.error('Erreur suppression disponibilités:', error);
-      Alert.alert('Erreur', 'Une erreur est survenue');
+      UniversalAlert.error('Erreur', 'Une erreur est survenue');
     } finally {
       setSaving(false);
     }
@@ -398,7 +392,7 @@ export default function SelectDatesScreen() {
         if (result.success) {
           const actionText = 'modifiée';
           const actionTextPlural = 'modifiées';
-          Alert.alert(
+          UniversalAlert.show(
             'Succès',
             `${selectedDates.length} disponibilité${selectedDates.length > 1 ? 's' : ''} ${selectedDates.length > 1 ? actionTextPlural : actionText} avec succès`,
             [
@@ -410,10 +404,9 @@ export default function SelectDatesScreen() {
           );
         } else {
           // Afficher le message d'erreur détaillé
-          Alert.alert(
+          UniversalAlert.info(
             'Attention',
-            result.error || 'Impossible de mettre à jour les disponibilités',
-            [{ text: 'Compris', style: 'default' }]
+            result.error || 'Impossible de mettre à jour les disponibilités'
           );
         }
       } else {
@@ -425,7 +418,7 @@ export default function SelectDatesScreen() {
         );
 
         if (success) {
-          Alert.alert(
+          UniversalAlert.show(
             'Succès',
             `${selectedDates.length} disponibilité${selectedDates.length > 1 ? 's' : ''} ajoutée${selectedDates.length > 1 ? 's' : ''} avec succès`,
             [
@@ -436,12 +429,12 @@ export default function SelectDatesScreen() {
             ]
           );
         } else {
-          Alert.alert('Erreur', 'Impossible de créer les disponibilités');
+          UniversalAlert.error('Erreur', 'Impossible de créer les disponibilités');
         }
       }
     } catch (error) {
       console.error('Erreur sauvegarde disponibilités:', error);
-      Alert.alert('Erreur', 'Une erreur est survenue');
+      UniversalAlert.error('Erreur', 'Une erreur est survenue');
     } finally {
       setSaving(false);
     }

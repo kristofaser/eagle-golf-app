@@ -4,7 +4,7 @@
  */
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session } from '@supabase/supabase-js';
-import { Alert } from 'react-native';
+import { UniversalAlert } from '@/utils/alert';
 import { supabase } from '@/utils/supabase/client';
 import { AuthUser } from '@/utils/supabase/auth.types';
 import { useUserDeletionRealtime } from '@/hooks/useUserDeletionRealtime';
@@ -88,10 +88,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
             try {
               // Afficher l'alerte cohérente avec Realtime
-              Alert.alert(
+              UniversalAlert.info(
                 'Compte supprimé',
-                'Votre compte a été supprimé par un administrateur. Vous avez été déconnecté.',
-                [{ text: 'OK', style: 'default' }]
+                'Votre compte a été supprimé par un administrateur. Vous avez été déconnecté.'
               );
             } catch (alertError) {
               console.warn('⚠️ SessionContext: Alert non disponible, continuant la déconnexion');

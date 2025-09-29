@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import { useUser } from '@/hooks/useUser';
 import { Text, Button } from '@/components/atoms';
 import { DeleteAccountModal } from '@/components/organisms/DeleteAccountModal';
 import { Colors, Spacing, Typography, BorderRadius } from '@/constants/theme';
+import { UniversalAlert } from '@/utils/alert';
 
 export default function ProfileSettingsScreen() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function ProfileSettingsScreen() {
   const [emailNotifications, setEmailNotifications] = useState(true);
 
   const handleSignOut = async () => {
-    Alert.alert('Déconnexion', 'Êtes-vous sûr de vouloir vous déconnecter ?', [
+    UniversalAlert.show('Déconnexion', 'Êtes-vous sûr de vouloir vous déconnecter ?', [
       { text: 'Annuler', style: 'cancel' },
       {
         text: 'Déconnexion',

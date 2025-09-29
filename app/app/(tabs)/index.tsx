@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import React, { useRef, useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ImageBackground } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -44,11 +45,13 @@ export default function AccueilScreen() {
     calculateCountdown();
     const interval = setInterval(calculateCountdown, 60000); // Mise à jour toutes les minutes
 
+  const Container = Platform.OS === 'web' ? View : SafeAreaView;
     return () => clearInterval(interval);
   }, []);
 
   const renderFavoritePros = () => {
     if (favoritePros.length === 0) {
+  const Container = Platform.OS === 'web' ? View : SafeAreaView;
       return (
         <View style={styles.emptyFavoritesContainer}>
           <Text style={styles.emptyText}>Aucun pro favori</Text>
@@ -58,6 +61,7 @@ export default function AccueilScreen() {
     }
 
     if (isLoading) {
+  const Container = Platform.OS === 'web' ? View : SafeAreaView;
       return (
         <View style={styles.emptyFavoritesContainer}>
           <Text style={styles.emptyText}>Chargement...</Text>
@@ -66,6 +70,7 @@ export default function AccueilScreen() {
     }
 
     if (error || !favoriteProfiles) {
+  const Container = Platform.OS === 'web' ? View : SafeAreaView;
       return (
         <View style={styles.emptyFavoritesContainer}>
           <Text style={styles.emptyText}>Erreur de chargement</Text>
@@ -74,6 +79,7 @@ export default function AccueilScreen() {
       );
     }
 
+  const Container = Platform.OS === 'web' ? View : SafeAreaView;
     return (
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.avatarsScrollView}>
         {favoriteProfiles.map((profile, index) => (
@@ -96,8 +102,9 @@ export default function AccueilScreen() {
     );
   };
 
+  const Container = Platform.OS === 'web' ? View : SafeAreaView;
   return (
-    <SafeAreaView style={styles.container} edges={[]}>
+    <Container style={styles.container} edges={[]}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Mes pros favoris */}
         <View style={[styles.section, styles.firstSection]}>
@@ -202,7 +209,7 @@ export default function AccueilScreen() {
           </Text>
         </BottomSheetView>
       </BaseBottomSheet>
-    </SafeAreaView>
+    </Container>
   );
 }
 

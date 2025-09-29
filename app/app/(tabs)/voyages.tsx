@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import React, { useCallback } from 'react';
 import { View, StyleSheet, ActivityIndicator, RefreshControl, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -111,6 +112,7 @@ export default function VoyagesScreen() {
 
   // Afficher le loader pendant le chargement
   if (isLoading) {
+  const Container = Platform.OS === 'web' ? View : SafeAreaView;
     return (
       <View style={[styles.container, styles.centerContent]}>
         <ActivityIndicator size="large" color={Colors.primary.accent} />
@@ -123,6 +125,7 @@ export default function VoyagesScreen() {
 
   // Afficher une erreur si nécessaire
   if (error) {
+  const Container = Platform.OS === 'web' ? View : SafeAreaView;
     return (
       <View style={[styles.container, styles.centerContent]}>
         <Text variant="h3" color="charcoal" style={{ marginBottom: Spacing.m }}>
@@ -135,8 +138,9 @@ export default function VoyagesScreen() {
     );
   }
 
+  const Container = Platform.OS === 'web' ? View : SafeAreaView;
   return (
-    <SafeAreaView style={styles.container} edges={[]}>
+    <Container style={styles.container} edges={[]}>
       <StatusBar style="dark" />
 
       <View style={styles.contentContainer}>
@@ -216,7 +220,7 @@ export default function VoyagesScreen() {
         {/* FAB pour les alertes voyage */}
         <TravelNotificationFAB isEnabled={isEnabled} onPress={handleNotificationToggle} />
       </View>
-    </SafeAreaView>
+    </Container>
   );
 }
 

@@ -6,8 +6,8 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
+import { UniversalAlert } from '@/utils/alert';
 import { Colors } from '@/constants/theme';
 import { pricingService, ProPricing } from '@/services/pricing.service';
 import { logger } from '@/utils/logger';
@@ -81,7 +81,7 @@ export function ProPricingManager({
     // Validation
     const hasEmptyPrices = Object.values(prices).some((p) => !p || p === '0');
     if (hasEmptyPrices) {
-      Alert.alert('Erreur', 'Veuillez renseigner tous les tarifs');
+      UniversalAlert.error('Erreur', 'Veuillez renseigner tous les tarifs');
       return;
     }
 
@@ -107,13 +107,13 @@ export function ProPricingManager({
       const success = await pricingService.updateProPricing(proId, pricingData);
 
       if (success) {
-        Alert.alert('Succès', 'Vos tarifs ont été mis à jour');
+        UniversalAlert.success('Succès', 'Vos tarifs ont été mis à jour');
       } else {
-        Alert.alert('Erreur', 'Impossible de mettre à jour les tarifs');
+        UniversalAlert.error('Erreur', 'Impossible de mettre à jour les tarifs');
       }
     } catch (error) {
       logger.error('Erreur sauvegarde tarifs', error);
-      Alert.alert('Erreur', 'Une erreur est survenue');
+      UniversalAlert.error('Erreur', 'Une erreur est survenue');
     } finally {
       setSaving(false);
     }

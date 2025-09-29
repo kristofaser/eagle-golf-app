@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   TextInput,
-  Alert,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
@@ -16,6 +15,7 @@ import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Colors, Spacing, Typography, BorderRadius, Elevation } from '@/constants/theme';
+import { UniversalAlert } from '@/utils/alert';
 import { bookingService, AvailabilityWithDetails } from '@/services/booking.service';
 import { useAuth } from '@/hooks/useAuth';
 import { useUser } from '@/hooks/useUser';
@@ -36,10 +36,9 @@ export default function BookingScreen() {
     requireRole: 'amateur',
     redirectTo: '/(auth)/register',
     onUnauthorized: () => {
-      Alert.alert(
+      UniversalAlert.error(
         'Connexion requise',
-        'Vous devez être connecté en tant qu\'amateur pour réserver une partie.',
-        [{ text: 'OK' }]
+        'Vous devez être connecté en tant qu\'amateur pour réserver une partie.'
       );
     }
   });
@@ -162,7 +161,7 @@ export default function BookingScreen() {
   const handleBooking = async () => {
     if (!availability || !user?.amateurProfile) return;
 
-    Alert.alert(
+    UniversalAlert.show(
       'Confirmer la réservation',
       `Voulez-vous réserver cette partie pour ${numberOfPlayers} joueur${numberOfPlayers > 1 ? 's' : ''} ?`,
       [
@@ -200,14 +199,10 @@ export default function BookingScreen() {
       }
 
       // Succès - rediriger vers la page de confirmation ou les réservations
-      Alert.alert('Réservation confirmée !', 'Votre réservation a été enregistrée avec succès.', [
-        {
-          text: 'OK',
-          onPress: () => router.replace('/profile'),
-        },
-      ]);
+      UniversalAlert.success('Réservation confirmée !', 'Votre réservation a été enregistrée avec succès.');
+      router.replace('/profile');
     } catch (err: any) {
-      Alert.alert('Erreur', err.message || 'Impossible de créer la réservation');
+      UniversalAlert.error('Erreur', err.message || 'Impossible de créer la réservation');
     } finally {
       setSubmitting(false);
     }

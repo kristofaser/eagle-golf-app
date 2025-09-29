@@ -9,7 +9,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Colors, Spacing } from '@/constants/theme';
 import { ProPricingManager } from '@/components/organisms/ProPricingManager';
 import { useAuth } from '@/hooks/useAuth';
-import { Stack, router } from 'expo-router';
 import { pricingService, ProPricing } from '@/services/pricing.service';
 import { useQueryClient } from '@tanstack/react-query';
 import { useUserContext } from '@/contexts/UserContext';
@@ -97,35 +96,27 @@ function PricingContent() {
   };
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          title: 'Gestion des Tarifs',
-          headerBackTitle: 'Retour',
-        }}
-      />
-      <SafeAreaView style={styles.container}>
-        {/* Indicateur flottant de sauvegarde */}
-        {showSaved && (
-          <View style={styles.savedIndicator}>
-            <Ionicons name="checkmark-circle" size={16} color={Colors.semantic.success.default} />
-            <Text style={styles.savedText}>Sauvegardé</Text>
-          </View>
-        )}
+    <SafeAreaView style={styles.container}>
+      {/* Indicateur flottant de sauvegarde */}
+      {showSaved && (
+        <View style={styles.savedIndicator}>
+          <Ionicons name="checkmark-circle" size={16} color={Colors.semantic.success.default} />
+          <Text style={styles.savedText}>Sauvegardé</Text>
+        </View>
+      )}
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          <ProPricingManager
-            proId={user.id}
-            isEditable={true}
-            onPricesChange={handleAutoSave}
-            hideButton={true}
-          />
-        </ScrollView>
-      </SafeAreaView>
-    </>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <ProPricingManager
+          proId={user.id}
+          isEditable={true}
+          onPricesChange={handleAutoSave}
+          hideButton={true}
+        />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 

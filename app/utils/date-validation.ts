@@ -5,7 +5,6 @@
 export interface DateValidationResult {
   isValid: boolean;
   formattedDate?: string; // Format ISO (YYYY-MM-DD)
-  age?: number;
   error?: string;
 }
 
@@ -76,28 +75,6 @@ export function validateDateOfBirth(dateString: string): DateValidationResult {
     };
   }
 
-  // Vérification de l'âge minimum (18 ans)
-  const today = new Date();
-  const age = today.getFullYear() - year;
-  const monthDiff = today.getMonth() - (month - 1);
-  const dayDiff = today.getDate() - day;
-
-  // Ajustement si l'anniversaire n'est pas encore passé cette année
-  const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
-
-  if (actualAge < 18) {
-    return {
-      isValid: false,
-      error: 'Vous devez avoir au moins 18 ans',
-    };
-  }
-
-  if (actualAge > 120) {
-    return {
-      isValid: false,
-      error: 'Âge trop élevé. Vérifiez la date saisie',
-    };
-  }
 
   // Format ISO pour la base de données
   const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
@@ -105,7 +82,6 @@ export function validateDateOfBirth(dateString: string): DateValidationResult {
   return {
     isValid: true,
     formattedDate,
-    age: actualAge,
   };
 }
 
@@ -219,27 +195,6 @@ export function validateBusinessLeaderAge(dateString: string): DateValidationRes
     };
   }
 
-  // Calcul de l'âge
-  const today = new Date();
-  const age = today.getFullYear() - year;
-  const monthDiff = today.getMonth() - (month - 1);
-  const dayDiff = today.getDate() - day;
-  const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
-
-  // Vérification de l'âge minimum spécifique pour dirigeant (16 ans)
-  if (actualAge < 16) {
-    return {
-      isValid: false,
-      error: "Un dirigeant d'entreprise doit avoir au moins 16 ans",
-    };
-  }
-
-  if (actualAge > 120) {
-    return {
-      isValid: false,
-      error: 'Âge trop élevé. Vérifiez la date saisie',
-    };
-  }
 
   // Format ISO pour la base de données
   const formattedDate = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
@@ -247,6 +202,5 @@ export function validateBusinessLeaderAge(dateString: string): DateValidationRes
   return {
     isValid: true,
     formattedDate,
-    age: actualAge,
   };
 }

@@ -2,11 +2,11 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   StyleSheet,
-  Alert,
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
+import { UniversalAlert } from '@/utils/alert';
 import * as DocumentPicker from 'expo-document-picker';
 import { Video, ResizeMode } from 'expo-av';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
@@ -64,7 +64,7 @@ export const VideoUploadManager: React.FC<VideoUploadManagerProps> = ({
 
         // Vérifier la taille du fichier (limite à 50MB)
         if (asset.size && asset.size > 50 * 1024 * 1024) {
-          Alert.alert('Erreur', 'La vidéo ne peut pas dépasser 50MB');
+          UniversalAlert.error('Erreur', 'La vidéo ne peut pas dépasser 50MB');
           return;
         }
 
@@ -75,7 +75,7 @@ export const VideoUploadManager: React.FC<VideoUploadManagerProps> = ({
       }
     } catch (error) {
       console.error('Erreur lors de la sélection:', error);
-      Alert.alert('Erreur', 'Impossible de sélectionner la vidéo');
+      UniversalAlert.error('Erreur', 'Impossible de sélectionner la vidéo');
     }
   }, []);
 
@@ -118,11 +118,11 @@ export const VideoUploadManager: React.FC<VideoUploadManagerProps> = ({
         });
 
         onVideoUploaded?.(skillKey, publicUrl);
-        Alert.alert('Succès', 'Vidéo uploadée avec succès !');
+        UniversalAlert.success('Succès', 'Vidéo uploadée avec succès !');
       } catch (error) {
         console.error('Erreur upload:', error);
         updateUploadProgress(skillKey, 0, false);
-        Alert.alert('Erreur', "Impossible d'uploader la vidéo");
+        UniversalAlert.error('Erreur', "Impossible d'uploader la vidéo");
       }
     },
     [user, selectedVideos, updateUploadProgress, onVideoUploaded]
@@ -132,7 +132,7 @@ export const VideoUploadManager: React.FC<VideoUploadManagerProps> = ({
     async (skillKey: string) => {
       if (!user) return;
 
-      Alert.alert('Supprimer la vidéo', 'Êtes-vous sûr de vouloir supprimer cette vidéo ?', [
+      UniversalAlert.show('Supprimer la vidéo', 'Êtes-vous sûr de vouloir supprimer cette vidéo ?', [
         { text: 'Annuler', style: 'cancel' },
         {
           text: 'Supprimer',
@@ -146,10 +146,10 @@ export const VideoUploadManager: React.FC<VideoUploadManagerProps> = ({
               if (error) throw error;
 
               onVideoDeleted?.(skillKey);
-              Alert.alert('Succès', 'Vidéo supprimée');
+              UniversalAlert.success('Succès', 'Vidéo supprimée');
             } catch (error) {
               console.error('Erreur suppression:', error);
-              Alert.alert('Erreur', 'Impossible de supprimer la vidéo');
+              UniversalAlert.error('Erreur', 'Impossible de supprimer la vidéo');
             }
           },
         },

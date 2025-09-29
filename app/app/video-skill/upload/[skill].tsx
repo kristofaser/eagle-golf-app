@@ -1,10 +1,11 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { useLocalSearchParams, useRouter, useNavigation } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
+import { UniversalAlert } from '@/utils/alert';
 import { Text, Button } from '@/components/atoms';
 import { SingleVideoUploadManager } from '@/components/organisms/SingleVideoUploadManager';
 import { useAuth } from '@/hooks/useAuth';
@@ -104,14 +105,9 @@ export default function UploadSkillVideoScreen() {
   const handleVideoUploaded = useCallback((skillKey: string, videoUrl: string) => {
     logger.dev('✅ Vidéo uploadée:', { skillKey, videoUrl });
     setCurrentVideoUrl(videoUrl);
-    Alert.alert(
+    UniversalAlert.success(
       'Succès',
-      'Votre vidéo a été uploadée avec succès !',
-      [
-        {
-          text: 'OK',
-        },
-      ]
+      'Votre vidéo a été uploadée avec succès !'
     );
   }, []);
 

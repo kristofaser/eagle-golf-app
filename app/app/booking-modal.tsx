@@ -6,8 +6,8 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  Alert,
   TextInput,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
@@ -15,6 +15,7 @@ import { UserIcon, UserMultipleIcon, UserGroupIcon } from '@hugeicons/core-free-
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Colors } from '@/constants/theme';
+import { UniversalAlert } from '@/utils/alert';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -41,7 +42,8 @@ const BOOKING_STEPS = [
 
 export default function BookingModal() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
+  // Sur web, on utilise des valeurs fixes au lieu de useSafeAreaInsets
+  const insets = Platform.OS === 'web' ? { top: 0, bottom: 0, left: 0, right: 0 } : useSafeAreaInsets();
   const params = useLocalSearchParams();
   const { user, isAuthenticated } = useAuth();
 
@@ -118,7 +120,7 @@ export default function BookingModal() {
   const goToNextStep = () => {
     // Vérifier l'authentification avant de passer à l'étape de récapitulatif/paiement
     if (currentStep === 3 && !isAuthenticated) {
-      Alert.alert(
+      UniversalAlert.show(
         'Connexion requise',
         'Créez un compte Eagle pour finaliser votre réservation',
         [

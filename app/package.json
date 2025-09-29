@@ -41,6 +41,7 @@
     "@react-native-community/slider": "4.5.6",
     "@react-native-picker/picker": "^2.11.1",
     "@shopify/flash-list": "1.7.6",
+    "@stripe/react-stripe-js": "^4.0.2",
     "@stripe/stripe-js": "^7.9.0",
     "@stripe/stripe-react-native": "0.45.0",
     "@supabase/supabase-js": "^2.56.1",

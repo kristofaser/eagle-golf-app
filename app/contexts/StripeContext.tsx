@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { StripeProvider } from '@stripe/stripe-react-native';
+import { Platform } from 'react-native';
 
 interface StripeContextProps {
   children: ReactNode;
@@ -15,6 +15,14 @@ export function StripeProviderWrapper({ children }: StripeContextProps) {
       'Clé Stripe manquante. Veuillez définir EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY dans votre fichier .env.local'
     );
   }
+
+  // Sur web, pas besoin du StripeProvider natif
+  if (Platform.OS === 'web') {
+    return <>{children}</>;
+  }
+
+  // Import conditionnel pour éviter les erreurs sur web
+  const { StripeProvider } = require('@stripe/stripe-react-native');
 
   return (
     <StripeProvider

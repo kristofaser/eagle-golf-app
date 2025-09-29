@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import { View, StyleSheet, TouchableOpacity, Animated, Alert } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, BorderRadius, Spacing, Typography } from '@/constants/theme';
+import { UniversalAlert } from '@/utils/alert';
 import { Text } from '@/components/atoms';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -20,9 +21,7 @@ export const TravelNotificationToggle: React.FC<TravelNotificationToggleProps> =
 
   const handleToggle = useCallback(() => {
     if (!user) {
-      Alert.alert('Connexion requise', 'Connectez-vous pour être alerté des prochains voyages', [
-        { text: 'OK' },
-      ]);
+      UniversalAlert.info('Connexion requise', 'Connectez-vous pour être alerté des prochains voyages');
       return;
     }
 
@@ -39,12 +38,11 @@ export const TravelNotificationToggle: React.FC<TravelNotificationToggleProps> =
     }).start();
 
     // Feedback utilisateur
-    Alert.alert(
+    UniversalAlert.info(
       newValue ? 'Alertes activées !' : 'Alertes désactivées',
       newValue
         ? "Vous serez notifié dès qu'un nouveau voyage sera disponible."
-        : "Vous ne recevrez plus d'alertes pour les voyages.",
-      [{ text: 'OK' }]
+        : "Vous ne recevrez plus d'alertes pour les voyages."
     );
   }, [enabled, user, onToggle, animatedValue]);
 

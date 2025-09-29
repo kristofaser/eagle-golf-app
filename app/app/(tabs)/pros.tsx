@@ -5,6 +5,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   FlatList,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
@@ -296,8 +297,10 @@ function ProsScreen() {
     );
   }
 
+  const Container = Platform.OS === 'web' ? View : SafeAreaView;
+
   return (
-    <SafeAreaView style={styles.container} edges={[]}>
+    <Container style={styles.container} edges={Platform.OS === 'web' ? undefined : []}>
       <ScrollView
         refreshControl={
           <RefreshControl
@@ -381,7 +384,7 @@ function ProsScreen() {
           );
         })}
       </ScrollView>
-    </SafeAreaView>
+    </Container>
   );
 }
 

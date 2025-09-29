@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { Stack, router } from 'expo-router';
@@ -15,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { golfParcoursService, GolfParcours } from '@/services/golf-parcours.service';
+import { UniversalAlert } from '@/utils/alert';
 
 export default function SelectCourseScreen() {
   const { user } = useAuth();
@@ -57,7 +57,7 @@ export default function SelectCourseScreen() {
       setGolfCourses(response.data || []);
     } catch (error) {
       console.error('Erreur chargement parcours:', error);
-      Alert.alert('Erreur', 'Impossible de charger la liste des parcours');
+      UniversalAlert.error('Erreur', 'Impossible de charger la liste des parcours');
     } finally {
       setLoading(false);
     }

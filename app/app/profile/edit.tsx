@@ -7,7 +7,6 @@ import {
   Platform,
   TouchableOpacity,
   Switch,
-  Alert,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,6 +19,7 @@ import { useSimpleProfileUpload } from '@/hooks/useImageUpload';
 import { Text, Input, Button, Avatar } from '@/components/atoms';
 import { Colors, Spacing } from '@/constants/theme';
 import { profileService, UpdateProfileData } from '@/services/profile.service';
+import { UniversalAlert } from '@/utils/alert';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -57,7 +57,7 @@ export default function EditProfileScreen() {
       const timeout = setTimeout(() => {
         console.error('Timeout de sécurité - Réinitialisation de isLoading');
         setIsLoading(false);
-        Alert.alert('Erreur', "L'opération a pris trop de temps. Veuillez réessayer.");
+        UniversalAlert.error('Erreur', "L'opération a pris trop de temps. Veuillez réessayer.");
       }, 30000); // 30 secondes de timeout
 
       return () => clearTimeout(timeout);
@@ -79,7 +79,7 @@ export default function EditProfileScreen() {
 
   const handleSave = async () => {
     if (!user?.id) {
-      Alert.alert('Erreur', 'Utilisateur non connecté');
+      UniversalAlert.error('Erreur', 'Utilisateur non connecté');
       return;
     }
 
@@ -103,7 +103,7 @@ export default function EditProfileScreen() {
         } catch (uploadError) {
           console.error('Erreur upload image:', uploadError);
           // On continue la sauvegarde même si l'upload échoue
-          Alert.alert(
+          UniversalAlert.info(
             'Attention',
             "L'image n'a pas pu être uploadée, mais les autres modifications seront sauvegardées."
           );
@@ -160,7 +160,7 @@ export default function EditProfileScreen() {
         // Continuer même si le refresh échoue
       }
 
-      Alert.alert('Succès', 'Votre profil a été mis à jour avec succès', [
+      UniversalAlert.show('Succès', 'Votre profil a été mis à jour avec succès', [
         {
           text: 'OK',
           onPress: () => {
@@ -171,7 +171,7 @@ export default function EditProfileScreen() {
       ]);
     } catch (error) {
       console.error('Erreur mise à jour profil:', error);
-      Alert.alert('Erreur', 'Impossible de mettre à jour le profil');
+      UniversalAlert.error('Erreur', 'Impossible de mettre à jour le profil');
     } finally {
       console.log('=== Fin handleSave - setIsLoading(false) ===');
       setIsLoading(false);

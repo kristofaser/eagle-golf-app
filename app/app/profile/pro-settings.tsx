@@ -1,5 +1,5 @@
 import React, { useState, memo, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TouchableOpacity } from 'react-native';
@@ -10,6 +10,7 @@ import { skillsService, ProSkills } from '@/services/skills.service';
 import { useAuth } from '@/hooks/useAuth';
 import { getPublicUrl } from '@/utils/scaleway';
 import { logger } from '@/utils/logger';
+import { UniversalAlert } from '@/utils/alert';
 
 interface SkillData {
   name: string;
@@ -205,7 +206,7 @@ function ProSettingsScreen() {
       setSaveTimer(timer);
     } else {
       // Afficher une erreur seulement si ça échoue
-      Alert.alert('Erreur', 'Impossible d\'enregistrer cette compétence');
+      UniversalAlert.error('Erreur', 'Impossible d\'enregistrer cette compétence');
     }
   };
 

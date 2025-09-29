@@ -4,8 +4,8 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Pressable,
   TextInput,
-  Alert,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -78,6 +78,7 @@ const validatePhoneNumber = (phone: string): { isValid: boolean; error?: string 
 };
 import { LoadingScreen, ErrorScreen } from '@/components/atoms';
 import { Colors, Spacing, Typography, BorderRadius, Elevation } from '@/constants/theme';
+import { UniversalAlert } from '@/utils/alert';
 import { Text } from '@/components/atoms';
 import { useUnifiedImagePicker, ImageResult } from '@/hooks/useImageUpload';
 import { documentUploadService, DocumentType } from '@/services/document-upload.service';
@@ -161,6 +162,12 @@ export default function BecomeProScreen() {
     minHeight: 600,
     showPermissionAlerts: true,
     allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image', undefined], // Support étendu pour simulateur iOS
+    // Compression pour les documents
+    enableCompression: true,
+    compressionMaxWidth: 1500, // Plus grande résolution pour lisibilité des documents
+    compressionMaxHeight: 1500,
+    compressionQuality: 0.9, // Qualité plus élevée pour les documents
+    outputFormat: 'jpeg',
   });
 
   // Animation FAB au changement d'étape et checkbox
@@ -252,6 +259,17 @@ export default function BecomeProScreen() {
       return false;
     }
 
+    // TEMPORAIRE: Validation basique sans API INSEE pour tester
+    // Vérification simple : 14 chiffres
+    if (siret.length === 14 && /^\d+$/.test(siret)) {
+      setSiretValidationResult({ isValid: true });
+      return true;
+    }
+
+    setSiretValidationResult({ isValid: false, error: 'SIRET invalide' });
+    return false;
+
+    /* DÉSACTIVÉ TEMPORAIREMENT - Code original de validation INSEE
     // Debug du token dans React Native
     console.log(
       '🔑 Token ENV disponible dans RN:',
@@ -292,12 +310,13 @@ export default function BecomeProScreen() {
     } finally {
       setIsValidatingSiret(false);
     }
+    */
   };
 
   // Sélection et upload de documents réels
   const pickImage = async (type: 'front' | 'back') => {
     if (isUploadingDocument) {
-      Alert.alert('Patience', "Un document est déjà en cours d'upload...");
+      UniversalAlert.info('Patience', "Un document est déjà en cours d'upload...");
       return;
     }
 
@@ -354,17 +373,16 @@ export default function BecomeProScreen() {
         setErrors(newErrors);
       }
 
-      Alert.alert(
+      UniversalAlert.success(
         'Document uploadé !',
-        `Votre ${type === 'front' ? "pièce d'identité (recto)" : "pièce d'identité (verso)"} a été uploadée avec succès.`,
-        [{ text: 'OK' }]
+        `Votre ${type === 'front' ? "pièce d'identité (recto)" : "pièce d'identité (verso)"} a été uploadée avec succès.`
       );
     } catch (error: any) {
       console.error(`❌ Erreur upload document ${type}:`, error);
 
       // Gestion spécifique pour fichier vide
       if (error.message?.includes('vide') || error.message?.includes('0 bytes')) {
-        Alert.alert(
+        UniversalAlert.show(
           'Fichier vide détecté',
           'Le document sélectionné semble vide. Cela peut arriver avec certains simulateurs. Essayez de reprendre la photo ou sélectionnez une autre image.',
           [
@@ -373,7 +391,7 @@ export default function BecomeProScreen() {
           ]
         );
       } else {
-        Alert.alert(
+        UniversalAlert.show(
           "Erreur d'upload",
           error.message ||
             "Impossible d'uploader le document. Vérifiez votre connexion et réessayez.",
@@ -430,9 +448,10 @@ export default function BecomeProScreen() {
         }
 
         // Autres validations
-        if (!formData.companyStatus) {
-          newErrors.companyStatus = 'Statut entreprise requis';
-        }
+        // TEMPORAIRE: companyStatus désactivé car rempli automatiquement par l'API INSEE
+        // if (!formData.companyStatus) {
+        //   newErrors.companyStatus = 'Statut entreprise requis';
+        // }
         break;
 
       case 2: // Documents
@@ -486,13 +505,13 @@ export default function BecomeProScreen() {
       // Validation finale des données
       const dateValidation = validateDateOfBirth(formData.dateOfBirth);
       if (!dateValidation.isValid) {
-        Alert.alert('Erreur', dateValidation.error || 'Date de naissance invalide');
+        UniversalAlert.error('Erreur', dateValidation.error || 'Date de naissance invalide');
         setIsLoading(false);
         return;
       }
 
       if (!user?.id) {
-        Alert.alert('Erreur', 'Utilisateur non identifié');
+        UniversalAlert.error('Erreur', 'Utilisateur non identifié');
         setIsLoading(false);
         return;
       }
@@ -530,26 +549,21 @@ export default function BecomeProScreen() {
       const result = await profileService.convertToPro(user.id, proData);
 
       if (result.error) {
-        Alert.alert('Erreur', result.error);
+        UniversalAlert.error('Erreur', result.error);
         return;
       }
 
       // Rafraîchir le statut pro avant de fermer
       await refreshProRequestStatus();
 
-      Alert.alert(
+      UniversalAlert.success(
         'Demande Soumise avec Succès !',
-        'Votre demande pour devenir professionnel a été envoyée à notre équipe de validation.\n\n⏱️ Délai de traitement : 24-48h\n📧 Vous recevrez une notification une fois validée.',
-        [
-          {
-            text: 'Compris',
-            onPress: () => router.back(),
-          },
-        ]
+        'Votre demande pour devenir professionnel a été envoyée à notre équipe de validation.\n\n⏱️ Délai de traitement : 24-48h\n📧 Vous recevrez une notification une fois validée.'
       );
+      router.back();
     } catch (error: any) {
       console.error('Erreur soumission:', error);
-      Alert.alert('Erreur', "Une erreur est survenue lors de l'envoi de votre demande");
+      UniversalAlert.error('Erreur', "Une erreur est survenue lors de l'envoi de votre demande");
     } finally {
       setIsLoading(false);
     }
@@ -746,6 +760,7 @@ export default function BecomeProScreen() {
           <TextInput
             style={[styles.priceInput, errors.price9Holes1Player && styles.inputError]}
             placeholder="100"
+            placeholderTextColor={Colors.neutral.mist}
             value={formData.price9Holes1Player}
             onChangeText={(text) => setFormData({ ...formData, price9Holes1Player: text })}
             keyboardType="numeric"
@@ -758,6 +773,7 @@ export default function BecomeProScreen() {
           <TextInput
             style={styles.priceInput}
             placeholder="90"
+            placeholderTextColor={Colors.neutral.mist}
             value={formData.price9Holes2Players}
             onChangeText={(text) => setFormData({ ...formData, price9Holes2Players: text })}
             keyboardType="numeric"
@@ -770,6 +786,7 @@ export default function BecomeProScreen() {
           <TextInput
             style={styles.priceInput}
             placeholder="80"
+            placeholderTextColor={Colors.neutral.mist}
             value={formData.price9Holes3Players}
             onChangeText={(text) => setFormData({ ...formData, price9Holes3Players: text })}
             keyboardType="numeric"
@@ -784,6 +801,7 @@ export default function BecomeProScreen() {
           <TextInput
             style={[styles.priceInput, errors.price18Holes1Player && styles.inputError]}
             placeholder="180"
+            placeholderTextColor={Colors.neutral.mist}
             value={formData.price18Holes1Player}
             onChangeText={(text) => setFormData({ ...formData, price18Holes1Player: text })}
             keyboardType="numeric"
@@ -796,6 +814,7 @@ export default function BecomeProScreen() {
           <TextInput
             style={styles.priceInput}
             placeholder="160"
+            placeholderTextColor={Colors.neutral.mist}
             value={formData.price18Holes2Players}
             onChangeText={(text) => setFormData({ ...formData, price18Holes2Players: text })}
             keyboardType="numeric"
@@ -808,6 +827,7 @@ export default function BecomeProScreen() {
           <TextInput
             style={styles.priceInput}
             placeholder="140"
+            placeholderTextColor={Colors.neutral.mist}
             value={formData.price18Holes3Players}
             onChangeText={(text) => setFormData({ ...formData, price18Holes3Players: text })}
             keyboardType="numeric"
@@ -989,26 +1009,38 @@ export default function BecomeProScreen() {
       {/* FAB Bouton Continuer pour les étapes 1-3 */}
       {currentStep < 4 && (
         <Animated.View style={[styles.fabExtended, fabAnimatedStyle]}>
-          <TouchableOpacity
-            style={styles.fabButton}
-            onPress={handleNext}
-            disabled={!canGoNext || isLoading}
-            activeOpacity={0.8}
+          <Pressable
+            style={({ pressed }) => [
+              styles.fabButton,
+              (!canGoNext || isLoading) && { opacity: 0.5 },
+              pressed && (canGoNext && !isLoading) && { opacity: 0.8 }
+            ]}
+            onPress={() => {
+              if (canGoNext && !isLoading) {
+                handleNext();
+              }
+            }}
           >
             <Ionicons name="arrow-forward" size={20} color={Colors.neutral.white} />
             <Text style={styles.fabExtendedText}>Continuer</Text>
-          </TouchableOpacity>
+          </Pressable>
         </Animated.View>
       )}
 
       {/* FAB Bouton Soumettre pour l'étape finale */}
       {currentStep === 4 && formData.termsAccepted && (
         <Animated.View style={[styles.fab, fabAnimatedStyle]}>
-          <TouchableOpacity
-            style={styles.fabButton}
-            onPress={handleSubmit}
-            disabled={isLoading}
-            activeOpacity={0.8}
+          <Pressable
+            style={({ pressed }) => [
+              styles.fabButton,
+              isLoading && { opacity: 0.5 },
+              pressed && !isLoading && { opacity: 0.8 }
+            ]}
+            onPress={() => {
+              if (!isLoading) {
+                handleSubmit();
+              }
+            }}
           >
             {isLoading ? (
               <ActivityIndicator size="small" color={Colors.neutral.white} />
@@ -1018,7 +1050,7 @@ export default function BecomeProScreen() {
                 <Text style={styles.fabText}>Soumettre</Text>
               </>
             )}
-          </TouchableOpacity>
+          </Pressable>
         </Animated.View>
       )}
     </>

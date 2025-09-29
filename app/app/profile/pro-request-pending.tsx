@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import { Text, LoadingScreen, ErrorScreen } from '@/components/atoms';
 import { Colors, Spacing, Typography, BorderRadius, Elevation } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { profileService } from '@/services/profile.service';
+import { UniversalAlert } from '@/utils/alert';
 
 export default function ProRequestPendingScreen() {
   const router = useRouter();
@@ -54,10 +55,9 @@ export default function ProRequestPendingScreen() {
   };
 
   const handleContactSupport = () => {
-    Alert.alert(
+    UniversalAlert.info(
       'Contacter le support',
-      'Fonctionnalité à venir. En attendant, vous pouvez nous contacter par email.',
-      [{ text: 'OK', style: 'default' }]
+      'Fonctionnalité à venir. En attendant, vous pouvez nous contacter par email.'
     );
   };
 

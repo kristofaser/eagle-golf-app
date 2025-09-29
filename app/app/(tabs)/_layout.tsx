@@ -4,7 +4,7 @@ import { Colors, Typography, TouchTarget } from '@/constants/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useOverlay } from '@/contexts/OverlayContext';
 import { HugeiconsIcon } from '@hugeicons/react-native';
-import { TouchableOpacity, View, Alert } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useUser } from '@/hooks/useUser';
 import { Avatar, FavoriteBadge } from '@/components/atoms';

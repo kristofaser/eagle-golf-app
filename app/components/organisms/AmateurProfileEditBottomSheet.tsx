@@ -3,11 +3,12 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   ScrollView,
   Modal,
   SafeAreaView,
 } from 'react-native';
+import { UniversalAlert } from '@/utils/alert';
+import { toast } from '@/utils/toast';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography, BorderRadius } from '@/constants/theme';
 import { Text, Input, Button, Avatar } from '@/components/atoms';
@@ -56,7 +57,7 @@ export function AmateurProfileEditBottomSheet({ profile, visible, onClose, onPro
 
   const handleSave = async () => {
     if (!user?.id) {
-      Alert.alert('Erreur', 'Utilisateur non connecté');
+      UniversalAlert.error('Erreur', 'Utilisateur non connecté');
       return;
     }
 
@@ -64,7 +65,7 @@ export function AmateurProfileEditBottomSheet({ profile, visible, onClose, onPro
 
     // Validation du numéro de licence (9 chiffres)
     if (licenseNumber && (!/^\d{9}$/.test(licenseNumber))) {
-      Alert.alert('Erreur', 'Le numéro de licence doit contenir exactement 9 chiffres');
+      UniversalAlert.error('Erreur', 'Le numéro de licence doit contenir exactement 9 chiffres');
       return;
     }
 
@@ -78,7 +79,7 @@ export function AmateurProfileEditBottomSheet({ profile, visible, onClose, onPro
           avatarUrl = await uploadProfileImage(user.id);
         } catch (uploadError) {
           console.error('Erreur upload image:', uploadError);
-          Alert.alert(
+          UniversalAlert.info(
             'Attention',
             "L'image n'a pas pu être uploadée, mais les autres modifications seront sauvegardées."
           );
@@ -112,18 +113,12 @@ export function AmateurProfileEditBottomSheet({ profile, visible, onClose, onPro
         console.log('Erreur rafraîchissement session/profil:', refreshError);
       }
 
-      Alert.alert('Succès', 'Vos informations ont été mises à jour', [
-        {
-          text: 'OK',
-          onPress: () => {
-            onProfileUpdated();
-            onClose();
-          },
-        },
-      ]);
+      toast.success('Mis à jour !');
+      onProfileUpdated();
+      onClose();
     } catch (error) {
       console.error('Erreur mise à jour profil:', error);
-      Alert.alert('Erreur', 'Impossible de mettre à jour le profil');
+      UniversalAlert.error('Erreur', 'Impossible de mettre à jour le profil');
     } finally {
       setIsLoading(false);
     }

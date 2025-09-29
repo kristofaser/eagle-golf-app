@@ -105,10 +105,7 @@ export const useProfileScreen = ({ profileId }: UseProfileScreenProps) => {
   const getMinPrice = useMemo(() => {
     return (playersCount?: number) => {
       if (!pricing || pricing.length === 0) {
-        // Fallback sur l'ancien prix si pas de pricing
-        const basePrice = profile?.pro_profiles?.price_18_holes_1_player || 0;
-        // Ajouter la commission de 20%
-        return Math.round(basePrice * 1.2);
+        return 0;
       }
 
       // Si un nombre de joueurs est spécifié, filtrer pour ce nombre
@@ -137,7 +134,7 @@ export const useProfileScreen = ({ profileId }: UseProfileScreenProps) => {
       // Ajouter la commission de 20% (prix déjà en euros depuis le service)
       return Math.round(minPrice * 1.2);
     };
-  }, [pricing, profile?.pro_profiles?.price_18_holes_1_player]);
+  }, [pricing]);
 
   // Fonction pour sauvegarder le profil édité
   const handleSave = useCallback(async () => {

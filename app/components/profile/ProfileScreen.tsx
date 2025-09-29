@@ -28,8 +28,12 @@ import { profileStyles, IMAGE_HEIGHT } from './styles/profileStyles';
 export default function ProfileScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, loading: authLoading } = useAuth();
   const profileId = Array.isArray(id) ? id[0] : id;
+
+  // Les profils pros sont des pages vitrines publiques accessibles sans authentification
+  // La protection auth est gérée au niveau des actions (réservation, favoris)
+  // via useProFavorite et booking-modal qui affichent des alertes appropriées
 
   // Hook principal avec toute la logique métier
   const {
@@ -81,7 +85,7 @@ export default function ProfileScreen() {
     isLoadingCourses,
   });
 
-  // Afficher un skeleton loader pendant le chargement
+  // Afficher un skeleton loader pendant le chargement du profil
   if (isLoading) {
     return <ProfileSkeleton />;
   }

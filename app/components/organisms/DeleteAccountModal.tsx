@@ -4,10 +4,11 @@ import {
   StyleSheet,
   Modal,
   TouchableOpacity,
+  Pressable,
   Switch,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
+import { UniversalAlert } from '@/utils/alert';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
@@ -34,7 +35,7 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
   const handleDelete = async () => {
     if (!isConfirmed) return;
 
-    Alert.alert(
+    UniversalAlert.show(
       'Dernière confirmation',
       'Êtes-vous absolument certain de vouloir supprimer votre compte ?',
       [
@@ -50,16 +51,19 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
             try {
               await deleteAccount();
               handleClose();
-              // Rediriger vers la page de connexion
-              router.replace('/login');
+              // Reset complet du stack de navigation et redirection vers la racine
+              // Cela permet à l'app de gérer automatiquement la redirection vers login
+              router.dismissAll();
+              router.replace('/');
             } catch (error) {
-              Alert.alert('Erreur', 'Une erreur est survenue lors de la suppression du compte');
+              UniversalAlert.error('Erreur', 'Une erreur est survenue lors de la suppression du compte');
             } finally {
               setIsLoading(false);
             }
           },
         },
-      ]
+      ],
+      { forceNative: true } // Force l'utilisation de window.confirm sur web pour éviter les modals imbriquées
     );
   };
 
@@ -72,7 +76,7 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
           <View style={styles.modalContent}>
             {/* Icône d'avertissement */}
             <View style={styles.iconContainer}>
-              <Ionicons name="warning-outline" size={60} color={Colors.semantic.error} />
+              <Ionicons name="warning-outline" size={60} color={Colors.semantic.error.default} />
             </View>
 
             {/* Titre */}
@@ -109,7 +113,7 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
               <Switch
                 value={isConfirmed}
                 onValueChange={setIsConfirmed}
-                trackColor={{ false: Colors.neutral.lightGray, true: Colors.semantic.error }}
+                trackColor={{ false: Colors.neutral.lightGray, true: Colors.semantic.error.default }}
                 thumbColor={Colors.neutral.white}
               />
               <Text
@@ -132,15 +136,14 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
               >
                 Annuler
               </Button>
-              <TouchableOpacity
-                onPress={isConfirmed ? handleDelete : undefined}
-                style={[
+              <Pressable
+                onPress={handleDelete}
+                style={({ pressed }) => [
                   styles.button,
                   styles.deleteButton,
                   !isConfirmed && styles.deleteButtonDisabled,
+                  pressed && isConfirmed && { opacity: 0.7 }
                 ]}
-                disabled={!isConfirmed || isLoading}
-                activeOpacity={isConfirmed ? 0.7 : 1}
               >
                 {isLoading ? (
                   <ActivityIndicator color={Colors.neutral.white} size="small" />
@@ -149,7 +152,7 @@ export function DeleteAccountModal({ visible, onClose }: DeleteAccountModalProps
                     Supprimer
                   </Text>
                 )}
-              </TouchableOpacity>
+              </Pressable>
             </View>
           </View>
         </View>
@@ -173,6 +176,7 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     backgroundColor: Colors.neutral.white,
     borderRadius: 16,
+    zIndex: 1000, // Assure que la modal est au-dessus du backdrop
   },
   modalContent: {
     padding: Spacing.l,
@@ -191,7 +195,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   warningBox: {
-    backgroundColor: Colors.semantic.error + '10',
+    backgroundColor: Colors.semantic.error.default + '10',
     borderRadius: 8,
     padding: Spacing.m,
     marginBottom: Spacing.l,
@@ -224,13 +228,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   deleteButton: {
-    backgroundColor: Colors.semantic.error,
+    backgroundColor: Colors.semantic.error.default,
     paddingHorizontal: Spacing.l,
     paddingVertical: Spacing.s,
     minHeight: 44,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 1001, // Assure que le bouton est cliquable
   },
   deleteButtonDisabled: {
     backgroundColor: Colors.neutral.lightGray,

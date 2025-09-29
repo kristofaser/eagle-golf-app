@@ -93,7 +93,7 @@ export default function LoginScreen() {
                 placeholder="john.doe@example.com"
                 keyboardType="email-address"
                 autoCapitalize="none"
-                {...(errors.email && { error: errors.email })}
+                {...(errors.email ? { error: errors.email } : {})}
               />
 
               <Button

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { View, Alert, ActivityIndicator } from 'react-native';
-import { useStripe } from '@stripe/stripe-react-native';
+import { View, ActivityIndicator, Platform } from 'react-native';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import { Text } from '@/components/atoms';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
@@ -27,10 +26,23 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
   buttonText = 'Payer maintenant',
   disabled = false,
 }) => {
-  const { initPaymentSheet, presentPaymentSheet } = useStripe();
+  // Import conditionnel pour éviter les erreurs sur web
+  const stripe = Platform.OS !== 'web' ? require('@stripe/stripe-react-native').useStripe() : null;
+  const { initPaymentSheet, presentPaymentSheet } = stripe || {};
   const [loading, setLoading] = useState(false);
 
   const initializePaymentSheet = async () => {
+    // Sur web, ce composant ne devrait pas être utilisé
+    if (Platform.OS === 'web') {
+      onPaymentError('Utilisez PaymentForm pour les paiements web');
+      return;
+    }
+
+    if (!initPaymentSheet || !presentPaymentSheet) {
+      onPaymentError('Stripe non initialisé');
+      return;
+    }
+
     try {
       setLoading(true);
 

@@ -1,6 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
-import { Marker } from 'react-native-maps';
+import { StyleSheet, View, TouchableOpacity, Text, Platform } from 'react-native';
 import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { DepartmentCluster } from '@/types/clustering';
 
@@ -10,6 +9,11 @@ interface ClusterMarkerProps {
 }
 
 export function ClusterMarker({ cluster, onPress }: ClusterMarkerProps) {
+  // Sur web, ce composant ne devrait pas être utilisé
+  if (Platform.OS === 'web') {
+    return null;
+  }
+
   // Validation complète du cluster
   if (
     !cluster ||
@@ -48,6 +52,9 @@ export function ClusterMarker({ cluster, onPress }: ClusterMarkerProps) {
     console.warn('❌ ClusterMarker: données invalides', { count, department });
     return null;
   }
+
+  // Import conditionnel pour éviter les erreurs sur web
+  const { Marker } = require('react-native-maps');
 
   // Rendu simplifié avec valeurs garanties
   const coordinate = { latitude, longitude };

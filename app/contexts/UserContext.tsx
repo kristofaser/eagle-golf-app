@@ -5,7 +5,7 @@
  * ✅ REFACTORISÉ avec useAsyncOperation
  */
 import React, { createContext, useContext, useCallback, useEffect } from 'react';
-import { Alert } from 'react-native';
+import { UniversalAlert } from '@/utils/alert';
 import { supabase } from '@/utils/supabase/client';
 import { AuthUser, Profile } from '@/utils/supabase/auth.types';
 import { useSessionContext } from './SessionContext';
@@ -87,10 +87,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                   '✅ UserContext: Déconnexion déclenchée pour profil manquant (compte ancien)'
                 );
 
-                Alert.alert(
+                UniversalAlert.info(
                   'Compte supprimé',
-                  'Votre compte a été supprimé par un administrateur. Vous avez été déconnecté.',
-                  [{ text: 'OK', style: 'default' }]
+                  'Votre compte a été supprimé par un administrateur. Vous avez été déconnecté.'
                 );
               } catch (error) {
                 logger.error('❌ UserContext: Erreur lors de signOut:', error);
@@ -204,9 +203,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (result) {
-        Alert.alert('Succès', 'Profil mis à jour');
+        UniversalAlert.success('Succès', 'Profil mis à jour');
       } else if (updateOperation.error) {
-        Alert.alert('Erreur', updateOperation.error.message);
+        UniversalAlert.error('Erreur', updateOperation.error.message);
         throw updateOperation.error;
       }
     },
@@ -250,12 +249,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (result) {
-      Alert.alert(
+      UniversalAlert.info(
         'Compte supprimé',
         'Votre compte et toutes vos données ont été supprimés définitivement.'
       );
     } else if (deleteOperation.error) {
-      Alert.alert('Erreur', deleteOperation.error.message || 'Impossible de supprimer le compte');
+      UniversalAlert.error('Erreur', deleteOperation.error.message || 'Impossible de supprimer le compte');
       throw deleteOperation.error;
     }
   }, [user?.id, setUser, deleteOperation]);

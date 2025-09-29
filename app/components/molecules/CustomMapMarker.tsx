@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Marker } from 'react-native-maps';
+import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { HugeiconsIcon } from '@hugeicons/react-native';
 import { GolfHoleIcon } from '@hugeicons/core-free-icons';
 import { Colors, Spacing, BorderRadius, Elevation } from '@/constants/theme';
@@ -24,6 +23,14 @@ export const CustomMapMarker: React.FC<CustomMapMarkerProps> = ({
   isSelected = false,
   onPress,
 }) => {
+  // Sur web, ce composant ne devrait pas être utilisé
+  if (Platform.OS === 'web') {
+    return null;
+  }
+
+  // Import conditionnel pour éviter les erreurs sur web
+  const { Marker } = require('react-native-maps');
+
   return (
     <Marker
       coordinate={coordinate}

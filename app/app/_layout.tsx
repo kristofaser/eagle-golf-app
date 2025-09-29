@@ -22,6 +22,10 @@ import { AppProviders } from '@/contexts/AppProviders';
 import { queryClient } from '@/services/query/queryClient';
 import { ProProfileProvider } from '@/contexts/ProProfileContext';
 import { StripeProviderWrapper } from '@/contexts/StripeContext';
+import { AlertModalProvider } from '@/contexts/AlertModalContext';
+import { AlertModalInitializer } from '@/components/atoms/AlertModalInitializer';
+import { ToastProvider } from '@/contexts/ToastContext';
+import { ToastInitializer } from '@/components/atoms/ToastInitializer';
 import '@/utils/polyfills';
 import { DURATIONS, EASING_CURVES } from '@/constants/animations';
 import { Colors } from '@/constants/theme';
@@ -42,11 +46,15 @@ SplashScreen.preventAutoHideAsync();
 function RootLayoutContent() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <StripeProviderWrapper>
-        <AppProviders>
-          <ProProfileProvider>
-            <BottomSheetModalProvider>
-              <OverlayProvider>
+      <ToastProvider>
+        <ToastInitializer />
+        <AlertModalProvider>
+          <AlertModalInitializer />
+          <StripeProviderWrapper>
+            <AppProviders>
+              <ProProfileProvider>
+                <BottomSheetModalProvider>
+                  <OverlayProvider>
                 <Stack
                   screenOptions={{
                     headerShown: false,
@@ -178,6 +186,8 @@ function RootLayoutContent() {
           </ProProfileProvider>
         </AppProviders>
       </StripeProviderWrapper>
+        </AlertModalProvider>
+      </ToastProvider>
     </GestureHandlerRootView>
   );
 }
