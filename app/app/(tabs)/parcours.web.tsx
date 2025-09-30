@@ -1,9 +1,8 @@
-import { Platform } from 'react-native';
 import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { StyleSheet, View, RefreshControl, TouchableOpacity, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlashList } from '@shopify/flash-list';
-import { GolfCoursesMapExpo, CourseBottomSheet } from '@/components/organisms';
+import { GolfCoursesMapWeb } from '@/components/organisms/GolfCoursesMapWeb';
+import { CourseBottomSheet } from '@/components/organisms';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { Colors, Spacing, BorderRadius, Elevation } from '@/constants/theme';
 import { Text, Icon, Badge, LoadingScreen, ErrorScreen } from '@/components/atoms';
@@ -262,9 +261,8 @@ function ParcoursScreen() {
     return <ErrorScreen error={error} onRetry={loadCourses} />;
   }
 
-  const Container = Platform.OS === 'web' ? View : SafeAreaView;
   return (
-    <Container style={styles.container} edges={[]}>
+    <View style={styles.container}>
       {viewMode === 'list' ? (
         <View style={styles.container}>
           <FlashList
@@ -292,7 +290,7 @@ function ParcoursScreen() {
       ) : (
         <>
           <View style={styles.mapContainerFullScreen}>
-            <GolfCoursesMapExpo
+            <GolfCoursesMapWeb
               allGolfs={allGolfs}
               userLocation={userLocation?.coords}
               onCoursePress={handleCoursePress}
@@ -313,7 +311,7 @@ function ParcoursScreen() {
           onClose={handleBottomSheetClose}
         />
       )}
-    </Container>
+    </View>
   );
 }
 

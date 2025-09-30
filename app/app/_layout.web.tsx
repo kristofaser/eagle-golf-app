@@ -61,52 +61,53 @@ const styles = StyleSheet.create({
   },
 });
 
-// Injecter des styles CSS globaux pour le web mobile
-if (typeof document !== 'undefined') {
-  const style = document.createElement('style');
-  style.textContent = `
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html, body, #root, #__expo-root {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-    }
-
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      overscroll-behavior: none;
-      touch-action: pan-x pan-y;
-    }
-
-    /* Désactiver le zoom sur mobile web */
-    input, textarea, select {
-      font-size: 16px !important;
-    }
-
-    /* Empêcher le bounce sur iOS Safari */
-    .gesture-handler-root-view {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      overflow: hidden;
-    }
-  `;
-  document.head.appendChild(style);
-}
-
 function RootLayoutContent() {
+  // Injecter des styles CSS globaux pour le web mobile (dans useEffect pour éviter l'erreur sur mobile)
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const style = document.createElement('style');
+      style.textContent = `
+        * {
+          box-sizing: border-box;
+          -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body, #root, #__expo-root {
+          margin: 0;
+          padding: 0;
+          height: 100%;
+          width: 100%;
+          overflow: hidden;
+        }
+
+        body {
+          margin: 0;
+          padding: 0;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          overscroll-behavior: none;
+          touch-action: pan-x pan-y;
+        }
+
+        /* Désactiver le zoom sur mobile web */
+        input, textarea, select {
+          font-size: 16px !important;
+        }
+
+        /* Empêcher le bounce sur iOS Safari */
+        .gesture-handler-root-view {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          overflow: hidden;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }, []);
   return (
     <View style={styles.container}>
       <GestureHandlerRootView style={styles.rootView} className="gesture-handler-root-view">

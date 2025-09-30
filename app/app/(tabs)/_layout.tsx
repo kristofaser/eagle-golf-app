@@ -4,7 +4,7 @@ import { Colors, Typography, TouchTarget } from '@/constants/theme';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useOverlay } from '@/contexts/OverlayContext';
 import { HugeiconsIcon } from '@hugeicons/react-native';
-import { TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View, Platform } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useUser } from '@/hooks/useUser';
 import { Avatar, FavoriteBadge } from '@/components/atoms';
@@ -51,7 +51,7 @@ export default function TabLayout() {
         screenOptions={({ route }) => ({
           headerShown: true,
           headerStyle: {
-            backgroundColor: Colors.neutral.ball,
+            backgroundColor: Colors.neutral.white,
             elevation: 0,
             shadowOpacity: 0,
             borderBottomWidth: 1,
@@ -59,7 +59,7 @@ export default function TabLayout() {
           },
           headerTitleStyle: {
             fontFamily: Typography.fontFamily.primary,
-            fontSize: Typography.fontSize.h2,
+            fontSize: Platform.OS === 'android' ? Typography.fontSize.h3 : Typography.fontSize.h2,
             fontWeight: Typography.fontWeight.bold,
             color: Colors.neutral.charcoal,
           },
@@ -78,7 +78,10 @@ export default function TabLayout() {
           headerLeft: () => (
             <TouchableOpacity
               onPress={handleProfilePress}
-              style={[TouchTarget.minimum, { marginLeft: 16 }]}
+              style={[
+                Platform.OS === 'android' ? TouchTarget.android : TouchTarget.minimum,
+                { marginLeft: 16 },
+              ]}
             >
               <Avatar
                 imageUrl={profile?.avatar_url}
@@ -108,7 +111,10 @@ export default function TabLayout() {
               {/* Bouton Favoris avec badge */}
               <TouchableOpacity
                 onPress={handleFavoritesPress}
-                style={[TouchTarget.minimum, { marginRight: 8, position: 'relative' }]}
+                style={[
+                  Platform.OS === 'android' ? TouchTarget.android : TouchTarget.minimum,
+                  { marginRight: 8, position: 'relative' },
+                ]}
               >
                 <HugeiconsIcon
                   icon={FavouriteIcon}
@@ -119,7 +125,10 @@ export default function TabLayout() {
               </TouchableOpacity>
 
               {/* Bouton Search */}
-              <TouchableOpacity onPress={handleSearchPress} style={TouchTarget.minimum}>
+              <TouchableOpacity
+                onPress={handleSearchPress}
+                style={Platform.OS === 'android' ? TouchTarget.android : TouchTarget.minimum}
+              >
                 <HugeiconsIcon icon={Search01Icon} size={24} color={Colors.primary.accent} />
               </TouchableOpacity>
             </View>
@@ -132,10 +141,10 @@ export default function TabLayout() {
             fontWeight: Typography.fontWeight.medium,
           },
           tabBarStyle: {
-            backgroundColor: Colors.neutral.ball,
+            backgroundColor: Colors.neutral.white,
             borderTopColor: Colors.neutral.mist,
             borderTopWidth: 1,
-            paddingBottom: insets.bottom > 0 ? insets.bottom - 10 : 5,
+            paddingBottom: insets.bottom > 0 ? insets.bottom : 5,
             paddingTop: 10,
             height: 60 + insets.bottom,
             display: isOverlayOpen ? 'none' : 'flex',

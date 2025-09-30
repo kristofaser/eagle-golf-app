@@ -33,27 +33,11 @@ export function GolfCoursesMapExpo({
   selectedCourseId,
   onMapPress,
 }: GolfCoursesMapExpoProps) {
-  // Sur web, afficher un placeholder simple
-  if (Platform.OS === 'web') {
-    return (
-      <View style={styles.container}>
-        <View style={styles.webPlaceholder}>
-          <Text variant="h3" color="charcoal" style={styles.placeholderTitle}>
-            🗺️ Carte des Parcours
-          </Text>
-          <Text variant="body" color="iron" style={styles.placeholderText}>
-            {allGolfs.length} parcours de golf disponibles
-          </Text>
-          <Text variant="caption" color="iron" style={styles.placeholderNote}>
-            La vue carte sera disponible dans la prochaine version web
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
   // Import conditionnel pour éviter les erreurs sur web
-  const { MapView, Region, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Marker } = require('react-native-maps');
+  // Note: Ce fichier est pour mobile uniquement, la version web est dans GolfCoursesMapExpo.web.tsx
+  const ReactNativeMaps = require('react-native-maps');
+  const MapView = ReactNativeMaps.default;
+  const { Region, PROVIDER_GOOGLE, PROVIDER_DEFAULT, Marker } = ReactNativeMaps;
 
   const mapRef = useRef<typeof MapView>(null);
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
