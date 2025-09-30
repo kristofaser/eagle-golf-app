@@ -171,6 +171,54 @@ npx supabase functions deploy <function-name> --project-ref vrpsulmidpgxmkybgtwn
 npx supabase functions deploy stripe-webhook --no-verify-jwt --project-ref vrpsulmidpgxmkybgtwn
 ```
 
+## Google Maps API Configuration
+
+### Obtaining an API Key
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create or select a project
+3. Enable **Maps SDK for Android**
+4. Create credentials → API Key
+5. **CRITICAL**: Add restrictions:
+   - **API restrictions**: Maps SDK for Android ONLY
+   - **Application restrictions**: Android apps → Package `com.cigalo.eagle`
+   - **Quotas**: Limit to 10,000 requests/day
+
+### Local Configuration
+
+1. Copy `.env.example` to `.env.local`:
+   ```bash
+   cp .env.example .env.local
+   ```
+
+2. Add your Google Maps API key to `.env.local`:
+   ```bash
+   GOOGLE_MAPS_API_KEY=your_key_here
+   ```
+
+3. **NEVER** commit `.env.local` to Git (already in `.gitignore`)
+
+### How it Works
+
+- The API key is loaded from `.env.local` via `app.config.js`
+- At build time, Expo generates `google_maps_api.xml` automatically
+- The generated file is ignored by Git (see `.gitignore`)
+- On Android: Uses Google Maps SDK with your key
+- On iOS: Uses Apple Maps (no Google key needed)
+- On Web: Shows a placeholder (maps not supported yet)
+
+### Troubleshooting
+
+**Problem**: "Map not loading" or "Authorization failure"
+- Check that `GOOGLE_MAPS_API_KEY` is set in `.env.local`
+- Verify the key has correct restrictions in Google Cloud Console
+- Rebuild the app: `npm run android`
+
+**Problem**: "API key exposed in Git"
+- The key should NEVER be in `google_maps_api.xml` in Git
+- Only `.env.local` should contain the key (and it's gitignored)
+- If exposed: Revoke immediately and create a new key
+
 ## Stripe Integration
 
 ### Account Configuration
