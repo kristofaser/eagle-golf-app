@@ -193,9 +193,13 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Erreur API /api/admin/invite/accept:', error);
+    console.error('❌ [FATAL ERROR] Erreur API /api/admin/invite/accept:', error);
+    console.error('❌ [STACK TRACE]:', error instanceof Error ? error.stack : 'No stack trace');
     return NextResponse.json(
-      { error: 'Erreur serveur interne' },
+      {
+        error: 'Erreur serveur interne',
+        details: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }
