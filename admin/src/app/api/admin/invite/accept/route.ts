@@ -110,13 +110,17 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (profileError) {
-      console.error('❌ [ERROR] Erreur création profil:', profileError);
+      console.error('❌ [ERROR] Erreur création profil:', JSON.stringify(profileError, null, 2));
+      console.error('❌ [ERROR] Profile data was:', JSON.stringify(profileData, null, 2));
 
       // Rollback: supprimer l'utilisateur auth
       await serviceClient.auth.admin.deleteUser(authData.user.id);
 
       return NextResponse.json(
-        { error: 'Erreur lors de la création du profil' },
+        {
+          error: 'Erreur lors de la création du profil',
+          details: profileError.message || JSON.stringify(profileError)
+        },
         { status: 500 }
       );
     }

@@ -30,9 +30,10 @@ export function useAdminAuth() {
 
         // Vérifier si c'est un admin
         const { data: adminProfile, error: adminError } = await supabase
-          .from('admin_profiles')
-          .select('id, email, role, is_active')
+          .from('profiles')
+          .select('id, email, user_type, is_admin')
           .eq('id', user.id)
+          .eq('is_admin', true)
           .single();
 
         if (adminError || !adminProfile) {
@@ -45,8 +46,8 @@ export function useAdminAuth() {
         setAdminUser({
           id: adminProfile.id,
           email: adminProfile.email,
-          role: adminProfile.role,
-          isActive: adminProfile.is_active
+          role: adminProfile.user_type,
+          isActive: true // Tous les admins avec is_admin = true sont actifs
         });
 
         console.log('👤 Admin connecté:', {
