@@ -3,11 +3,16 @@ import { createServiceClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🟢 [START] API accept invitation démarrée');
+
     // 1. Récupérer les données
     const body = await request.json();
     const { token, password } = body;
 
+    console.log('🟢 [STEP 1] Données reçues - Token:', token?.substring(0, 10) + '...');
+
     if (!token || !password) {
+      console.log('❌ [STEP 1] Token ou mot de passe manquant');
       return NextResponse.json(
         { error: 'Token et mot de passe requis' },
         { status: 400 }
@@ -34,10 +39,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('🟢 [STEP 2] Validation mot de passe OK');
+
     const serviceClient = await createServiceClient();
+    console.log('🟢 [STEP 3] Service client créé');
 
     // 3. Vérifier que le token est valide
     await serviceClient.rpc('expire_old_invitations');
+    console.log('🟢 [STEP 3] RPC expire_old_invitations exécuté');
 
     const { data: invitation, error: invitationError } = await serviceClient
       .from('admin_invitations')
@@ -46,7 +55,11 @@ export async function POST(request: NextRequest) {
       .eq('status', 'pending')
       .single();
 
+    console.log('🟢 [STEP 3] Invitation récupérée:', invitation ? 'trouvée' : 'non trouvée');
+    if (invitationError) console.log('⚠️ [STEP 3] Erreur invitation:', invitationError);
+
     if (invitationError || !invitation) {
+      console.log('❌ [STEP 3] Invitation invalide ou expirée');
       return NextResponse.json(
         { error: 'Invitation invalide ou expirée' },
         { status: 404 }
@@ -67,7 +80,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('🟢 [STEP 4] Vérification email existant OK');
+
     // 5. Créer l'utilisateur dans auth.users
+    console.log('🟢 [STEP 5] Création utilisateur auth - email:', invitation.email);
     const { data: authData, error: authError } = await serviceClient.auth.admin.createUser({
       email: invitation.email,
       password: password,
@@ -80,12 +96,17 @@ export async function POST(request: NextRequest) {
     });
 
     if (authError || !authData.user) {
-      console.error('Erreur création utilisateur:', authError);
+      console.error('❌ [STEP 5] Erreur création utilisateur:', JSON.stringify(authError, null, 2));
       return NextResponse.json(
-        { error: 'Erreur lors de la création du compte' },
+        {
+          error: 'Erreur lors de la création du compte',
+          details: authError?.message || 'Unknown auth error'
+        },
         { status: 500 }
       );
     }
+
+    console.log('🟢 [STEP 5] Utilisateur auth créé - ID:', authData.user.id);
 
     // 6. Créer le profil dans profiles
     const profileData = {
