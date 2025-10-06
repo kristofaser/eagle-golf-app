@@ -47,7 +47,8 @@ export async function middleware(request: NextRequest) {
 
   // Protéger les routes super admin (nécessite super_admin uniquement)
   const isSuperAdminPage = request.nextUrl.pathname.startsWith('/admin') &&
-      !request.nextUrl.pathname.startsWith('/api');
+      !request.nextUrl.pathname.startsWith('/api') &&
+      !request.nextUrl.pathname.startsWith('/admin-invitation');
 
   // Vérifier d'abord les pages super admin (plus restrictives)
   if (isSuperAdminPage) {
