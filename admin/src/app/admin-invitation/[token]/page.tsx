@@ -1,9 +1,10 @@
 import AcceptInvitationClient from './AcceptInvitationClient';
 
 interface PageProps {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 }
 
-export default function AcceptInvitationPage({ params }: PageProps) {
-  return <AcceptInvitationClient token={params.token} />;
+export default async function AcceptInvitationPage({ params }: PageProps) {
+  const { token } = await params;
+  return <AcceptInvitationClient token={token} />;
 }
