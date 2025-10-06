@@ -3511,13 +3511,12 @@ export type Database = {
     };
     Enums: {
       pro_division:
-        | 'DP World Tour'
-        | 'HotelPlanner Tour'
-        | 'Alps Tour'
-        | 'Pro Golf Tour'
+        | 'DP World'
         | 'Ladies European Tour'
         | 'Legends Tour'
-        | 'Circuit Français';
+        | 'Hotel Planner'
+        | 'Alps Tour & Pro Golf'
+        | 'Circuit FR';
       trip_status: 'available' | 'full' | 'completed';
     };
     CompositeTypes: {
@@ -3653,13 +3652,12 @@ export const Constants = {
   public: {
     Enums: {
       pro_division: [
-        'DP World Tour',
-        'HotelPlanner Tour',
-        'Alps Tour',
-        'Pro Golf Tour',
+        'DP World',
         'Ladies European Tour',
         'Legends Tour',
-        'Circuit Français',
+        'Hotel Planner',
+        'Alps Tour & Pro Golf',
+        'Circuit FR',
       ],
       trip_status: ['available', 'full', 'completed'],
     },

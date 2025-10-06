@@ -23,6 +23,7 @@ import { useProtectedRoute } from '@/hooks/useProtectedRoute';
 import { Avatar } from '@/components/atoms';
 import { supabase } from '@/utils/supabase/client';
 import { pricingService } from '@/services/pricing.service';
+import { useCommissionRate } from '@/contexts/CommissionContext';
 
 export default function BookingScreen() {
   const { availabilityId } = useLocalSearchParams();
@@ -60,6 +61,9 @@ export default function BookingScreen() {
     totalAmount: 0,
   });
 
+  // Commission dynamique depuis CommissionContext (temps réel automatique)
+  const commissionRate = useCommissionRate();
+
   // Charger les données de disponibilité
   useEffect(() => {
     if (availabilityId && isAuthorized) {
@@ -67,7 +71,7 @@ export default function BookingScreen() {
     }
   }, [availabilityId, isAuthorized]);
 
-  // Calculer le prix quand le nombre de joueurs change
+  // Calculer le prix quand le nombre de joueurs ou la commission change
   useEffect(() => {
     const calculatePrice = async () => {
       if (!availability) return;
@@ -82,7 +86,7 @@ export default function BookingScreen() {
       if (price) {
         // price est en euros par personne, multiplier par le nombre de joueurs
         const totalForAllPlayers = price * numberOfPlayers;
-        const platformFee = Math.round(totalForAllPlayers * 0.2); // 20% de commission
+        const platformFee = Math.round(totalForAllPlayers * commissionRate);
         const total = totalForAllPlayers + platformFee;
 
         setPricing({
@@ -101,7 +105,7 @@ export default function BookingScreen() {
     };
 
     calculatePrice();
-  }, [numberOfPlayers, availability]);
+  }, [numberOfPlayers, availability, commissionRate]);
 
   const loadAvailability = async () => {
     try {

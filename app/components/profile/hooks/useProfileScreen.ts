@@ -8,6 +8,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { profileService, FullProfile } from '@/services/profile.service';
 import { golfCourseService, GolfCourse } from '@/services/golf-course.service';
 import { amateurAvailabilityService } from '@/services/amateur-availability.service';
+import { useCommissionRate } from '@/contexts/CommissionContext';
 
 interface UseProfileScreenProps {
   profileId: string;
@@ -35,6 +36,9 @@ export const useProfileScreen = ({ profileId }: UseProfileScreenProps) => {
   const [golfCourses, setGolfCourses] = useState<GolfCourse[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<FullProfile | null>(null);
+
+  // Commission dynamique depuis CommissionContext (temps réel automatique)
+  const commissionRate = useCommissionRate();
 
   // Vérifier si c'est mon profil
   const isMyProfile = user?.id === profileId;
@@ -116,8 +120,8 @@ export const useProfileScreen = ({ profileId }: UseProfileScreenProps) => {
 
         if (pricesForPlayers.length > 0) {
           const minPrice = Math.min(...pricesForPlayers);
-          // Ajouter la commission de 20% (prix déjà en euros depuis le service)
-          return Math.round(minPrice * 1.2);
+          // Ajouter la commission dynamique (prix déjà en euros depuis le service)
+          return Math.round(minPrice * (1 + commissionRate));
         }
 
         // Si pas de prix pour ce nombre de joueurs, prendre le minimum global
@@ -131,10 +135,10 @@ export const useProfileScreen = ({ profileId }: UseProfileScreenProps) => {
       }
 
       const minPrice = Math.min(...validPrices);
-      // Ajouter la commission de 20% (prix déjà en euros depuis le service)
-      return Math.round(minPrice * 1.2);
+      // Ajouter la commission dynamique (prix déjà en euros depuis le service)
+      return Math.round(minPrice * (1 + commissionRate));
     };
-  }, [pricing]);
+  }, [pricing, commissionRate]);
 
   // Fonction pour sauvegarder le profil édité
   const handleSave = useCallback(async () => {

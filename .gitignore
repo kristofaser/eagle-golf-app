@@ -90,3 +90,4 @@ temp/
 
 # Sensitive files
 strip.txt
+.vercel

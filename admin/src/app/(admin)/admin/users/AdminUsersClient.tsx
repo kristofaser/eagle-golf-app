@@ -1,18 +1,20 @@
 'use client';
 
-import { Shield, Search, UserPlus } from 'lucide-react';
+import { Shield, Search, UserPlus, Mail } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AddAdminModal, { AdminFormData } from '@/components/admin/AddAdminModal';
 import EditAdminModal, { EditAdminFormData } from '@/components/admin/EditAdminModal';
 import AdminUserSidebar from '@/components/features/admin/AdminUserSidebar';
 import ConfirmationModal from '@/components/admin/ConfirmationModal';
-import { 
-  createAdminUser, 
-  updateAdminUser, 
-  deleteAdminUser, 
-  toggleAdminUserStatus, 
-  resetAdminPassword 
+import CommissionSettings from '@/components/features/CommissionSettings';
+import InviteAdminModal from '@/components/admin/InviteAdminModal';
+import {
+  createAdminUser,
+  updateAdminUser,
+  deleteAdminUser,
+  toggleAdminUserStatus,
+  resetAdminPassword
 } from './actions';
 
 interface AdminUsersClientProps {
@@ -32,6 +34,7 @@ interface ModalState {
   delete: boolean;
   toggleStatus: boolean;
   resetPassword: boolean;
+  invite: boolean;
 }
 
 interface SidebarState {
@@ -54,6 +57,7 @@ export default function AdminUsersClient({ initialUsers, currentUserId, currentU
     delete: false,
     toggleStatus: false,
     resetPassword: false,
+    invite: false,
   });
   
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -155,6 +159,7 @@ export default function AdminUsersClient({ initialUsers, currentUserId, currentU
       delete: false,
       toggleStatus: false,
       resetPassword: false,
+      invite: false,
     });
     setSelectedUser(null);
   };
@@ -276,13 +281,8 @@ export default function AdminUsersClient({ initialUsers, currentUserId, currentU
         </div>
       )}
 
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Administration système</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Gérez les utilisateurs administrateurs du backoffice Eagle Golf
-        </p>
-      </div>
+      {/* Commission Settings */}
+      <CommissionSettings canEdit={canManageAdmins} />
 
       {/* Actions Bar */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -317,13 +317,22 @@ export default function AdminUsersClient({ initialUsers, currentUserId, currentU
         {/* Actions */}
         <div className="flex items-center gap-2">
           {canManageAdmins && (
-            <button 
-              onClick={() => openModal('add')}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Ajouter un admin
-            </button>
+            <>
+              <button
+                onClick={() => openModal('invite')}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Inviter un admin
+              </button>
+              <button
+                onClick={() => openModal('add')}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Créer manuellement
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -462,6 +471,15 @@ export default function AdminUsersClient({ initialUsers, currentUserId, currentU
       {/* Modals */}
       {canManageAdmins && (
         <>
+          <InviteAdminModal
+            isOpen={modals.invite}
+            onClose={() => closeModal('invite')}
+            onSuccess={() => {
+              setSuccessMessage('Invitation envoyée avec succès');
+              router.refresh();
+            }}
+          />
+
           <AddAdminModal
             isOpen={modals.add}
             onClose={() => closeModal('add')}

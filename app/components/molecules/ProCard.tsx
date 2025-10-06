@@ -22,18 +22,10 @@ interface ProCardProps {
   showDeleteButton?: boolean;
 }
 
-// Fonction pour obtenir le nom court de la division
+// Fonction pour obtenir le nom de la division (nom complet pour affichage)
 const getDivisionShortName = (division: string): string => {
-  const shortNames: { [key: string]: string } = {
-    'DP World Tour': 'DP WORLD',
-    'HotelPlanner Tour': 'HOTELPLANNER',
-    'Ladies European Tour': 'LET',
-    'Circuit Français': 'CIRCUIT FR',
-    'Challenge Tour': 'CHALLENGE',
-    'Elite Tour': 'ELITE',
-    'Alps Tour': 'ALPS',
-  };
-  return shortNames[division] || division.toUpperCase();
+  // Retourner le nom complet de la division tel quel
+  return division;
 };
 
 // Fonction pour obtenir le style du badge selon la division
@@ -371,9 +363,9 @@ const styles = StyleSheet.create({
   },
   divisionBadge: {
     position: 'absolute',
-    top: Spacing.xs + 11, // Centrer avec le bouton favori (44px de haut / 2 - 22px de badge / 2)
+    bottom: Spacing.s,
     left: Spacing.s,
-    paddingHorizontal: Spacing.xs,
+    paddingHorizontal: Spacing.s,
     paddingVertical: 4,
     borderRadius: BorderRadius.medium,
     elevation: 2,
@@ -381,13 +373,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
-    height: 22, // Hauteur fixe pour aligner avec le cœur
+    minHeight: 22,
+    maxWidth: 180,
     justifyContent: 'center',
     alignItems: 'center',
   },
   divisionText: {
-    fontSize: 10,
-    letterSpacing: 0.2,
+    fontSize: 9,
+    letterSpacing: 0.1,
     lineHeight: 12,
     textAlign: 'center',
   },
@@ -441,12 +434,14 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: BorderRadius.medium,
     marginBottom: 6,
+    minHeight: 22,
+    maxWidth: 200,
     justifyContent: 'center',
     alignItems: 'center',
   },
   horizontalDivisionText: {
-    fontSize: 10,
-    letterSpacing: 0.2,
+    fontSize: 9,
+    letterSpacing: 0.1,
     lineHeight: 12,
     textAlign: 'center',
   },

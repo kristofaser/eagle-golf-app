@@ -61,7 +61,7 @@ export default function CourseFilters({ search, onSearchChange, isLoading }: Cou
           <input
             ref={inputRef}
             type="text"
-            placeholder="Rechercher un parcours (nom, ville)..."
+            placeholder="Rechercher un parcours (nom, ville, département)..."
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}

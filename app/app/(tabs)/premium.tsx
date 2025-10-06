@@ -1,14 +1,19 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { usePremium } from '@/hooks/usePremium';
+import { useWeeklyTips } from '@/hooks/usePremiumContent';
 
 const { width } = Dimensions.get('window');
 
 export default function PremiumScreen() {
   const insets = useSafeAreaInsets();
+  const { isPremium, loading: premiumLoading } = usePremium();
+  const { tips, loading: tipsLoading } = useWeeklyTips();
 
   return (
     <View style={styles.container}>
@@ -21,7 +26,89 @@ export default function PremiumScreen() {
         <View style={styles.simpleHeader}>
           <Text style={styles.headerTitle}>Eagle Premium</Text>
           <Text style={styles.headerSubtitle}>Accédez au contenu exclusif des professionnels</Text>
+
+          {/* Bouton de test (visible uniquement en développement) */}
+          {__DEV__ && (
+            <TouchableOpacity
+              style={styles.devButton}
+              onPress={() => router.push('/test-premium')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="flask" size={16} color="#fff" />
+              <Text style={styles.devButtonText}>Test Premium Services</Text>
+            </TouchableOpacity>
+          )}
         </View>
+
+        {/* Affichage conditionnel : Paywall si pas premium */}
+        {premiumLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#2E7D32" />
+            <Text style={styles.loadingText}>Vérification du statut premium...</Text>
+          </View>
+        ) : !isPremium ? (
+          <View style={styles.paywallContainer}>
+            <TouchableOpacity
+              style={styles.paywallButton}
+              onPress={() => router.push('/premium-paywall')}
+              activeOpacity={0.9}
+            >
+              <View style={styles.paywallContent}>
+                <Ionicons name="diamond" size={48} color="#FFB300" />
+                <Text style={styles.paywallTitle}>Devenez membre Premium</Text>
+                <Text style={styles.paywallSubtitle}>
+                  Accédez à tous les contenus exclusifs
+                </Text>
+                <View style={styles.paywallCTA}>
+                  <Text style={styles.paywallCTAText}>Voir les avantages</Text>
+                  <Ionicons name="arrow-forward" size={20} color="#0472B2" />
+                </View>
+              </View>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <>
+            {/* Contenu premium accessible (afficher si isPremium === true) */}
+            <View style={styles.premiumContentHeader}>
+              <Ionicons name="checkmark-circle" size={32} color="#4CAF50" />
+              <Text style={styles.premiumActiveTitle}>Vous êtes Premium ✨</Text>
+              <Text style={styles.premiumActiveSubtitle}>
+                Profitez de tous les avantages exclusifs
+              </Text>
+            </View>
+
+            {/* Section Tips de la semaine (afficher les tips réels) */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Ionicons name="bulb" size={24} color="#2E7D32" />
+                <Text style={styles.sectionTitle}>Tips de la Semaine</Text>
+              </View>
+              {tipsLoading ? (
+                <ActivityIndicator size="small" color="#2E7D32" />
+              ) : tips.length > 0 ? (
+                <View style={styles.card}>
+                  <View style={styles.cardContent}>
+                    <Text style={styles.tipsCountBadge}>
+                      {tips.length} tip{tips.length > 1 ? 's' : ''} disponible{tips.length > 1 ? 's' : ''}
+                    </Text>
+                    {tips.map((tip, index) => (
+                      <View key={tip.id} style={styles.tipItem}>
+                        <Ionicons name="videocam" size={16} color="#2E7D32" />
+                        <Text style={styles.tipTitle}>{tip.title}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.card}>
+                  <Text style={styles.noContentText}>Aucun tip disponible pour le moment</Text>
+                </View>
+              )}
+            </View>
+          </>
+        )}
+
+        {/* Sections statiques (visibles pour tous, même non-premium) */}
         {/* Section Vidéos de Swing */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -314,5 +401,130 @@ const styles = StyleSheet.create({
     color: '#FFA500',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  devButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#9C27B0',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.5,
+  },
+  devButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  loadingContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 14,
+    color: '#666',
+  },
+  paywallContainer: {
+    paddingHorizontal: 20,
+    marginTop: 20,
+  },
+  paywallButton: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 32,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  paywallContent: {
+    alignItems: 'center',
+  },
+  paywallTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  paywallSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  paywallCTA: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E6F4FF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+    gap: 8,
+  },
+  paywallCTAText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0472B2',
+  },
+  premiumContentHeader: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    backgroundColor: '#E8F5E9',
+    marginHorizontal: 20,
+    borderRadius: 16,
+    marginBottom: 20,
+  },
+  premiumActiveTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+    marginTop: 12,
+  },
+  premiumActiveSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+  },
+  tipsCountBadge: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#2E7D32',
+    backgroundColor: '#E8F5E9',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  tipTitle: {
+    fontSize: 14,
+    color: '#333',
+    marginLeft: 10,
+    flex: 1,
+  },
+  noContentText: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    paddingVertical: 20,
   },
 });

@@ -210,14 +210,6 @@ export default function UsersClient({ initialUsers, currentUserRole = 'admin', c
         </div>
       )}
 
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Gestion des utilisateurs</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Gérez les utilisateurs de l'application mobile Eagle Golf
-        </p>
-      </div>
-
       {/* Actions Bar */}
       <UserActions 
         onSearchChange={setSearchQuery}

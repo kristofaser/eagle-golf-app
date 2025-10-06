@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Users, MapPin } from 'lucide-react';
+import { Calendar, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { getProAvailabilities } from '@/app/(admin)/users/actions/availabilities';
+import { ProAvailabilityCalendar } from './ProAvailabilityCalendar';
 
 interface ProAvailability {
   id: string;
@@ -29,6 +30,7 @@ interface ProAvailabilitiesSectionProps {
 export default function ProAvailabilitiesSection({ proId }: ProAvailabilitiesSectionProps) {
   const [availabilities, setAvailabilities] = useState<ProAvailability[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<{ date: Date; availabilities: ProAvailability[] } | null>(null);
 
   useEffect(() => {
     const loadAvailabilities = async () => {
@@ -53,6 +55,13 @@ export default function ProAvailabilitiesSection({ proId }: ProAvailabilitiesSec
       loadAvailabilities();
     }
   }, [proId]);
+
+  const handleDateClick = (date: Date, dayAvailabilities: any[]) => {
+    // Retrouver les disponibilités complètes à partir des IDs
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const fullAvailabilities = availabilities.filter(avail => avail.date === dateStr);
+    setSelectedDate({ date, availabilities: fullAvailabilities });
+  };
 
   if (loading) {
     return (
@@ -85,77 +94,71 @@ export default function ProAvailabilitiesSection({ proId }: ProAvailabilitiesSec
     );
   }
 
+  // Transformer les données pour le calendrier
+  const calendarAvailabilities = availabilities.map((avail) => ({
+    date: avail.date,
+    golf_course_id: avail.golf_course_id,
+    golf_course_name: avail.golf_parcours?.name || 'Parcours inconnu',
+    is_available: avail.is_available,
+    current_bookings: avail.current_bookings,
+    max_players: avail.max_players,
+  }));
+
   return (
     <div className="mb-6">
       <h3 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
         Disponibilités ({availabilities.length})
       </h3>
-      <div className="space-y-2">
-        {availabilities.map((availability) => (
-          <div key={availability.id} className="p-3 bg-gray-50 rounded-lg">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                {/* Date et heure */}
-                <div className="flex items-center gap-2 mb-1">
-                  <Calendar className="h-3 w-3 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-900">
-                    {format(new Date(availability.date), 'EEEE dd MMMM', { locale: fr })}
+
+      {/* Calendrier */}
+      <ProAvailabilityCalendar
+        availabilities={calendarAvailabilities}
+        onDateClick={handleDateClick}
+      />
+
+      {/* Détails de la date sélectionnée */}
+      {selectedDate && (
+        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-semibold text-blue-900">
+              {format(selectedDate.date, 'EEEE dd MMMM yyyy', { locale: fr })}
+            </h4>
+            <button
+              onClick={() => setSelectedDate(null)}
+              className="text-blue-600 hover:text-blue-800 text-xs"
+            >
+              Fermer
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {selectedDate.availabilities.map((availability) => (
+              <div key={availability.id} className="p-2 bg-white rounded border border-blue-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-3 w-3 text-gray-400" />
+                    <span className="text-sm font-medium text-gray-900">
+                      {availability.golf_parcours?.name || 'Parcours inconnu'}
+                    </span>
+                  </div>
+                  <span className={`px-2 py-0.5 text-xs rounded-full ${
+                    (availability.current_bookings || 0) < availability.max_players
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {availability.current_bookings || 0}/{availability.max_players} joueurs
                   </span>
                 </div>
-                
-                <div className="flex items-center gap-4 text-xs text-gray-600">
-                  {/* Horaires */}
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    <span>{availability.start_time} - {availability.end_time}</span>
-                  </div>
-                  
-                  {/* Capacité */}
-                  <div className="flex items-center gap-1">
-                    <Users className="h-3 w-3" />
-                    <span>
-                      {availability.current_bookings || 0}/{availability.max_players} joueurs
-                    </span>
-                  </div>
-                </div>
-
-                {/* Parcours si disponible */}
-                {availability.golf_parcours?.name && (
-                  <div className="flex items-center gap-1 mt-1">
-                    <MapPin className="h-3 w-3 text-gray-400" />
-                    <span className="text-xs text-gray-500">
-                      {availability.golf_parcours.name}
-                      {availability.golf_parcours.city && ` - ${availability.golf_parcours.city}`}
-                    </span>
-                  </div>
+                {availability.golf_parcours?.city && (
+                  <p className="text-xs text-gray-500 mt-1 ml-5">
+                    {availability.golf_parcours.city}
+                  </p>
                 )}
               </div>
-
-              {/* Statut */}
-              <div className="ml-2">
-                <span className={`px-2 py-1 text-xs rounded-full ${
-                  availability.is_available && (availability.current_bookings || 0) < availability.max_players
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {availability.is_available && (availability.current_bookings || 0) < availability.max_players
-                    ? 'Disponible'
-                    : 'Complet'
-                  }
-                </span>
-              </div>
-            </div>
+            ))}
           </div>
-        ))}
-        
-        {availabilities.length === 10 && (
-          <div className="text-center">
-            <span className="text-xs text-gray-500">
-              Affichage des 10 prochaines disponibilités
-            </span>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

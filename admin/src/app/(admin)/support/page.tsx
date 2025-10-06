@@ -78,14 +78,6 @@ export default function SupportPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Support client</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Gérez les demandes de support et les tickets clients
-        </p>
-      </div>
-
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">

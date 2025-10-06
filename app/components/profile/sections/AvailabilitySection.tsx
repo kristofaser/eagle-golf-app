@@ -24,7 +24,6 @@ export const AvailabilitySection = memo<AvailabilitySectionProps>(
         entering={FadeIn.delay(300).duration(DURATIONS.NORMAL)}
         style={[profileStyles.card, { backgroundColor: sectionColors.availability.background }]}
         accessible={true}
-        accessibilityRole="region"
         accessibilityLabel="Section disponibilités"
       >
         <View style={profileStyles.cardHeader}>

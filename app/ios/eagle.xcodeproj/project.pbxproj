@@ -21,7 +21,7 @@
 		13B07F961A680F5B00A75B9A /* eagle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = eagle.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = eagle/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = eagle/Info.plist; sourceTree = "<group>"; };
-		6ED9D367849885D6C04354AC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = eagle/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		6ED9D367849885D6C04354AC /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = eagle/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		7EF5E0D6767F4D90A09FEA9F /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "eagle/noop-file.swift"; sourceTree = "<group>"; };
 		8979D93399377AC671E0D66D /* Pods-eagle.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-eagle.release.xcconfig"; path = "Target Support Files/Pods-eagle/Pods-eagle.release.xcconfig"; sourceTree = "<group>"; };
 		988D428A1B6D94BABA51D756 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-eagle/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
@@ -76,7 +76,6 @@
 				FBB99C4E892CDBB76FB4AE12 /* Pods-eagle.debug.xcconfig */,
 				8979D93399377AC671E0D66D /* Pods-eagle.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -370,6 +369,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = eagle/eagle.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8ZK9RT46AY;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -406,6 +406,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = eagle/eagle.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8ZK9RT46AY;
 				INFOPLIST_FILE = eagle/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (

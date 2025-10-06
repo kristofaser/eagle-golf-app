@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/hooks/useAuth';
 import { Text, Button, EagleLogo } from '@/components/atoms';
+import { VideoBackground } from '@/components/organisms';
 import { Colors, Spacing, Typography } from '@/constants/theme';
 import { UniversalAlert } from '@/utils/alert';
 
@@ -200,7 +201,11 @@ export default function VerifyOtpScreen() {
           headerShown: false,
         }}
       />
-      <SafeAreaView style={styles.container}>
+      <View style={{ flex: 1 }}>
+        {/* Vidéo de fond avec gradient optimisé - Skeleton désactivé car vidéo déjà en cache */}
+        <VideoBackground showGradient showSkeleton={false} skeletonType="login" />
+
+        <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
@@ -213,18 +218,18 @@ export default function VerifyOtpScreen() {
             {/* Header */}
             <View style={styles.header}>
               <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-                <Ionicons name="arrow-back" size={24} color={Colors.primary.navy} />
+                <Ionicons name="arrow-back" size={24} color={Colors.neutral.white} />
               </TouchableOpacity>
               <EagleLogo size={80} animated animationType="pulse" />
-              <Text variant="h2" style={[styles.title, { color: Colors.primary.navy }]}>
+              <Text variant="h2" style={[styles.title, { color: Colors.neutral.white }]}>
                 Vérifiez votre email
               </Text>
-              <Text variant="body" style={[styles.subtitle, { color: Colors.neutral.course }]}>
+              <Text variant="body" style={[styles.subtitle, { color: Colors.neutral.white }]}>
                 Un code à 6 chiffres a été envoyé à
               </Text>
               <Text
                 variant="body"
-                style={[styles.email, { color: Colors.primary.navy, fontWeight: '600' }]}
+                style={[styles.email, { color: Colors.neutral.white, fontWeight: '600' }]}
               >
                 {email}
               </Text>
@@ -232,7 +237,7 @@ export default function VerifyOtpScreen() {
 
             {/* Code Input */}
             <View style={styles.codeContainer}>
-              <Text variant="caption" color="gray" style={styles.codeLabel}>
+              <Text variant="caption" style={[styles.codeLabel, { color: Colors.neutral.white }]}>
                 Entrez le code à 6 chiffres
               </Text>
 
@@ -281,7 +286,7 @@ export default function VerifyOtpScreen() {
                   variant="body"
                   style={[
                     styles.resendText,
-                    { color: canResend ? Colors.primary.electric : Colors.neutral.course },
+                    { color: canResend ? Colors.primary.electric : Colors.neutral.white },
                   ]}
                 >
                   {canResend ? 'Renvoyer le code' : `Renvoyer dans ${timer}s`}
@@ -292,7 +297,7 @@ export default function VerifyOtpScreen() {
               <TouchableOpacity onPress={handleChangeEmail} disabled={isLoading}>
                 <Text
                   variant="body"
-                  style={[styles.changeEmailText, { color: Colors.neutral.course }]}
+                  style={[styles.changeEmailText, { color: Colors.neutral.white }]}
                 >
                   Changer d'email
                 </Text>
@@ -315,6 +320,7 @@ export default function VerifyOtpScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+      </View>
     </>
   );
 }
@@ -322,7 +328,7 @@ export default function VerifyOtpScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.neutral.cloud,
+    backgroundColor: 'transparent', // Fond transparent pour voir la vidéo
   },
   keyboardView: {
     flex: 1,

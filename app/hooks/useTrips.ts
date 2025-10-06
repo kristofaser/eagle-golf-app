@@ -5,9 +5,6 @@ import { logger } from '@/utils/logger';
 
 export const useTrips = () => {
   const [trips, setTrips] = useState<Trip[]>([]);
-  const [completedTrips, setCompletedTrips] = useState<Trip[]>([]);
-  const [fullTrips, setFullTrips] = useState<Trip[]>([]);
-  const [availableTrips, setAvailableTrips] = useState<Trip[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,15 +22,6 @@ export const useTrips = () => {
 
       if (data) {
         setTrips(data);
-
-        // Séparer par statut
-        const completed = data.filter((trip) => trip.status === 'completed');
-        const full = data.filter((trip) => trip.status === 'full');
-        const available = data.filter((trip) => trip.status === 'available');
-
-        setCompletedTrips(completed);
-        setFullTrips(full);
-        setAvailableTrips(available);
       }
     } catch (err) {
       logger.error('Erreur chargement voyages:', err);
@@ -43,38 +31,6 @@ export const useTrips = () => {
     }
   }, []);
 
-  // Charger les voyages par statut
-  const loadTripsByStatus = useCallback(async (status: TripStatus) => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const { data, error } = await tripService.getTripsByStatus(status);
-
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        switch (status) {
-          case 'completed':
-            setCompletedTrips(data);
-            break;
-          case 'full':
-            setFullTrips(data);
-            break;
-          case 'available':
-            setAvailableTrips(data);
-            break;
-        }
-      }
-    } catch (err) {
-      logger.error(`Erreur chargement voyages ${status}:`, err);
-      setError(`Impossible de charger les voyages ${status}`);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
   // Écouter les changements en temps réel
   useEffect(() => {
@@ -106,12 +62,8 @@ export const useTrips = () => {
 
   return {
     trips,
-    completedTrips,
-    fullTrips,
-    availableTrips,
     isLoading,
     error,
     refresh,
-    loadTripsByStatus,
   };
 };

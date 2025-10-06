@@ -1,36 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  Modal,
-  SafeAreaView,
-  Platform,
-} from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Modal, SafeAreaView } from 'react-native';
 import { UniversalAlert } from '@/utils/alert';
 import { toast } from '@/utils/toast';
-import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Spacing, Typography, BorderRadius } from '@/constants/theme';
+import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { Text, Input, Button, Avatar } from '@/components/atoms';
 import { useSimpleProfileUpload } from '@/hooks/useImageUpload';
 import { profileService, UpdateProfileData } from '@/services/profile.service';
 import { FullProfile } from '@/services/profile.service';
 import { useAuth } from '@/hooks/useAuth';
 
-// Enum des divisions depuis la base de données
-const PRO_DIVISIONS = [
-  'DP World Tour',
-  'HotelPlanner Tour',
-  'Alps Tour',
-  'Pro Golf Tour',
-  'Ladies European Tour',
-  'Legends Tour',
-  'Circuit Français',
-] as const;
+// Type pour les divisions
+type ProDivision = 'DP World' | 'Ladies European Tour' | 'Legends Tour' | 'Hotel Planner' | 'Alps Tour' | 'Pro Golf' | 'Circuit FR';
 
-type ProDivision = (typeof PRO_DIVISIONS)[number];
+// Liste des divisions
+const PRO_DIVISIONS = [
+  { key: 'DP World', label: 'DP World' },
+  { key: 'Ladies European Tour', label: 'Ladies European Tour' },
+  { key: 'Legends Tour', label: 'Legends Tour' },
+  { key: 'Hotel Planner', label: 'Hotel Planner' },
+  { key: 'Alps Tour', label: 'Alps Tour' },
+  { key: 'Pro Golf', label: 'Pro Golf' },
+  { key: 'Circuit FR', label: 'Circuit FR' },
+] as const;
 
 interface ProProfileEditBottomSheetProps {
   profile: FullProfile;
@@ -47,7 +39,6 @@ export function ProProfileEditBottomSheet({
 }: ProProfileEditBottomSheetProps) {
   const { user, refreshSession, loadUserProfile } = useAuth();
   const {
-    uploading: uploadingImage,
     tempImageUri,
     handleImageSelection,
     uploadProfileImage,
@@ -64,7 +55,7 @@ export function ProProfileEditBottomSheet({
     profile?.pro_profiles?.world_ranking?.toString() || ''
   );
   const [isLoading, setIsLoading] = useState(false);
-  const [showDivisionPicker, setShowDivisionPicker] = useState(false);
+  const [showDivisionModal, setShowDivisionModal] = useState(false);
 
   // Réinitialiser les champs quand le profil change
   useEffect(() => {
@@ -203,49 +194,31 @@ export function ProProfileEditBottomSheet({
             <View style={styles.row}>
               <View style={styles.halfInput}>
                 <Input
-                  label="Prénom"
                   value={firstName}
                   onChangeText={setFirstName}
-                  placeholder="John"
+                  placeholder="Votre prénom"
                 />
               </View>
               <View style={styles.halfInput}>
-                <Input label="Nom" value={lastName} onChangeText={setLastName} placeholder="Doe" />
+                <Input value={lastName} onChangeText={setLastName} placeholder="Votre nom" />
               </View>
             </View>
 
-            {/* Division - Picker/Select */}
+            {/* Division - Cliquable pour ouvrir modal */}
             <View style={styles.inputContainer}>
               <Text variant="label" color="charcoal" style={styles.label}>
                 Division
               </Text>
-              {Platform.OS === 'ios' ? (
-                <TouchableOpacity
-                  style={styles.selectButton}
-                  onPress={() => setShowDivisionPicker(true)}
-                >
-                  <Text variant="body" color={division ? 'charcoal' : 'slate'}>
-                    {division || 'Sélectionner une division'}
-                  </Text>
-                  <Ionicons name="chevron-down" size={20} color={Colors.neutral.slate} />
-                </TouchableOpacity>
-              ) : (
-                <View style={styles.pickerContainer}>
-                  <Picker
-                    selectedValue={division}
-                    onValueChange={(value) => setDivision(value as ProDivision)}
-                    style={styles.picker}
-                  >
-                    <Picker.Item label="Sélectionner une division" value="" />
-                    {PRO_DIVISIONS.map((div) => (
-                      <Picker.Item key={div} label={div} value={div} />
-                    ))}
-                  </Picker>
-                </View>
-              )}
-              <Text variant="caption" color="slate" style={styles.helperText}>
-                Circuit professionnel
-              </Text>
+              <TouchableOpacity
+                style={styles.selectButton}
+                onPress={() => setShowDivisionModal(true)}
+                activeOpacity={0.7}
+              >
+                <Text variant="body" color={division ? 'charcoal' : 'slate'}>
+                  {division || 'Sélectionner une division'}
+                </Text>
+                <Ionicons name="chevron-forward" size={20} color={Colors.neutral.slate} />
+              </TouchableOpacity>
             </View>
 
             {/* Classement mondial */}
@@ -275,51 +248,169 @@ export function ProProfileEditBottomSheet({
             {isLoading ? 'Enregistrement...' : 'Enregistrer les modifications'}
           </Button>
         </ScrollView>
-
-        {/* Modal iOS pour la sélection de division */}
-        {Platform.OS === 'ios' && (
-          <Modal
-            visible={showDivisionPicker}
-            transparent={true}
-            animationType="slide"
-            onRequestClose={() => setShowDivisionPicker(false)}
-          >
-            <TouchableOpacity
-              style={styles.pickerModalOverlay}
-              activeOpacity={1}
-              onPress={() => setShowDivisionPicker(false)}
-            >
-              <View style={styles.pickerModalContent}>
-                <View style={styles.pickerModalHeader}>
-                  <TouchableOpacity onPress={() => setShowDivisionPicker(false)}>
-                    <Text variant="body" color="accent" weight="medium">
-                      Annuler
-                    </Text>
-                  </TouchableOpacity>
-                  <Text variant="body" color="charcoal" weight="semiBold">
-                    Choisir une division
-                  </Text>
-                  <TouchableOpacity onPress={() => setShowDivisionPicker(false)}>
-                    <Text variant="body" color="accent" weight="medium">
-                      OK
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-                <Picker
-                  selectedValue={division}
-                  onValueChange={(value) => setDivision(value as ProDivision)}
-                  style={styles.iosPicker}
-                >
-                  <Picker.Item label="Aucune division" value="" />
-                  {PRO_DIVISIONS.map((div) => (
-                    <Picker.Item key={div} label={div} value={div} />
-                  ))}
-                </Picker>
-              </View>
-            </TouchableOpacity>
-          </Modal>
-        )}
       </SafeAreaView>
+
+      {/* Modal Division */}
+      <Modal
+        visible={showDivisionModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowDivisionModal(false)}
+      >
+        <SafeAreaView style={styles.divisionModalContainer}>
+          <View style={styles.divisionModalHeader}>
+            <Text variant="h3" color="charcoal" weight="semiBold">
+              Division
+            </Text>
+            <TouchableOpacity onPress={() => setShowDivisionModal(false)} style={styles.closeButton}>
+              <Ionicons name="close" size={24} color={Colors.neutral.charcoal} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={styles.divisionModalContent} showsVerticalScrollIndicator={false}>
+            <Text variant="caption" color="iron" style={styles.divisionSubtitle}>
+              Sélectionnez votre circuit professionnel
+            </Text>
+
+            <View style={styles.divisionsList}>
+              {PRO_DIVISIONS.map((div, index) => {
+                // Après Hotel Planner, on insère Alps Tour et Pro Golf côte à côte
+                if (div.key === 'Hotel Planner') {
+                  return (
+                    <React.Fragment key="hotel-planner-group">
+                      {/* Hotel Planner normal */}
+                      <TouchableOpacity
+                        style={[
+                          styles.divisionItem,
+                          division === 'Hotel Planner' && styles.divisionItemSelected,
+                        ]}
+                        onPress={() => {
+                          setDivision('Hotel Planner');
+                          setShowDivisionModal(false);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <View style={styles.divisionContent}>
+                          <Text
+                            variant="body"
+                            color={division === 'Hotel Planner' ? 'accent' : 'charcoal'}
+                            weight={division === 'Hotel Planner' ? 'semiBold' : 'regular'}
+                            style={styles.divisionLabel}
+                          >
+                            Hotel Planner
+                          </Text>
+                        </View>
+                        {division === 'Hotel Planner' && (
+                          <Ionicons name="checkmark-circle" size={24} color={Colors.primary.accent} />
+                        )}
+                      </TouchableOpacity>
+
+                      {/* Ligne spéciale pour Alps Tour et Pro Golf côte à côte */}
+                      <View style={styles.twoColumnsRow}>
+                        {/* Alps Tour */}
+                        <TouchableOpacity
+                          style={[
+                            styles.divisionItem,
+                            styles.halfWidthItem,
+                            division === 'Alps Tour' && styles.divisionItemSelected,
+                          ]}
+                          onPress={() => {
+                            setDivision('Alps Tour');
+                            setShowDivisionModal(false);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <View style={styles.divisionContent}>
+                            <Text
+                              variant="body"
+                              color={division === 'Alps Tour' ? 'accent' : 'charcoal'}
+                              weight={division === 'Alps Tour' ? 'semiBold' : 'regular'}
+                              style={styles.divisionLabel}
+                            >
+                              Alps Tour
+                            </Text>
+                          </View>
+                          {division === 'Alps Tour' && (
+                            <Ionicons
+                              name="checkmark-circle"
+                              size={24}
+                              color={Colors.primary.accent}
+                            />
+                          )}
+                        </TouchableOpacity>
+
+                        {/* Pro Golf */}
+                        <TouchableOpacity
+                          style={[
+                            styles.divisionItem,
+                            styles.halfWidthItem,
+                            division === 'Pro Golf' && styles.divisionItemSelected,
+                          ]}
+                          onPress={() => {
+                            setDivision('Pro Golf');
+                            setShowDivisionModal(false);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <View style={styles.divisionContent}>
+                            <Text
+                              variant="body"
+                              color={division === 'Pro Golf' ? 'accent' : 'charcoal'}
+                              weight={division === 'Pro Golf' ? 'semiBold' : 'regular'}
+                              style={styles.divisionLabel}
+                            >
+                              Pro Golf
+                            </Text>
+                          </View>
+                          {division === 'Pro Golf' && (
+                            <Ionicons
+                              name="checkmark-circle"
+                              size={24}
+                              color={Colors.primary.accent}
+                            />
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    </React.Fragment>
+                  );
+                }
+
+                // On saute Alps Tour et Pro Golf car ils sont déjà rendus après Hotel Planner
+                if (div.key === 'Alps Tour' || div.key === 'Pro Golf') {
+                  return null;
+                }
+
+                const isSelected = division === div.key;
+                return (
+                  <TouchableOpacity
+                    key={div.key}
+                    style={[styles.divisionItem, isSelected && styles.divisionItemSelected]}
+                    onPress={() => {
+                      setDivision(div.key as ProDivision);
+                      setShowDivisionModal(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.divisionContent}>
+                      <Text
+                        variant="body"
+                        color={isSelected ? 'accent' : 'charcoal'}
+                        weight={isSelected ? 'semiBold' : 'regular'}
+                        style={styles.divisionLabel}
+                      >
+                        {div.label}
+                      </Text>
+                    </View>
+                    {isSelected && (
+                      <Ionicons name="checkmark-circle" size={24} color={Colors.primary.accent} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
     </Modal>
   );
 }
@@ -387,6 +478,9 @@ const styles = StyleSheet.create({
   label: {
     marginBottom: Spacing.xs,
   },
+  helperText: {
+    marginTop: Spacing.xs,
+  },
   selectButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -397,39 +491,72 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.small,
     borderWidth: 1,
     borderColor: Colors.neutral.mist,
+    minHeight: 48,
   },
-  pickerContainer: {
-    backgroundColor: Colors.neutral.pearl,
-    borderRadius: BorderRadius.small,
-    borderWidth: 1,
-    borderColor: Colors.neutral.mist,
-    overflow: 'hidden',
-  },
-  picker: {
-    height: 50,
-  },
-  helperText: {
-    marginTop: Spacing.xs,
-  },
-  pickerModalOverlay: {
+  // Styles Modal Division
+  divisionModalContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: Colors.neutral.pearl,
   },
-  pickerModalContent: {
-    backgroundColor: Colors.neutral.white,
-    borderTopLeftRadius: BorderRadius.large,
-    borderTopRightRadius: BorderRadius.large,
-  },
-  pickerModalHeader: {
+  divisionModalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: Spacing.m,
+    paddingHorizontal: Spacing.l,
+    paddingVertical: Spacing.m,
+    backgroundColor: Colors.neutral.white,
     borderBottomWidth: 1,
     borderBottomColor: Colors.neutral.mist,
   },
-  iosPicker: {
-    height: 200,
+  divisionModalContent: {
+    flex: 1,
+    padding: Spacing.l,
+  },
+  divisionSubtitle: {
+    marginBottom: Spacing.xl,
+    textAlign: 'center',
+  },
+  divisionsList: {
+    marginBottom: Spacing.m,
+  },
+  divisionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Spacing.m,
+    paddingHorizontal: Spacing.l,
+    backgroundColor: Colors.neutral.white,
+    borderRadius: BorderRadius.medium,
+    marginBottom: Spacing.s,
+    shadowColor: Colors.neutral.charcoal,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  divisionItemSelected: {
+    borderColor: Colors.primary.accent,
+    backgroundColor: Colors.primary.light,
+  },
+  divisionContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.m,
+  },
+  divisionLabel: {
+    flex: 1,
+  },
+  twoColumnsRow: {
+    flexDirection: 'row',
+    gap: Spacing.s,
+  },
+  halfWidthItem: {
+    flex: 1,
   },
 });

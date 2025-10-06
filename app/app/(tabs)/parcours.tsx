@@ -29,7 +29,7 @@ interface CourseCardData extends GolfParcours {
 
 type ViewMode = 'list' | 'map';
 
-function ParcoursScreen() {
+export default function ParcoursScreen() {
   const insets = useSafeAreaInsets();
   const TAB_BAR_HEIGHT = 60; // Hauteur de la tab bar sans les safe areas
   const router = useRouter();
@@ -316,8 +316,6 @@ function ParcoursScreen() {
     </Container>
   );
 }
-
-export default ParcoursScreen;
 
 const styles = StyleSheet.create({
   container: {

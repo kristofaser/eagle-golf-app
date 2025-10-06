@@ -5,14 +5,6 @@ import { TrendingUp, Users, Calendar, DollarSign, Activity, BarChart3 } from 'lu
 export default function AnalyticsPage() {
   return (
     <div>
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Visualisez les performances et les statistiques de la plateforme
-        </p>
-      </div>
-
       {/* Date Range Selector */}
       <div className="mb-6 flex justify-between">
         <div className="flex gap-2">

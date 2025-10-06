@@ -18,7 +18,6 @@ export interface SearchByProParams {
     min?: number;
     max?: number;
   };
-  canTravel?: boolean;
   language?: string;
 }
 
@@ -121,7 +120,7 @@ class SearchService extends BaseService {
    */
   async searchByPro(params: SearchByProParams): Promise<ServiceResponse<SearchResult>> {
     try {
-      const { city, date, specialties, priceRange, canTravel, language } = params;
+      const { city, date, specialties, priceRange, language } = params;
 
       // Construire les filtres pour les pros
       const proFilters: Record<string, unknown> = {};
@@ -129,7 +128,6 @@ class SearchService extends BaseService {
       if (specialties?.length) proFilters.specialties = specialties;
       if (priceRange?.min !== undefined) proFilters.minHourlyRate = priceRange.min;
       if (priceRange?.max !== undefined) proFilters.maxHourlyRate = priceRange.max;
-      if (canTravel !== undefined) proFilters.canTravel = canTravel;
       if (language) proFilters.languages = [language];
 
       // Récupérer les pros

@@ -57,13 +57,13 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Vérifier le rôle super_admin uniquement avec la nouvelle table admin_profiles
+    // Vérifier le rôle super_admin uniquement
     const { data: superAdminProfile, error: superAdminError } = await supabase
-      .from('admin_profiles')
-      .select('id, role, is_active')
+      .from('profiles')
+      .select('id, user_type, is_admin')
       .eq('id', user.id)
-      .eq('role', 'super_admin')
-      .eq('is_active', true)
+      .eq('is_admin', true)
+      .eq('user_type', 'super_admin')
       .single();
 
     if (superAdminError || !superAdminProfile) {
@@ -81,12 +81,12 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // Vérifier le profil admin avec la nouvelle table admin_profiles
+    // Vérifier le profil admin (admin OU super_admin)
     const { data: adminProfile, error: roleError } = await supabase
-      .from('admin_profiles')
-      .select('id, role, is_active')
+      .from('profiles')
+      .select('id, user_type, is_admin')
       .eq('id', user.id)
-      .eq('is_active', true)
+      .eq('is_admin', true)
       .single();
 
     if (roleError || !adminProfile) {

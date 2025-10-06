@@ -79,6 +79,7 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
   const menuItem3AnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: menuItem3Scale.value }, { translateY: menuItem3TranslateY.value }],
   }));
+
   const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([]);
   const [pastBookings, setPastBookings] = useState<Booking[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(true);
@@ -429,10 +430,7 @@ export function ProProfile({ profile, onRefresh, openSection }: ProProfileProps)
       <View style={styles.fabContainer}>
         {/* Overlay invisible pour fermer le menu en touchant à l'extérieur */}
         {fabMenuOpen && (
-          <Pressable
-            style={styles.fabOverlay}
-            onPress={() => setFabMenuOpen(false)}
-          />
+          <Pressable style={styles.fabOverlay} onPress={() => setFabMenuOpen(false)} />
         )}
 
         {/* Menu Items */}

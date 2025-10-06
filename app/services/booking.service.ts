@@ -591,15 +591,22 @@ class BookingService extends BaseService {
   /**
    * Calcule le prix total d'une réservation
    * @param basePriceInCents - Prix de base en centimes depuis pro_pricing
+   * @param commissionRate - Taux de commission (par défaut 0.2 = 20%)
+   *
+   * ⚠️ ATTENTION: Pour une commission dynamique depuis Supabase,
+   * utilisez pricingService.getCurrentCommission() avant d'appeler cette fonction
    */
-  calculateBookingPrice(basePriceInCents: number): {
+  calculateBookingPrice(
+    basePriceInCents: number,
+    commissionRate: number = 0.2
+  ): {
     proFee: number;
     platformFee: number;
     totalAmount: number;
   } {
     // Le prix de base est déjà le prix total de la partie
     const proFee = basePriceInCents;
-    const platformFee = Math.round(proFee * 0.2); // 20% de commission
+    const platformFee = Math.round(proFee * commissionRate);
     const totalAmount = proFee + platformFee;
 
     return {

@@ -26,12 +26,15 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('golf_parcours')
-      .select('*', { count: 'exact' });
+      .select(`
+        *,
+        bookings!bookings_golf_course_id_fkey(id, status)
+      `, { count: 'exact' });
 
     // Appliquer le filtre de recherche
     if (search.trim()) {
       const searchTerm = search.trim();
-      query = query.or(`name.ilike.%${searchTerm}%,city.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+      query = query.or(`name.ilike.%${searchTerm}%,city.ilike.%${searchTerm}%,department.ilike.%${searchTerm}%`);
     }
 
     // Pagination
@@ -54,8 +57,22 @@ export async function GET(request: NextRequest) {
 
     const totalPages = count ? Math.ceil(count / limit) : 0;
 
+    // Transformer les données pour compter les réservations en cours
+    const coursesWithBookingCount = (data || []).map((course: any) => {
+      const activeBookingsCount = course.bookings?.filter(
+        (booking: any) => booking.status === 'confirmed' || booking.status === 'pending'
+      ).length || 0;
+
+      // Retirer le tableau bookings et ajouter juste le compteur
+      const { bookings, ...courseData } = course;
+      return {
+        ...courseData,
+        active_bookings_count: activeBookingsCount
+      };
+    });
+
     const response: CourseSearchResponse = {
-      data: data || [],
+      data: coursesWithBookingCount,
       count: count || 0,
       page,
       totalPages

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { useRouter } from 'expo-router';
 import { HugeiconsIcon } from '@hugeicons/react-native';
+import { Ionicons } from '@expo/vector-icons';
 import {
   BombIcon,
   GolfBatIcon,
@@ -12,9 +13,10 @@ import {
   GolfHoleIcon,
   Video02Icon,
 } from '@hugeicons/core-free-icons';
-import { Colors } from '@/constants/theme';
+import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { DURATIONS } from '@/constants/animations';
 import { profileStyles, sectionColors } from '../styles/profileStyles';
+import { SKILL_ACCESS_RULES, SkillType } from '@/types/premium';
 
 interface SkillsSectionProps {
   skills?: {
@@ -56,6 +58,10 @@ export const SkillsSection = memo<SkillsSectionProps>(({ skills, profileId }) =>
       // Pas d'icône vidéo pour la compétence Mental
       const shouldShowVideo = skillKey && skillKey !== 'mental';
 
+      // Vérifier si cette skill est premium (sauf Driving et Mental)
+      const accessRule = SKILL_ACCESS_RULES[skillKey as SkillType];
+      const isPremiumSkill = accessRule === 'premium';
+
       return (
         <View
           style={profileStyles.skillRow}
@@ -83,6 +89,40 @@ export const SkillsSection = memo<SkillsSectionProps>(({ skills, profileId }) =>
                 </View>
               )}
               <Text style={profileStyles.skillLabel}>{label}</Text>
+
+              {/* Badge Premium pour les skills premium */}
+              {isPremiumSkill && (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    backgroundColor: Colors.secondary.gold + '15',
+                    paddingHorizontal: Spacing.xs,
+                    paddingVertical: 2,
+                    borderRadius: BorderRadius.small,
+                    marginLeft: Spacing.xs,
+                    borderWidth: 1,
+                    borderColor: Colors.secondary.gold + '30',
+                  }}
+                >
+                  <Ionicons
+                    name="lock-closed"
+                    size={10}
+                    color={Colors.secondary.gold}
+                    style={{ marginRight: 2 }}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 9,
+                      fontWeight: '600',
+                      color: Colors.secondary.gold,
+                      letterSpacing: 0.3,
+                    }}
+                  >
+                    PREMIUM
+                  </Text>
+                </View>
+              )}
 
               {/* Icône vidéo juste à côté du nom - sauf pour Mental */}
               {shouldShowVideo && (
@@ -133,7 +173,6 @@ export const SkillsSection = memo<SkillsSectionProps>(({ skills, profileId }) =>
       entering={FadeIn.delay(350).duration(DURATIONS.NORMAL)}
       style={[profileStyles.card, { backgroundColor: sectionColors.level.background }]}
       accessible={true}
-      accessibilityRole="region"
       accessibilityLabel="Section compétences"
     >
       <View style={profileStyles.cardHeader}>

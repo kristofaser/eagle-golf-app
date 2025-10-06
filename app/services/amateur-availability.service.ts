@@ -459,6 +459,14 @@ export const amateurAvailabilityService = {
         return a.golf_course_name.localeCompare(b.golf_course_name);
       });
 
+      // Log pour debug
+      console.log(`📍 Parcours disponibles triés par distance:`);
+      coursesArray.forEach((course, i) => {
+        console.log(
+          `  ${i + 1}. ${course.city}: ${course.distance_km ? `${course.distance_km} km` : 'distance inconnue'} (${course.available_slots_count} créneaux)`
+        );
+      });
+
       return { data: coursesArray, error: null };
     } catch (err) {
       logger.error('Erreur récupération parcours disponibles:', err);

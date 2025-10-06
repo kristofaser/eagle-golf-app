@@ -19,6 +19,7 @@ import { HugeiconsIcon } from '@hugeicons/react-native';
 import {
   ArrowLeft01Icon,
   Search01Icon,
+  FavouriteIcon,
 } from '@hugeicons/core-free-icons';
 import { useQuery } from '@tanstack/react-query';
 import { profileService } from '@/services/profile.service';
@@ -150,7 +151,7 @@ export default function FavoritesScreen() {
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
       <View style={styles.emptyIconWrapper}>
-        <Ionicons name="heart-outline" size={64} color={Colors.neutral.mist} />
+        <HugeiconsIcon icon={FavouriteIcon} size={64} color={Colors.neutral.mist} />
       </View>
       <Text variant="h3" color="charcoal" weight="semiBold" style={styles.emptyTitle}>
         Aucun favori

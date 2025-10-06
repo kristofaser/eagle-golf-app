@@ -30,6 +30,7 @@ import { SuccessStep } from '@/components/profile/sections/steps/SuccessStep';
 import { pricingService } from '@/services/pricing.service';
 import { bookingService } from '@/services/booking.service';
 import { useAuth } from '@/hooks/useAuth';
+import { useCommissionRate } from '@/contexts/CommissionContext';
 
 // Étapes du parcours de réservation
 const BOOKING_STEPS = [
@@ -83,6 +84,9 @@ export default function BookingModal() {
   const [availableSlots, setAvailableSlots] = useState<any[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [createdBookingId, setCreatedBookingId] = useState<string | null>(null);
+
+  // Commission dynamique depuis CommissionContext (temps réel automatique)
+  const commissionRate = useCommissionRate();
 
   // États globaux de gestion d'erreur
   const [globalError, setGlobalError] = useState<string | null>(null);
@@ -176,9 +180,9 @@ export default function BookingModal() {
       }
 
       // Le prix est en euros par personne depuis la base de données
-      // Multiplier par le nombre de joueurs puis ajouter la commission Eagle (20%)
+      // Multiplier par le nombre de joueurs puis ajouter la commission Eagle (dynamique)
       const totalForAllPlayers = price * players;
-      const totalWithCommission = totalForAllPlayers + totalForAllPlayers * 0.2;
+      const totalWithCommission = totalForAllPlayers + totalForAllPlayers * commissionRate;
       return totalWithCommission;
     } catch (error) {
       console.error('Erreur calcul prix:', error);

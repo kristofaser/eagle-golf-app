@@ -45,14 +45,6 @@ export default function PaymentsPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Paiements</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Gérez les transactions et les commissions de la plateforme
-        </p>
-      </div>
-
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white p-6 rounded-lg shadow">

@@ -41,6 +41,17 @@ class ProfileAggregatedService {
         return this.fallbackAggregation(profileId);
       }
 
+      // SOLUTION ROBUSTE: Toujours convertir les prix de centimes en euros
+      // La fonction RPC retourne les prix en centimes depuis la base de données
+      // On applique systématiquement la conversion comme dans pricingService
+      if (data.pricing && Array.isArray(data.pricing)) {
+        data.pricing = data.pricing.map((item: any) => ({
+          ...item,
+          // Conversion systématique centimes → euros (aligné avec pricingService.getProPricing)
+          price: item.price / 100,
+        }));
+      }
+
       return data as AggregatedProProfile;
     } catch (error) {
       // Fallback en cas d'erreur de la fonction RPC
@@ -154,11 +165,10 @@ class ProfileAggregatedService {
       return [];
     }
 
-    // Les prix sont déjà stockés en euros dans la base de données
-    // Pas de conversion nécessaire
+    // Convertir les prix de centimes en euros
     return (data || []).map((item) => ({
       ...item,
-      price: item.price, // Prix déjà en euros
+      price: item.price / 100, // Conversion centimes → euros
     })) as ProPricing[];
   }
 

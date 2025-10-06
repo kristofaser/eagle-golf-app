@@ -177,6 +177,38 @@ export default function SearchScreen() {
     return 5;
   }, []);
 
+  // Fonction pour charger les pros de tous les parcours (pour les avatars dans les cards)
+  const loadProsForAllCourses = useCallback(async (courses: CourseCardData[]) => {
+    const prosPromises = courses.map(async (course) => {
+      try {
+        const { data: pros, error } = await proAvailabilityService.getProsAvailableOnCourse(
+          course.id
+        );
+        return {
+          courseId: course.id,
+          pros: error ? [] : pros || [],
+        };
+      } catch (error) {
+        console.error('Erreur chargement pros pour parcours:', course.id, error);
+        return {
+          courseId: course.id,
+          pros: [],
+        };
+      }
+    });
+
+    try {
+      const results = await Promise.all(prosPromises);
+      const newCoursesPros: Record<string, any[]> = {};
+      results.forEach(({ courseId, pros }) => {
+        newCoursesPros[courseId] = pros;
+      });
+      setCoursesPros(newCoursesPros);
+    } catch (error) {
+      console.error('Erreur chargement pros pour tous les parcours:', error);
+    }
+  }, []);
+
   // Transformation des données pour l'affichage
   const { prosResults, coursesResults } = React.useMemo(() => {
     if (!searchData) {
@@ -317,38 +349,6 @@ export default function SearchScreen() {
       setAvailablePros([]);
     } finally {
       setLoadingPros(false);
-    }
-  }, []);
-
-  // Fonction pour charger les pros de tous les parcours (pour les avatars dans les cards)
-  const loadProsForAllCourses = useCallback(async (courses: CourseCardData[]) => {
-    const prosPromises = courses.map(async (course) => {
-      try {
-        const { data: pros, error } = await proAvailabilityService.getProsAvailableOnCourse(
-          course.id
-        );
-        return {
-          courseId: course.id,
-          pros: error ? [] : pros || [],
-        };
-      } catch (error) {
-        console.error('Erreur chargement pros pour parcours:', course.id, error);
-        return {
-          courseId: course.id,
-          pros: [],
-        };
-      }
-    });
-
-    try {
-      const results = await Promise.all(prosPromises);
-      const newCoursesPros: Record<string, any[]> = {};
-      results.forEach(({ courseId, pros }) => {
-        newCoursesPros[courseId] = pros;
-      });
-      setCoursesPros(newCoursesPros);
-    } catch (error) {
-      console.error('Erreur chargement pros pour tous les parcours:', error);
     }
   }, []);
 

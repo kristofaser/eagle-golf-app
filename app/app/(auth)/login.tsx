@@ -11,13 +11,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/hooks/useAuth';
 import { usePublicRoute } from '@/hooks/useProtectedRoute';
+import { useAuthLayout } from '@/hooks/useResponsiveLayout';
 import { Text, Input, Button, EagleLogo } from '@/components/atoms';
+import { VideoBackground } from '@/components/organisms';
 import { Colors, Spacing, Typography } from '@/constants/theme';
+import { validateEmailWithError, sanitizeEmail } from '@/utils/validation';
+import { detectErrorCode, getErrorMessage } from '@/constants/errorCodes';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { returnTo } = useLocalSearchParams();
   const { signIn } = useAuth();
+  const { formMaxHeight } = useAuthLayout();
 
   // Rediriger si déjà connecté
   usePublicRoute({ redirectTo: (returnTo as string) || '/(tabs)' });
@@ -26,13 +31,13 @@ export default function LoginScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
+  // Validation avec utils centralisés
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!email.trim()) {
-      newErrors.email = "L'email est requis";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Email invalide';
+    const emailValidation = validateEmailWithError(email);
+    if (!emailValidation.valid) {
+      newErrors.email = emailValidation.error!;
     }
 
     setErrors(newErrors);
@@ -44,17 +49,25 @@ export default function LoginScreen() {
 
     setIsLoading(true);
     try {
-      await signIn(email);
+      const cleanEmail = sanitizeEmail(email);
+      await signIn(cleanEmail);
 
       // Rediriger vers l'écran de vérification OTP
       router.push({
         pathname: '/(auth)/verify-otp',
         params: {
-          email,
+          email: cleanEmail,
         },
       });
-    } catch (error) {
-      // L'erreur est déjà gérée dans le hook
+    } catch (error: any) {
+      // Gestion des erreurs avec codes constants
+      console.error('Erreur connexion:', error);
+
+      const errorCode = detectErrorCode(error);
+      const errorMessage = getErrorMessage(errorCode);
+
+      // Afficher l'erreur à l'utilisateur
+      // Note: UniversalAlert non importé ici, l'erreur sera gérée dans le hook
     } finally {
       setIsLoading(false);
     }
@@ -67,9 +80,13 @@ export default function LoginScreen() {
           headerShown: false,
         }}
       />
-      <SafeAreaView style={styles.container}>
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.content}>
+      <View style={{ flex: 1 }}>
+        {/* Vidéo de fond avec gradient optimisé */}
+        <VideoBackground showGradient showSkeleton skeletonType="login" />
+
+        <SafeAreaView style={styles.container}>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.content}>
             {/* Header Zone */}
             <View style={styles.headerZone}>
               <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
@@ -79,18 +96,17 @@ export default function LoginScreen() {
               <Text variant="h2" style={[styles.title, { color: Colors.primary.navy }]}>
                 Connexion
               </Text>
-              <Text variant="caption" style={[styles.subtitle, { color: Colors.neutral.course }]}>
+              <Text variant="caption" style={[styles.subtitle, { color: Colors.neutral.white }]}>
                 Un code sera envoyé par email
               </Text>
             </View>
 
             {/* Form Zone */}
-            <View style={styles.formZone}>
+            <View style={[styles.formZone, { maxHeight: formMaxHeight }]}>
               <Input
-                label="Email"
                 value={email}
                 onChangeText={setEmail}
-                placeholder="john.doe@example.com"
+                placeholder="Votre email"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 {...(errors.email ? { error: errors.email } : {})}
@@ -112,7 +128,7 @@ export default function LoginScreen() {
             <View style={styles.footerZone}>
               <View style={styles.dividerContainer}>
                 <View style={styles.divider} />
-                <Text style={styles.dividerText}>OU</Text>
+                <Text style={[styles.dividerText, { color: Colors.neutral.white }]}>OU</Text>
                 <View style={styles.divider} />
               </View>
 
@@ -125,13 +141,14 @@ export default function LoginScreen() {
                 Créer un compte
               </Button>
 
-              <Text variant="caption" style={styles.helpText}>
+              <Text variant="caption" style={[styles.helpText, { color: Colors.neutral.white }]}>
                 Inscription rapide avec un simple email
               </Text>
             </View>
-          </View>
-        </TouchableWithoutFeedback>
-      </SafeAreaView>
+            </View>
+          </TouchableWithoutFeedback>
+        </SafeAreaView>
+      </View>
     </>
   );
 }
@@ -139,7 +156,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.neutral.cloud,
+    backgroundColor: 'transparent',
   },
   content: {
     flex: 1,
@@ -167,7 +184,7 @@ const styles = StyleSheet.create({
   formZone: {
     flex: 1,
     justifyContent: 'center',
-    maxHeight: 200,
+    // maxHeight dynamique géré par useAuthLayout hook
   },
   submitButton: {
     marginTop: Spacing.l,

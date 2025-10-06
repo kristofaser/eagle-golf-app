@@ -1,20 +1,12 @@
-import { Platform } from 'react-native';
-import React, { useCallback } from 'react';
+import { Platform, Dimensions } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
 import { View, StyleSheet, ActivityIndicator, RefreshControl, FlatList } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import Animated, {
-  useSharedValue,
-  useAnimatedScrollHandler,
-  useAnimatedStyle,
-  interpolate,
-  Extrapolation,
-} from 'react-native-reanimated';
 import { Colors, Spacing } from '@/constants/theme';
 import { Text, TravelNotificationFAB } from '@/components/atoms';
 import { TripCard, TripData } from '@/components/molecules/TripCard';
 import { commonStyles } from '@/utils/commonStyles';
-import { useResponsiveCardSize } from '@/hooks/useResponsiveCardSize';
 import { useTravelNotifications } from '@/hooks/useTravelNotifications';
 import { useTrips } from '@/hooks/useTrips';
 import { Trip } from '@/types/trip';
@@ -32,38 +24,20 @@ const mapTripToTripData = (trip: Trip): TripData => ({
   golfCourses: 0,
   description: '',
   featured: false,
-  status: trip.status as 'completed' | 'full',
   date: '',
 });
 
 export default function VoyagesScreen() {
-  const { isTablet } = useResponsiveCardSize();
   const { isEnabled, toggleNotifications } = useTravelNotifications();
-  const { completedTrips, fullTrips, isLoading, error, refresh } = useTrips();
+  const { trips, isLoading, error, refresh } = useTrips();
 
-  // Animation values for smooth scrolling
-  const scrollY = useSharedValue(0);
-
-  // Scroll handler optimized for 60fps
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      'worklet';
-      scrollY.value = event.contentOffset.y;
-    },
-  });
-
-  // Header parallax animation
-  const headerAnimatedStyle = useAnimatedStyle(() => {
-    'worklet';
-    const opacity = interpolate(scrollY.value, [0, 100], [1, 0.8], Extrapolation.CLAMP);
-
-    const translateY = interpolate(scrollY.value, [0, 200], [0, -50], Extrapolation.CLAMP);
-
-    return {
-      opacity,
-      transform: [{ translateY }],
-    };
-  }, []);
+  // Calcul de la largeur des cartes pour 2 colonnes
+  const { width: screenWidth } = Dimensions.get('window');
+  const CARD_SPACING = Spacing.m;
+  const HORIZONTAL_PADDING = Spacing.m * 2; // padding gauche + droite
+  const CARD_WIDTH = useMemo(() => {
+    return (screenWidth - HORIZONTAL_PADDING - CARD_SPACING) / 2;
+  }, [screenWidth]);
 
   const handleTripPress = useCallback((trip: TripData) => {
     // Pas d'action pour le moment
@@ -92,22 +66,17 @@ export default function VoyagesScreen() {
   const renderTripCard = useCallback(
     ({ item }: { item: Trip }) => {
       const tripData = mapTripToTripData(item);
-      return <TripCard data={tripData} onPress={handleTripPress} onHover={handleTripHover} />;
+      return (
+        <TripCard
+          data={tripData}
+          onPress={handleTripPress}
+          onHover={handleTripHover}
+          cardWidth={CARD_WIDTH}
+          cardHeight={CARD_WIDTH}
+        />
+      );
     },
-    [handleTripPress, handleTripHover]
-  );
-
-  // Optimisation FlatList avec dimensions pré-calculées
-  const CARD_WIDTH = 280; // Largeur standard des cartes
-  const CARD_SPACING = Spacing.m;
-
-  const getItemLayout = useCallback(
-    (data: unknown, index: number) => ({
-      length: CARD_WIDTH + CARD_SPACING,
-      offset: (CARD_WIDTH + CARD_SPACING) * index,
-      index,
-    }),
-    [CARD_WIDTH, CARD_SPACING]
+    [handleTripPress, handleTripHover, CARD_WIDTH]
   );
 
   // Afficher le loader pendant le chargement
@@ -144,12 +113,22 @@ export default function VoyagesScreen() {
       <StatusBar style="dark" />
 
       <View style={styles.contentContainer}>
-        <Animated.ScrollView
-          onScroll={scrollHandler}
-          scrollEventThrottle={1}
+        <FlatList
+          data={trips}
+          renderItem={renderTripCard}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
           showsVerticalScrollIndicator={false}
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={styles.gridContent}
+          columnWrapperStyle={styles.row}
+          ListHeaderComponent={
+            <View style={styles.headerContainer}>
+              <Text variant="body" color="charcoal" style={styles.headerText}>
+                Des séjours uniques aux côtés des pros...{'\n'}
+                Préparez-vous à vivre le golf autrement !
+              </Text>
+            </View>
+          }
           refreshControl={
             <RefreshControl
               refreshing={isLoading}
@@ -157,65 +136,11 @@ export default function VoyagesScreen() {
               tintColor={Colors.primary.accent}
             />
           }
-        >
-          {/* Section Voyages récents */}
-          <View style={styles.sectionContainer}>
-            <Animated.View style={[styles.sectionHeader, headerAnimatedStyle]}>
-              <Text variant="h3" color="charcoal" style={styles.sectionTitle}>
-                Voyages récents
-              </Text>
-            </Animated.View>
-            <FlatList
-              data={completedTrips}
-              renderItem={renderTripCard}
-              keyExtractor={(item) => item.id}
-              horizontal={true}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={[
-                styles.scrollViewContent,
-                isTablet && styles.scrollViewContentTablet,
-              ]}
-              getItemLayout={getItemLayout}
-              windowSize={5}
-              initialNumToRender={3}
-              maxToRenderPerBatch={2}
-              removeClippedSubviews={true}
-              decelerationRate="fast"
-              snapToInterval={CARD_WIDTH + CARD_SPACING}
-              snapToAlignment="start"
-            />
-          </View>
-
-          {/* Section Voyages complets */}
-          {fullTrips.length > 0 && (
-            <View style={styles.sectionContainer}>
-              <Animated.View style={[styles.sectionHeader, headerAnimatedStyle]}>
-                <Text variant="h3" color="charcoal" style={styles.sectionTitle}>
-                  Voyages complets
-                </Text>
-              </Animated.View>
-              <FlatList
-                data={fullTrips}
-                renderItem={renderTripCard}
-                keyExtractor={(item) => item.id}
-                horizontal={true}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={[
-                  styles.scrollViewContent,
-                  isTablet && styles.scrollViewContentTablet,
-                ]}
-                getItemLayout={getItemLayout}
-                windowSize={5}
-                initialNumToRender={3}
-                maxToRenderPerBatch={2}
-                removeClippedSubviews={true}
-                decelerationRate="fast"
-                snapToInterval={CARD_WIDTH + CARD_SPACING}
-                snapToAlignment="start"
-              />
-            </View>
-          )}
-        </Animated.ScrollView>
+          windowSize={10}
+          initialNumToRender={6}
+          maxToRenderPerBatch={6}
+          removeClippedSubviews={true}
+        />
 
         {/* FAB pour les alertes voyage */}
         <TravelNotificationFAB isEnabled={isEnabled} onPress={handleNotificationToggle} />
@@ -229,33 +154,24 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
+  gridContent: {
+    paddingHorizontal: Spacing.m,
     paddingBottom: Spacing.xl, // Espace pour éviter la tab bar
+  },
+  headerContainer: {
+    paddingVertical: Spacing.l,
+    paddingHorizontal: Spacing.xs,
+  },
+  headerText: {
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  row: {
+    justifyContent: 'space-between',
+    marginBottom: Spacing.m,
   },
   centerContent: {
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  sectionContainer: {
-    marginTop: Spacing.l,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.m,
-    marginBottom: Spacing.m,
-  },
-  sectionTitle: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    paddingLeft: Spacing.m,
-    paddingRight: Spacing.m,
-  },
-  scrollViewContentTablet: {
-    paddingHorizontal: Spacing.m * 2,
   },
 });

@@ -2,8 +2,10 @@
  * usePriceCalculation - Hook pour les calculs de prix des réservations
  *
  * ✅ EXTRAIT du BookingScreen pour améliorer la modularité
+ * ✅ REALTIME : Utilise CommissionContext pour les mises à jour temps réel
  */
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
+import { useCommission } from '@/contexts/CommissionContext';
 
 interface PriceCalculationParams {
   numberOfPlayers: number;
@@ -24,13 +26,11 @@ interface UsePriceCalculationReturn extends PriceBreakdown {
   formatPrice: (price: number) => string;
   getPriceInCents: (price: number) => number;
   isLoading: boolean;
+  commissionRate: number;
 }
 
 // Constantes de calcul des prix
 const PRICING_CONFIG = {
-  // Frais de plateforme (en pourcentage)
-  PLATFORM_FEE_RATE: 0.2, // 20%
-
   // Prix de base par joueur par trou (en euros)
   BASE_PRICE_PER_PLAYER_PER_HOLE: {
     9: 15, // 15€ par joueur pour 9 trous
@@ -46,7 +46,9 @@ export function usePriceCalculation(): UsePriceCalculationReturn {
   const [calculatedPrice, setCalculatedPrice] = useState(0);
   const [proFee, setProFee] = useState(0);
   const [platformFee, setPlatformFee] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+
+  // Utiliser la commission depuis le CommissionContext (temps réel automatique)
+  const { commissionRate, isLoading } = useCommission();
 
   // Prix total calculé automatiquement
   const totalAmount = calculatedPrice + proFee + platformFee;
@@ -59,9 +61,9 @@ export function usePriceCalculation(): UsePriceCalculationReturn {
     const basePrice = baseProPrice || PRICING_CONFIG.BASE_PRICE_PER_PLAYER_PER_HOLE[holes];
     const calculatedProFee = Math.max(basePrice * numberOfPlayers, PRICING_CONFIG.MIN_PRO_FEE);
 
-    // Frais de plateforme
+    // Frais de plateforme (utilise la commission dynamique depuis Supabase)
     const calculatedPlatformFee = Math.max(
-      calculatedProFee * PRICING_CONFIG.PLATFORM_FEE_RATE,
+      calculatedProFee * commissionRate,
       PRICING_CONFIG.MIN_PLATFORM_FEE
     );
 
@@ -74,7 +76,7 @@ export function usePriceCalculation(): UsePriceCalculationReturn {
       platformFee: calculatedPlatformFee,
       totalAmount: total,
     };
-  }, []);
+  }, [commissionRate]);
 
   // Mise à jour manuelle des prix
   const setPrices = useCallback((prices: Partial<PriceBreakdown>) => {
@@ -109,18 +111,24 @@ export function usePriceCalculation(): UsePriceCalculationReturn {
     formatPrice,
     getPriceInCents,
     isLoading,
+    commissionRate,
   };
 }
 
 // Utilitaire pour calculer directement sans hook
-export function calculateBookingPrice(params: PriceCalculationParams): PriceBreakdown {
+// ⚠️ ATTENTION: Cette fonction utilise une commission par défaut de 20%
+// Pour une commission dynamique, utilisez le hook usePriceCalculation() à la place
+export function calculateBookingPrice(
+  params: PriceCalculationParams,
+  commissionRate: number = 0.2 // Fallback 20% si non fourni
+): PriceBreakdown {
   const { numberOfPlayers, holes, baseProPrice } = params;
 
   const basePrice = baseProPrice || PRICING_CONFIG.BASE_PRICE_PER_PLAYER_PER_HOLE[holes];
   const proFee = Math.max(basePrice * numberOfPlayers, PRICING_CONFIG.MIN_PRO_FEE);
 
   const platformFee = Math.max(
-    proFee * 0.2, // 20% de commission
+    proFee * commissionRate,
     PRICING_CONFIG.MIN_PLATFORM_FEE
   );
 

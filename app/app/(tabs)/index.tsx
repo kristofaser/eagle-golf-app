@@ -1,28 +1,34 @@
 import { Platform } from 'react-native';
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ImageBackground, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
+import { Colors, Typography, Spacing, BorderRadius, Elevation } from '@/constants/theme';
 import { CircleAvatar } from '@/components/atoms/CircleAvatar';
-import { BaseBottomSheet } from '@/components/sheets/BaseBottomSheet';
 import { useFavoritePros } from '@/stores/useAppStore';
 import { useFavoriteProfiles } from '@/hooks/useFavoriteProfiles';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { CrownIcon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import { EagleLogo } from '@/components/atoms/EagleLogo';
 
 export default function AccueilScreen() {
   const favoritePros = useFavoritePros();
   const { data: favoriteProfiles, isLoading, error } = useFavoriteProfiles();
   const router = useRouter();
-  const exclusiveGameBottomSheetRef = useRef<BottomSheetModal>(null);
-  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0 });
+  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const shineAnim = useRef(new Animated.Value(0)).current;
 
   const handleProPress = (proId: string) => {
     router.push(`/profile/${proId}`);
   };
 
   const handleExclusiveGamePress = () => {
-    exclusiveGameBottomSheetRef.current?.present();
+    router.push('/exclusive-game');
+  };
+
+  const handleContestPress = () => {
+    router.push('/contest-driving');
   };
 
   useEffect(() => {
@@ -35,28 +41,53 @@ export default function AccueilScreen() {
         const days = Math.floor(difference / (1000 * 60 * 60 * 24));
         const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-        setCountdown({ days, hours, minutes });
+        setCountdown({ days, hours, minutes, seconds });
       } else {
-        setCountdown({ days: 0, hours: 0, minutes: 0 });
+        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
     };
 
     calculateCountdown();
-    const interval = setInterval(calculateCountdown, 60000); // Mise à jour toutes les minutes
+    const interval = setInterval(calculateCountdown, 1000); // Mise à jour toutes les secondes
+
+    // Animation de brillance
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(shineAnim, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(shineAnim, {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
 
   const Container = Platform.OS === 'web' ? View : SafeAreaView;
     return () => clearInterval(interval);
   }, []);
 
+  const handleEmptyFavoritesPress = () => {
+    router.push('/(tabs)/pros');
+  };
+
   const renderFavoritePros = () => {
     if (favoritePros.length === 0) {
   const Container = Platform.OS === 'web' ? View : SafeAreaView;
       return (
-        <View style={styles.emptyFavoritesContainer}>
-          <Text style={styles.emptyText}>Aucun pro favori</Text>
-          <Text style={styles.emptySubtext}>Explorez les profils pour ajouter vos favoris</Text>
-        </View>
+        <TouchableOpacity
+          style={styles.emptyFavoritesContainer}
+          activeOpacity={0.7}
+          onPress={handleEmptyFavoritesPress}
+        >
+          <Text style={styles.emptyText}>Aucun pro dans vos favoris</Text>
+          <Text style={styles.emptySubtext}>Découvrez les profils et ajoutez-les ici</Text>
+        </TouchableOpacity>
       );
     }
 
@@ -108,16 +139,23 @@ export default function AccueilScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Mes pros favoris */}
         <View style={[styles.section, styles.firstSection]}>
-          <Text style={styles.sectionTitle}>Mes pros favoris</Text>
           {renderFavoritePros()}
         </View>
 
         {/* Offre membre Eagle */}
         <View style={styles.section}>
-          <View style={styles.premiumCard}>
-            <Text style={styles.premiumTitle}>Devenir Membre Eagle</Text>
-            <Text style={styles.premiumSubtitle}>À implémenter</Text>
-          </View>
+          <TouchableOpacity style={styles.premiumCard} activeOpacity={0.8}>
+            <View style={styles.premiumRow}>
+              <View style={styles.premiumTextContent}>
+                <Text style={styles.premiumTitle}>Eagle Premium</Text>
+                <Text style={styles.premiumSubtitle}>Accédez aux contenus exclusifs</Text>
+                <Text style={styles.premiumFeatures}>Vidéos • Lifestyle • Tournois</Text>
+              </View>
+              <View style={styles.premiumLogoWrapper}>
+                <EagleLogo size={80} variant="white" />
+              </View>
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Partie exclusive à gagner */}
@@ -126,18 +164,17 @@ export default function AccueilScreen() {
             <ImageBackground
               source={require('@/assets/images/joueur-mystere.png')}
               style={styles.exclusiveCardBackground}
-              resizeMode="contain"
+              resizeMode="cover"
               imageStyle={styles.exclusiveBackgroundImage}
             >
               <View style={styles.exclusiveLayout}>
                 <View style={styles.exclusiveImageZone} />
                 <View style={styles.exclusiveTextZone}>
-                  <View style={styles.exclusiveBadge}>
-                    <Text style={styles.exclusiveBadgeText}>Partie exclusive à gagner</Text>
+                  <Text style={styles.exclusiveTitle}>Gagnez une partie avec un Pro !</Text>
+                  <View style={styles.exclusiveValueContainer}>
+                    <Text style={styles.exclusiveValueText}>d'une valeur de </Text>
+                    <Text style={styles.exclusivePriceSimple}>400€</Text>
                   </View>
-                  <Text style={styles.exclusiveDescription}>
-                    Tentez de gagner une partie avec un Pro d'une valeur de 400€
-                  </Text>
                   <View style={styles.countdownContainer}>
                     <View style={styles.countdownNumbers}>
                       <View style={styles.countdownItem}>
@@ -146,29 +183,34 @@ export default function AccueilScreen() {
                             {countdown.days >= 100 ? countdown.days : countdown.days.toString().padStart(2, '0')}
                           </Text>
                         </View>
-                        <View style={styles.countdownBadge}>
-                          <Text style={styles.countdownBadgeText}>j</Text>
-                        </View>
+                        <Text style={styles.countdownLabel}>jours</Text>
                       </View>
+                      <Text style={styles.countdownSeparator}>:</Text>
                       <View style={styles.countdownItem}>
                         <View style={styles.countdownBox}>
                           <Text style={styles.countdownDigit}>
                             {countdown.hours.toString().padStart(2, '0')}
                           </Text>
                         </View>
-                        <View style={styles.countdownBadge}>
-                          <Text style={styles.countdownBadgeText}>h</Text>
-                        </View>
+                        <Text style={styles.countdownLabel}>heures</Text>
                       </View>
+                      <Text style={styles.countdownSeparator}>:</Text>
                       <View style={styles.countdownItem}>
                         <View style={styles.countdownBox}>
                           <Text style={styles.countdownDigit}>
                             {countdown.minutes.toString().padStart(2, '0')}
                           </Text>
                         </View>
-                        <View style={styles.countdownBadge}>
-                          <Text style={styles.countdownBadgeText}>mn</Text>
+                        <Text style={styles.countdownLabel}>min</Text>
+                      </View>
+                      <Text style={styles.countdownSeparator}>:</Text>
+                      <View style={styles.countdownItem}>
+                        <View style={styles.countdownBox}>
+                          <Text style={styles.countdownDigit}>
+                            {countdown.seconds.toString().padStart(2, '0')}
+                          </Text>
                         </View>
+                        <Text style={styles.countdownLabel}>sec</Text>
                       </View>
                     </View>
                   </View>
@@ -180,35 +222,24 @@ export default function AccueilScreen() {
 
         {/* Concours de Driving/Précision */}
         <View style={styles.section}>
-          <View style={styles.contestCard}>
-            <Text style={styles.contestTitle}>Concours de Driving/Précision</Text>
-            <Text style={styles.contestSubtitle}>À implémenter</Text>
-          </View>
+          <TouchableOpacity style={styles.contestCard} activeOpacity={0.8} onPress={handleContestPress}>
+            <ImageBackground
+              source={require('@/assets/images/balle2golf.jpeg')}
+              style={styles.contestCardBackground}
+              resizeMode="cover"
+              imageStyle={styles.contestBackgroundImage}
+            >
+              <LinearGradient
+                colors={['rgba(0, 0, 0, 0.3)', 'rgba(0, 0, 0, 0.6)']}
+                style={styles.contestOverlay}
+              >
+                <Text style={styles.contestTitle}>Concours de Driving/Précision</Text>
+                <Text style={styles.contestSubtitle}>Les meilleurs scores de nos membres</Text>
+              </LinearGradient>
+            </ImageBackground>
+          </TouchableOpacity>
         </View>
       </ScrollView>
-
-      {/* Bottom Sheet pour le jeu exclusif */}
-      <BaseBottomSheet
-        ref={exclusiveGameBottomSheetRef}
-        snapPoints={['50%', '80%']}
-        enablePanDownToClose={true}
-      >
-        <BottomSheetView style={styles.bottomSheetContent}>
-          <Text style={styles.bottomSheetTitle}>Partie exclusive à gagner</Text>
-          <Text style={styles.bottomSheetSubtitle}>
-            Tentez de gagner une partie avec un Pro d'une valeur de 400€
-          </Text>
-          <Text style={styles.bottomSheetPremium}>
-            Jeu-concours réservé aux abonnés Premium
-          </Text>
-          <Text style={styles.bottomSheetPrice}>
-            (À partir de 7,50€ HT/mois)
-          </Text>
-          <Text style={styles.bottomSheetText}>
-            Contenu du jeu-concours à implémenter...
-          </Text>
-        </BottomSheetView>
-      </BaseBottomSheet>
     </Container>
   );
 }
@@ -236,8 +267,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.m,
   },
   emptyFavoritesContainer: {
-    padding: Spacing.l,
-    minHeight: 120,
+    paddingVertical: Spacing.m,
+    paddingHorizontal: Spacing.l,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -264,53 +295,162 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.m,
   },
   premiumCard: {
-    backgroundColor: Colors.secondary.gold,
+    backgroundColor: 'rgba(0, 50, 100, 0.95)',
     borderRadius: BorderRadius.large,
     padding: Spacing.l,
-    minHeight: 100,
+    overflow: 'hidden',
+  },
+  premiumRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  premiumTextContent: {
+    flex: 1,
+    paddingRight: Spacing.m,
     justifyContent: 'center',
   },
   premiumTitle: {
     fontFamily: Typography.fontFamily.primary,
-    fontSize: Typography.fontSize.h4,
+    fontSize: Typography.fontSize.h3,
     fontWeight: Typography.fontWeight.bold,
     color: Colors.neutral.white,
     marginBottom: Spacing.xs,
   },
   premiumSubtitle: {
     fontFamily: Typography.fontFamily.primary,
+    fontSize: Typography.fontSize.caption,
+    color: Colors.neutral.white,
+    opacity: 0.85,
+    marginBottom: Spacing.xs,
+  },
+  premiumFeatures: {
+    fontFamily: Typography.fontFamily.primary,
+    fontSize: Typography.fontSize.small,
+    color: Colors.neutral.white,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  premiumLogoWrapper: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  premiumContent: {
+    marginBottom: Spacing.m,
+  },
+  premiumAdvantage: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.s,
+  },
+  premiumAdvantageIcon: {
+    fontSize: Typography.fontSize.body,
+    color: '#FFD700',
+    fontWeight: Typography.fontWeight.bold,
+    marginRight: Spacing.s,
+    width: 20,
+  },
+  premiumAdvantageText: {
+    fontFamily: Typography.fontFamily.primary,
     fontSize: Typography.fontSize.body,
     color: Colors.neutral.white,
-    opacity: 0.9,
+    flex: 1,
+  },
+  premiumFooter: {
+    alignItems: 'center',
+  },
+  premiumPriceTag: {
+    paddingHorizontal: Spacing.m,
+    paddingVertical: Spacing.s,
+    borderRadius: BorderRadius.medium,
+  },
+  premiumPriceTagText: {
+    fontFamily: Typography.fontFamily.primary,
+    fontSize: Typography.fontSize.body,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.neutral.white,
+    textAlign: 'center',
   },
   exclusiveCard: {
     borderRadius: BorderRadius.large,
     overflow: 'hidden',
-    height: 160, // Augmente la hauteur pour mieux voir l'image
-    borderWidth: 2,
-    borderColor: Colors.primary.electric,
+    height: 220,
   },
   exclusiveCardBackground: {
     width: '100%',
-    height: 160,
+    height: 220,
   },
   exclusiveBackgroundImage: {
-    left: 0, // Position l'image à gauche
-    width: '40%', // L'image ne prend que 40% de la largeur
+    width: '100%',
     height: '100%',
   },
   exclusiveLayout: {
     flex: 1,
-    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
   },
   exclusiveImageZone: {
-    flex: 0.4, // 40% de la largeur pour l'image (zone transparente)
+    display: 'none',
   },
   exclusiveTextZone: {
-    flex: 0.6, // 60% de la largeur pour le texte
-    backgroundColor: 'transparent', // Fond transparent
+    width: '100%',
+    backgroundColor: 'transparent',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.m,
+    paddingBottom: Spacing.m,
+  },
+  exclusiveTitle: {
+    fontFamily: Typography.fontFamily.primary,
+    fontSize: Typography.fontSize.h3,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.neutral.white,
+    textAlign: 'center',
+    marginBottom: Spacing.xs,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  exclusiveValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
-    padding: Spacing.m,
+    marginBottom: Spacing.m,
+  },
+  exclusiveValueText: {
+    fontFamily: Typography.fontFamily.primary,
+    fontSize: Typography.fontSize.body,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.neutral.white,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  exclusivePriceSimple: {
+    fontFamily: Typography.fontFamily.primary,
+    fontSize: Typography.fontSize.h1,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.neutral.white,
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 0, height: 3 },
+    textShadowRadius: 6,
+    marginLeft: Spacing.xs,
+  },
+  premiumPriceContainer: {
+    borderRadius: BorderRadius.medium,
+    overflow: 'hidden',
+  },
+  premiumPriceGradient: {
+    paddingHorizontal: Spacing.s,
+    paddingVertical: Spacing.xs / 2,
+  },
+  premiumPriceText: {
+    fontFamily: Typography.fontFamily.primary,
+    fontSize: Typography.fontSize.h2,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.neutral.white,
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 0, height: 3 },
+    textShadowRadius: 6,
   },
   exclusiveBadge: {
     backgroundColor: Colors.primary.electric,
@@ -352,114 +492,89 @@ const styles = StyleSheet.create({
   },
   countdownNumbers: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
-    gap: Spacing.m,
+    gap: Spacing.xs,
   },
   countdownItem: {
-    position: 'relative',
+    alignItems: 'center',
   },
   countdownBox: {
-    backgroundColor: 'rgba(0, 50, 100, 0.9)', // Bleu foncé Eagle
-    borderRadius: 30, // Cercle parfait réduit
-    width: 60,
-    height: 60,
+    backgroundColor: 'rgba(0, 50, 100, 0.9)',
+    borderRadius: BorderRadius.small,
+    paddingHorizontal: Spacing.s,
+    paddingVertical: Spacing.xs,
+    minWidth: 40,
     alignItems: 'center',
     justifyContent: 'center',
   },
   countdownDigit: {
     fontFamily: Typography.fontFamily.primary,
-    fontSize: Typography.fontSize.h3,
+    fontSize: Typography.fontSize.h4,
     fontWeight: Typography.fontWeight.bold,
     color: Colors.neutral.white,
     textAlign: 'center',
   },
-  countdownBadge: {
-    position: 'absolute',
-    bottom: -5,
-    right: -5,
-    backgroundColor: Colors.neutral.charcoal,
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: Colors.neutral.white,
-  },
-  countdownBadgeText: {
-    fontFamily: Typography.fontFamily.primary,
-    fontSize: Typography.fontSize.small,
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.neutral.white,
-  },
-  contestCard: {
-    backgroundColor: Colors.semantic.success.default,
-    borderRadius: BorderRadius.large,
-    padding: Spacing.l,
-    minHeight: 100,
-    justifyContent: 'center',
-  },
-  contestTitle: {
+  countdownSeparator: {
     fontFamily: Typography.fontFamily.primary,
     fontSize: Typography.fontSize.h4,
     fontWeight: Typography.fontWeight.bold,
     color: Colors.neutral.white,
+    marginHorizontal: 2,
+    paddingTop: Spacing.xs,
+  },
+  countdownLabel: {
+    fontFamily: Typography.fontFamily.primary,
+    fontSize: Typography.fontSize.small,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.neutral.white,
+    marginTop: Spacing.xs / 2,
+    textAlign: 'center',
+  },
+  contestCard: {
+    borderRadius: BorderRadius.large,
+    overflow: 'hidden',
+    height: 200,
+  },
+  contestCardBackground: {
+    width: '100%',
+    height: 200,
+  },
+  contestBackgroundImage: {
+    width: '100%',
+    height: '100%',
+  },
+  contestOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.l,
+  },
+  contestTitle: {
+    fontFamily: Typography.fontFamily.primary,
+    fontSize: Typography.fontSize.h3,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.neutral.white,
+    textAlign: 'center',
     marginBottom: Spacing.xs,
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   contestSubtitle: {
     fontFamily: Typography.fontFamily.primary,
     fontSize: Typography.fontSize.body,
+    fontWeight: Typography.fontWeight.medium,
     color: Colors.neutral.white,
-    opacity: 0.9,
+    textAlign: 'center',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   placeholderText: {
     fontFamily: Typography.fontFamily.primary,
     fontSize: Typography.fontSize.body,
     color: Colors.neutral.course,
     fontStyle: 'italic',
-  },
-  bottomSheetContent: {
-    flex: 1,
-    padding: Spacing.l,
-    alignItems: 'center',
-  },
-  bottomSheetTitle: {
-    fontFamily: Typography.fontFamily.primary,
-    fontSize: Typography.fontSize.h3,
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.primary.electric,
-    marginBottom: Spacing.m,
-    textAlign: 'center',
-  },
-  bottomSheetSubtitle: {
-    fontFamily: Typography.fontFamily.primary,
-    fontSize: Typography.fontSize.body,
-    color: Colors.neutral.charcoal,
-    textAlign: 'center',
-    marginBottom: Spacing.m,
-    fontWeight: Typography.fontWeight.medium,
-  },
-  bottomSheetPremium: {
-    fontFamily: Typography.fontFamily.primary,
-    fontSize: Typography.fontSize.body,
-    color: Colors.primary.electric,
-    textAlign: 'center',
-    fontWeight: Typography.fontWeight.medium,
-    marginBottom: Spacing.xs,
-  },
-  bottomSheetPrice: {
-    fontFamily: Typography.fontFamily.primary,
-    fontSize: Typography.fontSize.caption,
-    color: Colors.neutral.course,
-    textAlign: 'center',
-    fontStyle: 'italic',
-    marginBottom: Spacing.l,
-  },
-  bottomSheetText: {
-    fontFamily: Typography.fontFamily.primary,
-    fontSize: Typography.fontSize.body,
-    color: Colors.neutral.charcoal,
-    textAlign: 'center',
   },
 });

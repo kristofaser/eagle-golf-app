@@ -14,6 +14,8 @@ import { Colors, Spacing } from '@/constants/theme';
 import { Text } from '@/components/atoms';
 import { s3, getPublicUrl, generateVideoKey, BUCKET_NAME } from '@/utils/scaleway';
 import { supabase } from '@/utils/supabase/client';
+import { usePremium } from '@/hooks/usePremium';
+import { SKILL_ACCESS_RULES, SkillType } from '@/types/premium';
 
 const { width, height } = Dimensions.get('window');
 
@@ -24,6 +26,10 @@ export default function VideoSkillScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [proName, setProName] = useState<string>('');
+  const [accessGranted, setAccessGranted] = useState<boolean | null>(null);
+
+  // Hook premium
+  const { canAccessSkill, loading: premiumLoading } = usePremium();
 
   // Create video player
   const player = useVideoPlayer(videoUrl, (player) => {
@@ -36,11 +42,37 @@ export default function VideoSkillScreen() {
   const skillName = Array.isArray(skill) ? skill[0] : skill;
   const proIdString = Array.isArray(proId) ? proId[0] : proId;
 
-  // Charger la vidéo et les infos du pro
+  // Vérifier l'accès premium au montage
   useEffect(() => {
-    loadVideo();
-    loadProInfo();
-  }, [proIdString, skillName]);
+    const checkAccess = async () => {
+      if (!skillName || premiumLoading) return;
+
+      // Vérifier si l'utilisateur peut accéder à cette skill
+      const hasAccess = await canAccessSkill(skillName as SkillType);
+      setAccessGranted(hasAccess);
+
+      if (!hasAccess) {
+        // Si pas d'accès et que ce n'est pas Mental, naviguer vers le paywall
+        const accessRule = SKILL_ACCESS_RULES[skillName as SkillType];
+        if (accessRule === 'premium') {
+          router.replace({
+            pathname: '/premium-paywall',
+            params: { skillName: getSkillDisplayName(skillName) },
+          });
+        }
+      }
+    };
+
+    checkAccess();
+  }, [skillName, canAccessSkill, premiumLoading]);
+
+  // Charger la vidéo et les infos du pro seulement si accès autorisé
+  useEffect(() => {
+    if (accessGranted === true) {
+      loadVideo();
+      loadProInfo();
+    }
+  }, [proIdString, skillName, accessGranted]);
 
   const loadVideo = async () => {
     try {
@@ -122,7 +154,7 @@ export default function VideoSkillScreen() {
     return skillNames[skill] || skill;
   };
 
-  // Si la compétence est Mental, on bloque l'accès
+  // Si la compétence est Mental, afficher message "pas de contenu"
   if (skillName === 'mental') {
     return (
       <>
@@ -135,12 +167,12 @@ export default function VideoSkillScreen() {
             </TouchableOpacity>
           </View>
           <View style={styles.errorContainer}>
-            <Ionicons name="warning-outline" size={60} color="white" />
+            <Ionicons name="information-circle-outline" size={60} color="white" />
             <Text variant="h3" color="ball" style={styles.errorText}>
-              Compétence non disponible
+              Pas de vidéo disponible
             </Text>
             <Text variant="body" color="ball" style={styles.errorSubText}>
-              Les vidéos pour la compétence Mental ne sont plus disponibles
+              Les vidéos pour la compétence Mental ne sont pas encore disponibles
             </Text>
           </View>
         </View>

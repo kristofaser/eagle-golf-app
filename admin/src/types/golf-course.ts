@@ -13,4 +13,5 @@ export interface GolfCourse {
   description: string | null;
   created_at: string;
   updated_at: string;
+  active_bookings_count?: number;
 }

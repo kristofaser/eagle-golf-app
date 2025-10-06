@@ -13,7 +13,6 @@ import {
   CreditCard,
   BarChart3,
   MessageSquare,
-  Settings,
   LogOut,
   Plane,
   Crown,
@@ -32,7 +31,6 @@ const navigation = [
   { name: 'Paiements', href: '/payments', icon: CreditCard },
   { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   { name: 'Support', href: '/support', icon: MessageSquare },
-  { name: 'Paramètres', href: '/settings', icon: Settings },
 ];
 
 // Navigation pour super admin uniquement
@@ -53,13 +51,13 @@ export default function Sidebar() {
       
       if (user) {
         const { data: adminProfile } = await supabase
-          .from('admin_profiles')
-          .select('role')
+          .from('profiles')
+          .select('user_type, is_admin')
           .eq('id', user.id)
-          .eq('is_active', true)
+          .eq('is_admin', true)
           .single();
-        
-        setIsSuperAdmin(adminProfile?.role === 'super_admin');
+
+        setIsSuperAdmin(adminProfile?.user_type === 'super_admin');
       }
     };
 

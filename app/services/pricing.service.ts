@@ -86,26 +86,8 @@ export const pricingService = {
   },
 
   /**
-   * Calcule le prix avec commission
-   */
-  calculateTotalPrice(
-    basePrice: number,
-    commissionPercentage: number = 20
-  ): {
-    basePrice: number;
-    commission: number;
-    total: number;
-  } {
-    const commission = (basePrice * commissionPercentage) / 100;
-    return {
-      basePrice,
-      commission,
-      total: basePrice + commission,
-    };
-  },
-
-  /**
-   * Récupère la commission actuelle depuis la configuration
+   * Récupère la commission actuelle depuis la configuration Supabase
+   * @returns Le pourcentage de commission (ex: 20 pour 20%)
    */
   async getCurrentCommission(): Promise<number> {
     const { data, error } = await supabase
@@ -113,14 +95,42 @@ export const pricingService = {
       .select('percentage')
       .lte('effective_date', new Date().toISOString())
       .order('effective_date', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(1)
       .single();
 
     if (error || !data) {
-      console.warn('Commission par défaut utilisée');
+      console.warn('Commission par défaut utilisée (20%)');
       return 20; // Commission par défaut
     }
 
     return data.percentage;
+  },
+
+  /**
+   * Calcule le prix avec commission
+   * @param basePrice - Prix de base en euros
+   * @param commissionPercentage - Pourcentage de commission (optionnel, chargé depuis Supabase si non fourni)
+   *
+   * ⚠️ RECOMMANDATION: Utilisez getCurrentCommission() d'abord pour obtenir la commission dynamique
+   * ou utilisez le hook usePriceCalculation() qui charge automatiquement la commission
+   */
+  async calculateTotalPrice(
+    basePrice: number,
+    commissionPercentage?: number
+  ): Promise<{
+    basePrice: number;
+    commission: number;
+    total: number;
+  }> {
+    // Si aucune commission fournie, la charger depuis Supabase
+    const rate = commissionPercentage ?? (await this.getCurrentCommission());
+    const commission = (basePrice * rate) / 100;
+
+    return {
+      basePrice,
+      commission,
+      total: basePrice + commission,
+    };
   },
 };

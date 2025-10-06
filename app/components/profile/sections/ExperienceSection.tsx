@@ -79,7 +79,6 @@ export const ExperienceSection = memo<ExperienceSectionProps>(({ experience }) =
       entering={FadeIn.delay(400).duration(DURATIONS.NORMAL)}
       style={[profileStyles.card, { backgroundColor: sectionColors.experience.background }]}
       accessible={true}
-      accessibilityRole="region"
       accessibilityLabel="Section expérience"
     >
       <View style={profileStyles.cardHeader}>

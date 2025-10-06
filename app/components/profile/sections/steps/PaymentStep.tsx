@@ -6,6 +6,7 @@ import { useStripe } from '@stripe/stripe-react-native';
 import { paymentService } from '@/services/payment.service';
 import { bookingService } from '@/services/booking.service';
 import { supabase } from '@/utils/supabase/client';
+import { useCommissionRate } from '@/contexts/CommissionContext';
 
 interface PaymentStepProps {
   totalAmount: number;
@@ -37,6 +38,9 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
   const [paymentReady, setPaymentReady] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
+
+  // Commission dynamique depuis CommissionContext (temps réel automatique)
+  const commissionRate = useCommissionRate();
 
   // Initialiser le paiement automatiquement au chargement
   useEffect(() => {
@@ -169,8 +173,8 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
         number_of_players: bookingData.players,
         holes: bookingData.holes,
         total_amount: Math.round(totalAmount * 100), // en centimes
-        pro_fee: Math.round(totalAmount * 0.8 * 100), // 80% pour le pro
-        platform_fee: Math.round(totalAmount * 0.2 * 100), // 20% pour la plateforme
+        pro_fee: Math.round(totalAmount * (1 - commissionRate) * 100), // Montant pour le pro
+        platform_fee: Math.round(totalAmount * commissionRate * 100), // Commission plateforme
       };
 
       return await paymentService.confirmPaymentAndBooking(paymentIntentId, bookingRequest);
@@ -194,7 +198,7 @@ export const PaymentStep: React.FC<PaymentStepProps> = ({
       <View style={styles.amountCard}>
         <Text style={styles.amountLabel}>Montant total à payer</Text>
         <Text style={styles.amountValue}>{totalAmount}€</Text>
-        <Text style={styles.amountInfo}>Incluant les frais de service Eagle (20%)</Text>
+        <Text style={styles.amountInfo}>Incluant les frais de service Eagle ({Math.round(commissionRate * 100)}%)</Text>
       </View>
 
       {/* Méthodes de paiement acceptées */}

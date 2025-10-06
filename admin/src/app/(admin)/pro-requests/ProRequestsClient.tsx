@@ -206,14 +206,6 @@ export default function ProRequestsClient({
         </div>
       )}
 
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Demandes professionnelles</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Validez les demandes de conversion en compte professionnel
-        </p>
-      </div>
-
       {/* Statistiques */}
       <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-lg shadow border">

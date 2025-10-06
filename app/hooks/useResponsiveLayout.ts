@@ -80,3 +80,35 @@ export function useAdaptiveLayout() {
     gridColumns: screenInfo.isMobile ? 1 : screenInfo.isTablet ? 2 : 3,
   };
 }
+
+/**
+ * Hook spécialisé pour les écrans d'authentification
+ * Calcule les dimensions responsive pour les formulaires auth
+ */
+export function useAuthLayout() {
+  const { width, height, orientation } = useResponsiveLayout();
+
+  // Détection écran petit
+  const isSmallScreen = height < 700;
+
+  // Calcul hauteur formulaire responsive
+  // - Petits écrans: 40% de la hauteur
+  // - Écrans normaux: 280px max
+  // - Paysage: 50% de la hauteur
+  let formMaxHeight: number;
+  if (orientation === 'landscape') {
+    formMaxHeight = height * 0.5;
+  } else if (isSmallScreen) {
+    formMaxHeight = height * 0.4;
+  } else {
+    formMaxHeight = 280;
+  }
+
+  return {
+    formMaxHeight,
+    isSmallScreen,
+    isLandscape: orientation === 'landscape',
+    width,
+    height,
+  };
+}

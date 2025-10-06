@@ -17,6 +17,7 @@ import { useStripe } from '@stripe/stripe-react-native';
 import { paymentService } from '@/services/payment.service';
 import { bookingService } from '@/services/booking.service';
 import { supabase } from '@/utils/supabase/client';
+import { useCommissionRate } from '@/contexts/CommissionContext';
 
 interface TimeSlot {
   id: string;
@@ -69,7 +70,10 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
 
-  const platformFee = Math.round(bookingData.totalPrice * 0.2);
+  // Commission dynamique depuis CommissionContext (temps réel automatique)
+  const commissionRate = useCommissionRate();
+
+  const platformFee = Math.round(bookingData.totalPrice * commissionRate);
   const proFee = bookingData.totalPrice - platformFee;
 
   // Charger les données du professionnel et du cours
@@ -234,8 +238,8 @@ export const SummaryStep: React.FC<SummaryStepProps> = ({
         number_of_players: bookingData.players,
         holes: bookingData.holes,
         total_amount: Math.round(bookingData.totalPrice * 100), // en centimes
-        pro_fee: Math.round(bookingData.totalPrice * 0.8 * 100), // 80% pour le pro
-        platform_fee: Math.round(bookingData.totalPrice * 0.2 * 100), // 20% pour la plateforme
+        pro_fee: Math.round(bookingData.totalPrice * (1 - commissionRate) * 100), // Montant pour le pro
+        platform_fee: Math.round(bookingData.totalPrice * commissionRate * 100), // Commission plateforme
         // Ajouter les informations des joueurs supplémentaires
         player2_first_name: bookingData.players >= 2 ? bookingData.player2.firstName : undefined,
         player2_last_name: bookingData.players >= 2 ? bookingData.player2.lastName : undefined,

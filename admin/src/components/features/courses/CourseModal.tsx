@@ -31,10 +31,12 @@ interface CourseModalProps {
   onClose: () => void;
   course?: GolfCourse | null;
   onSave: (data: CourseFormData) => Promise<void>;
+  onDelete?: () => Promise<void>;
 }
 
-export default function CourseModal({ isOpen, onClose, course, onSave }: CourseModalProps) {
+export default function CourseModal({ isOpen, onClose, course, onSave, onDelete }: CourseModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [plusCodeError, setPlusCodeError] = useState<string>('');
   const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
   const isEditing = !!course;
@@ -161,10 +163,23 @@ export default function CourseModal({ isOpen, onClose, course, onSave }: CourseM
   };
 
   const handleClose = () => {
-    if (!isSubmitting) {
+    if (!isSubmitting && !isDeleting) {
       reset();
       setPlusCodeError('');
       onClose();
+    }
+  };
+
+  const handleDeleteClick = async () => {
+    if (!onDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await onDelete();
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -396,21 +411,35 @@ export default function CourseModal({ isOpen, onClose, course, onSave }: CourseM
         </div>
 
         {/* Actions */}
-        <div className="border-t border-gray-200 pt-6 flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleClose}
-            disabled={isSubmitting}
-          >
-            Annuler
-          </Button>
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Enregistrement...' : isEditing ? 'Modifier' : 'Ajouter'}
-          </Button>
+        <div className="border-t border-gray-200 pt-6 flex justify-between gap-3">
+          <div>
+            {isEditing && onDelete && (
+              <Button
+                type="button"
+                variant="danger"
+                onClick={handleDeleteClick}
+                disabled={isSubmitting || isDeleting}
+              >
+                {isDeleting ? 'Suppression...' : 'Supprimer'}
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleClose}
+              disabled={isSubmitting || isDeleting}
+            >
+              Annuler
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting || isDeleting}
+            >
+              {isSubmitting ? 'Enregistrement...' : isEditing ? 'Modifier' : 'Ajouter'}
+            </Button>
+          </div>
         </div>
       </form>
     </Modal>

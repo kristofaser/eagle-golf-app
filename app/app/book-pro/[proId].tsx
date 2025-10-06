@@ -293,8 +293,8 @@ export default function BookProScreen() {
     // Utiliser le prix minimum pour 1 joueur (prix stockés directement en euros)
     const minPriceInEuros = Math.min(...pricesForOnePlayer);
 
-    // Appliquer la commission de 20% sur le prix minimum pour l'affichage préliminaire
-    const totalWithCommission = Math.round(minPriceInEuros * 1.2);
+    // Appliquer la commission dynamique sur le prix minimum pour l'affichage préliminaire
+    const totalWithCommission = Math.round(minPriceInEuros * (1 + priceCalculation.commissionRate));
     priceCalculation.setPrices({ calculatedPrice: totalWithCommission });
   }, [pricing, bookingState.numberOfPlayers, bookingState.holes, priceCalculation]);
 
@@ -313,8 +313,8 @@ export default function BookProScreen() {
       // Prix exact trouvé - le prix est PAR JOUEUR
       const totalProFee = exactPrice.price * bookingState.numberOfPlayers;
 
-      // Appliquer la commission de 20%
-      const totalWithCommission = Math.round(totalProFee * 1.2);
+      // Appliquer la commission dynamique
+      const totalWithCommission = Math.round(totalProFee * (1 + priceCalculation.commissionRate));
       const commission = totalWithCommission - totalProFee;
 
       priceCalculation.setPrices({

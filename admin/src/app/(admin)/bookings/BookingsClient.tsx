@@ -110,14 +110,6 @@ export default function BookingsClient({ initialBookings, stats }: BookingsClien
 
   return (
     <div>
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Réservations</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Gérez les réservations de cours entre amateurs et professionnels
-        </p>
-      </div>
-
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         <div className="bg-white p-4 rounded-lg shadow">

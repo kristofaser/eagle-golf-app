@@ -6,13 +6,17 @@ import {
   ActivityIndicator,
   FlatList,
   Platform,
+  Pressable,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { JoueurData } from '@/components/molecules/ContentCard';
 import { ProCard } from '@/components/molecules/ProCard';
-import { Colors, Spacing } from '@/constants/theme';
+import { Colors, Spacing, BorderRadius } from '@/constants/theme';
 import { Text, LoadingScreen, ErrorScreen } from '@/components/atoms';
+import { ViewMoreCard } from '@/components/molecules';
+import { RadiusBottomSheet } from '@/components/organisms';
 import { commonStyles } from '@/utils/commonStyles';
 import { profileService } from '@/services/profile.service';
 import { proAvailabilityService } from '@/services/pro-availability.service';
@@ -22,12 +26,15 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { calculateDistance } from '@/utils/location';
-import { PostGISPoint } from '@/types/location';
+import { useLocationPreferences } from '@/stores/useLocationPreferences';
+import { Ionicons } from '@expo/vector-icons';
 
-function ProsScreen() {
+export default function ProsScreen() {
   const { isTablet } = useResponsiveCardSize();
   const router = useRouter();
   const { location: userLocation, isLoading: isLoadingLocation } = useGeolocation();
+  const { radiusKm, setRadiusKm } = useLocationPreferences();
+  const radiusBottomSheetRef = useRef<BottomSheetModal>(null);
 
   // Utiliser React Query pour charger les pros
   const {
@@ -50,39 +57,81 @@ function ProsScreen() {
         throw prosError;
       }
 
-      // Récupérer les settings de disponibilité et les parcours affiliés pour chaque pro
-      const prosWithAvailability = await Promise.all(
-        (pros || []).map(async (pro) => {
-          try {
-            // La méthode getProAvailabilitySettings n'existe plus dans le nouveau système
-            const settings = { is_globally_available: true };
+      // Récupérer tous les parcours de chaque pro depuis leurs disponibilités FUTURES
+      const proIds = (pros || []).map((pro) => pro.id);
+      const today = new Date().toISOString().split('T')[0];
 
-            // Récupérer les parcours affiliés du pro
-            let golfCourseLocation = null;
-            if (pro.pro_profiles?.golf_course_id) {
-              const { data: course } = await golfCourseService.getCourse(
-                pro.pro_profiles.golf_course_id
-              );
-              if (course?.location) {
-                golfCourseLocation = course.location;
-              }
-            }
+      console.log(`📍 Chargement des parcours avec disponibilités futures pour ${proIds.length} pros...`);
 
-            return {
-              ...pro,
-              availabilitySettings: settings,
-              golfCourseLocation,
-            };
-          } catch (error) {
-            console.warn(`⚠️ Impossible de récupérer les données pour ${pro.id}`);
-            return {
-              ...pro,
-              availabilitySettings: null,
-              golfCourseLocation: null,
-            };
+      // Récupérer tous les parcours utilisés par les pros (uniquement disponibilités futures)
+      const { data: availabilities, error: availError } = await golfCourseService.supabase
+        .from('pro_availabilities')
+        .select('pro_id, golf_course_id')
+        .in('pro_id', proIds)
+        .gte('date', today); // Filtrer uniquement les disponibilités futures ou d'aujourd'hui
+
+      // Créer un Map pro_id → [golf_course_ids]
+      const proCoursesByPro: Record<string, string[]> = {};
+
+      if (!availError && availabilities) {
+        availabilities.forEach((avail) => {
+          if (!proCoursesByPro[avail.pro_id]) {
+            proCoursesByPro[avail.pro_id] = [];
           }
-        })
-      );
+          if (!proCoursesByPro[avail.pro_id].includes(avail.golf_course_id)) {
+            proCoursesByPro[avail.pro_id].push(avail.golf_course_id);
+          }
+        });
+
+        console.log(`✅ ${Object.keys(proCoursesByPro).length} pros ont des parcours`);
+      }
+
+      // Récupérer les IDs uniques de tous les parcours
+      const allGolfCourseIds = [...new Set(availabilities?.map((a) => a.golf_course_id) || [])];
+
+      // Charger tous les parcours en une seule requête
+      let golfCoursesMap: Record<string, { latitude: number; longitude: number }> = {};
+
+      if (allGolfCourseIds.length > 0) {
+        const { data: courses, error: coursesError } = await golfCourseService.supabase
+          .from('golf_parcours')
+          .select('id, latitude, longitude')
+          .in('id', allGolfCourseIds);
+
+        if (!coursesError && courses) {
+          // Créer un Map pour accès rapide par ID
+          golfCoursesMap = courses.reduce(
+            (acc, course) => {
+              if (course.latitude && course.longitude) {
+                acc[course.id] = {
+                  latitude: Number(course.latitude),
+                  longitude: Number(course.longitude),
+                };
+              }
+              return acc;
+            },
+            {} as Record<string, { latitude: number; longitude: number }>
+          );
+          console.log(`✅ ${Object.keys(golfCoursesMap).length} parcours chargés avec succès`);
+        } else {
+          console.error('❌ Erreur lors du chargement des parcours:', coursesError);
+        }
+      }
+
+      // Enrichir les pros avec TOUS leurs parcours (on choisira le plus proche après selon la géoloc)
+      const prosWithAvailability = (pros || []).map((pro) => {
+        const settings = { is_globally_available: true };
+        const courseIds = proCoursesByPro[pro.id] || [];
+        const allCourseCoords = courseIds
+          .map((id) => golfCoursesMap[id])
+          .filter((coords) => coords !== undefined);
+
+        return {
+          ...pro,
+          availabilitySettings: settings,
+          allGolfCourseLocations: allCourseCoords, // Tous les parcours du pro
+        };
+      });
 
       return prosWithAvailability;
     },
@@ -91,18 +140,26 @@ function ProsScreen() {
   });
 
   // Transformer les données des pros
-  const { prosNearMe, prosByDivision } = useMemo(() => {
+  const { prosNearMe, fullProsNearMe, prosByDivision, fullProsByDivision } = useMemo(() => {
     if (!prosData || prosData.length === 0) {
       return {
         prosNearMe: [],
+        fullProsNearMe: [],
         prosByDivision: {
-          'DP World Tour': [],
-          'HotelPlanner Tour': [],
+          'DP World': [],
           'Ladies European Tour': [],
-          'Circuit Français': [],
-          'Challenge Tour': [],
-          'Elite Tour': [],
-          'Alps Tour': [],
+          'Legends Tour': [],
+          'Hotel Planner': [],
+          'Alps Tour & Pro Golf': [],
+          'Circuit FR': [],
+        },
+        fullProsByDivision: {
+          'DP World': [],
+          'Ladies European Tour': [],
+          'Legends Tour': [],
+          'Hotel Planner': [],
+          'Alps Tour & Pro Golf': [],
+          'Circuit FR': [],
         },
       };
     }
@@ -122,18 +179,33 @@ function ProsScreen() {
         const specialties = proProfile.specialties || [];
         const playStyle = proProfile.play_style || [];
 
-        // Calculer la distance si on a la localisation de l'utilisateur et du parcours du pro
+        // Calculer la distance minimale parmi tous les parcours du pro
         let distance: number | undefined;
-        if (userLocation && pro.golfCourseLocation) {
-          const location = pro.golfCourseLocation as PostGISPoint;
-          if (location.coordinates && Array.isArray(location.coordinates)) {
-            const [longitude, latitude] = location.coordinates;
-            distance = calculateDistance(
-              userLocation.latitude,
-              userLocation.longitude,
-              latitude,
-              longitude
-            );
+        if (userLocation && pro.allGolfCourseLocations) {
+          const allCourses = pro.allGolfCourseLocations as {
+            latitude: number;
+            longitude: number;
+          }[];
+
+          if (allCourses.length > 0) {
+            // Calculer la distance pour chaque parcours et garder la plus petite
+            const distances = allCourses
+              .map((coords) => {
+                if (coords.latitude && coords.longitude) {
+                  return calculateDistance(
+                    userLocation.latitude,
+                    userLocation.longitude,
+                    coords.latitude,
+                    coords.longitude
+                  );
+                }
+                return Infinity;
+              })
+              .filter((d) => d !== Infinity);
+
+            if (distances.length > 0) {
+              distance = Math.min(...distances);
+            }
           }
         }
 
@@ -157,7 +229,7 @@ function ProsScreen() {
           tarif: '120€', // Prix par d\u00e9faut, sera remplac\u00e9 par les vrais prix depuis pro_pricing
           isPremium: false, // \u00c0 d\u00e9terminer selon les prix dans pro_pricing
           isAvailable: pro.availabilitySettings?.is_globally_available ?? false,
-          division: proProfile.division || 'Circuit Français',
+          division: proProfile.division || 'Circuit FR',
           worldRanking: proProfile.world_ranking,
           distance,
         };
@@ -165,35 +237,52 @@ function ProsScreen() {
       .filter(Boolean) as (JoueurData & { distance?: number })[]; // Filtrer les nulls
 
     // Pour "autour de moi", trier par distance si on a la localisation
+    let fullNearMe: (JoueurData & { distance?: number })[];
     let nearMe: (JoueurData & { distance?: number })[];
 
     if (userLocation) {
       // Trier par distance croissante, en mettant ceux sans distance à la fin
-      nearMe = [...transformedPros]
-        .sort((a, b) => {
-          if (a.distance === undefined && b.distance === undefined) return 0;
-          if (a.distance === undefined) return 1;
-          if (b.distance === undefined) return -1;
-          return a.distance - b.distance;
-        })
-        .slice(0, 10);
+      fullNearMe = [...transformedPros].sort((a, b) => {
+        if (a.distance === undefined && b.distance === undefined) return 0;
+        if (a.distance === undefined) return 1;
+        if (b.distance === undefined) return -1;
+        return a.distance - b.distance;
+      });
+
+      // Filtrer par rayon
+      console.log(`🔍 Rayon sélectionné: ${radiusKm} km`);
+      console.log(`📊 Pros avant filtre: ${fullNearMe.length}`);
+
+      fullNearMe = fullNearMe.filter(
+        (pro) => pro.distance !== undefined && pro.distance <= radiusKm
+      );
+      console.log(`📊 Pros après filtre (≤${radiusKm}km): ${fullNearMe.length}`);
+
+      // Log des 3 premiers pros avec leur distance
+      fullNearMe.slice(0, 3).forEach((pro, i) => {
+        console.log(`  ${i + 1}. ${pro.title}: ${pro.distance?.toFixed(1)} km`);
+      });
+
+      // Limiter à 5 pour l'affichage initial
+      nearMe = fullNearMe.slice(0, 5);
     } else {
       // Sans géolocalisation, prendre ceux de Paris en priorité
-      nearMe = [
+      fullNearMe = [
         ...transformedPros.filter((p) => p.region === 'Paris'),
         ...transformedPros.filter((p) => p.region !== 'Paris'),
-      ].slice(0, 10);
+      ];
+      // Limiter à 5 pour l'affichage initial
+      nearMe = fullNearMe.slice(0, 5);
     }
 
-    // Diviser les pros par division
+    // Diviser les pros par division (6 divisions officielles synchronisées avec la DB)
     const divisionGroups: { [key: string]: JoueurData[] } = {
-      'DP World Tour': [],
-      'HotelPlanner Tour': [],
+      'DP World': [],
       'Ladies European Tour': [],
-      'Circuit Français': [],
-      'Challenge Tour': [],
-      'Elite Tour': [],
-      'Alps Tour': [],
+      'Legends Tour': [],
+      'Hotel Planner': [],
+      'Alps Tour & Pro Golf': [],
+      'Circuit FR': [],
     };
 
     // Grouper les pros par division
@@ -201,7 +290,12 @@ function ProsScreen() {
       const proProfile = pro.pro_profiles;
       if (!proProfile) return;
 
-      const division = proProfile.division || 'Circuit Français';
+      // Mapper les divisions "Alps Tour" et "Pro Golf" vers "Alps Tour & Pro Golf"
+      let division = proProfile.division || 'Circuit FR';
+      if (division === 'Alps Tour' || division === 'Pro Golf') {
+        division = 'Alps Tour & Pro Golf';
+      }
+
       const transformedPro = transformedPros.find((p) => p.id === pro.id);
 
       if (transformedPro && divisionGroups[division]) {
@@ -209,16 +303,22 @@ function ProsScreen() {
       }
     });
 
-    // Limiter à 10 pros par division
+    // Conserver la liste complète avant de limiter
+    const fullDivisionGroups = { ...divisionGroups };
+
+    // Limiter à 5 pros par division pour l'affichage initial
+    const limitedDivisionGroups: { [key: string]: JoueurData[] } = {};
     Object.keys(divisionGroups).forEach((division) => {
-      divisionGroups[division] = divisionGroups[division].slice(0, 10);
+      limitedDivisionGroups[division] = divisionGroups[division].slice(0, 5);
     });
 
     return {
       prosNearMe: nearMe,
-      prosByDivision: divisionGroups,
+      fullProsNearMe: fullNearMe,
+      prosByDivision: limitedDivisionGroups,
+      fullProsByDivision: fullDivisionGroups,
     };
-  }, [prosData]);
+  }, [prosData, userLocation, radiusKm]);
 
   const onRefresh = useCallback(() => {
     refetch();
@@ -319,8 +419,29 @@ function ProsScreen() {
               Autour de moi
             </Text>
             {isLoadingLocation && <ActivityIndicator size="small" color={Colors.primary.accent} />}
+            {userLocation && !isLoadingLocation && (
+              <Pressable
+                style={({ pressed }) => [styles.radiusButton, pressed && styles.radiusButtonPressed]}
+                onPress={() => radiusBottomSheetRef.current?.present()}
+              >
+                <Text variant="bodySmall" color="accent" weight="medium" style={styles.radiusText}>
+                  {radiusKm} km
+                </Text>
+                <Ionicons name="settings-outline" size={18} color={Colors.primary.accent} />
+              </Pressable>
+            )}
           </View>
-          {prosNearMe.length > 0 ? (
+          {!userLocation && !isLoadingLocation ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="location-outline" size={48} color={Colors.neutral.course} />
+              <Text variant="body" color="course" style={styles.emptyStateText}>
+                Activez la géolocalisation
+              </Text>
+              <Text variant="bodySmall" color="mist" style={styles.emptyStateSubtext}>
+                pour voir les pros autour de vous
+              </Text>
+            </View>
+          ) : prosNearMe.length > 0 ? (
             <FlatList
               data={prosNearMe}
               renderItem={({ item }) => renderProItem({ item, index: 0 }, true)}
@@ -333,26 +454,41 @@ function ProsScreen() {
               ]}
               getItemLayout={getItemLayout}
               windowSize={5}
-              initialNumToRender={3}
+              initialNumToRender={5}
               maxToRenderPerBatch={2}
               removeClippedSubviews={true}
               snapToInterval={CARD_WIDTH + CARD_SPACING}
               snapToAlignment="start"
               decelerationRate="fast"
+              ListFooterComponent={
+                fullProsNearMe.length > 5 ? (
+                  <ViewMoreCard
+                    count={fullProsNearMe.length}
+                    onPress={() => router.push('/pros-nearby-modal')}
+                    previewAvatars={fullProsNearMe.slice(5, 9).map((p) => p.imageUrl)}
+                  />
+                ) : null
+              }
             />
-          ) : (
+          ) : userLocation ? (
             <View style={styles.emptyState}>
-              <Text variant="body" color="course">
-                Aucun professionnel à proximité
+              <Text variant="body" color="course" style={styles.emptyStateText}>
+                Aucun professionnel dans un rayon de {radiusKm} km
+              </Text>
+              <Text variant="bodySmall" color="mist" style={styles.emptyStateSubtext}>
+                Essayez d'augmenter le rayon de recherche
               </Text>
             </View>
-          )}
+          ) : null}
         </View>
 
         {/* Sections par division */}
         {Object.entries(prosByDivision).map(([division, pros]) => {
           // Ne pas afficher les divisions sans pros
           if (pros.length === 0) return null;
+
+          const totalPros = fullProsByDivision[division]?.length || 0;
+          const hasMore = totalPros > 5;
 
           return (
             <View key={division} style={styles.sectionContainer}>
@@ -373,22 +509,41 @@ function ProsScreen() {
                 ]}
                 getItemLayout={getItemLayout}
                 windowSize={5}
-                initialNumToRender={3}
+                initialNumToRender={5}
                 maxToRenderPerBatch={2}
                 removeClippedSubviews={true}
                 snapToInterval={CARD_WIDTH + CARD_SPACING}
                 snapToAlignment="start"
                 decelerationRate="fast"
+                ListFooterComponent={
+                  hasMore ? (
+                    <ViewMoreCard
+                      count={totalPros}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/pros-division-modal',
+                          params: { division },
+                        })
+                      }
+                      previewAvatars={fullProsByDivision[division]?.slice(5, 9).map((p) => p.imageUrl) || []}
+                    />
+                  ) : null
+                }
               />
             </View>
           );
         })}
       </ScrollView>
+
+      {/* Bottom Sheet pour sélection du rayon */}
+      <RadiusBottomSheet
+        ref={radiusBottomSheetRef}
+        selectedRadius={radiusKm}
+        onSelectRadius={setRadiusKm}
+      />
     </Container>
   );
 }
-
-export default ProsScreen;
 
 const styles = StyleSheet.create({
   container: commonStyles.container,
@@ -419,5 +574,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 200,
+  },
+  emptyStateText: {
+    textAlign: 'center',
+    marginTop: Spacing.s,
+  },
+  emptyStateSubtext: {
+    textAlign: 'center',
+    marginTop: Spacing.xs,
+  },
+  radiusButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.s,
+    paddingVertical: Spacing.xs,
+    backgroundColor: Colors.primary.light,
+    borderRadius: BorderRadius.medium,
+    gap: Spacing.xs,
+  },
+  radiusButtonPressed: {
+    opacity: 0.7,
+  },
+  radiusText: {
+    marginLeft: 2,
   },
 });

@@ -145,9 +145,11 @@ const styles = StyleSheet.create({
     ...Elevation.minimal, // Ombre plus subtile
   },
   secondary: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: `rgba(2, 33, 66, 0.12)`, // Navy transparent
+    backgroundColor: Colors.primary.electric, // Bleu électrique
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.l,
+    minHeight: 52,
+    ...Elevation.minimal,
   },
   soft: {
     backgroundColor: `rgba(2, 33, 66, 0.04)`, // Navy très transparent
@@ -221,7 +223,7 @@ const styles = StyleSheet.create({
     color: Colors.neutral.white,
   },
   secondaryText: {
-    color: Colors.primary.navy, // Cohérence avec le style épuré
+    color: Colors.neutral.white, // Texte blanc sur fond bleu électrique
   },
   softText: {
     color: Colors.primary.navy,

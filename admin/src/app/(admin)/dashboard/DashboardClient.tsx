@@ -63,16 +63,6 @@ export default function DashboardClient({ stats, recentBookings }: DashboardClie
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Vue d'ensemble de votre plateforme Eagle Golf
-          </p>
-        </div>
-
-      </div>
-
       {/* Stats */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {statsCards.map((stat) => (

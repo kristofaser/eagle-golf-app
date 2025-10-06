@@ -26,6 +26,7 @@ import { AlertModalProvider } from '@/contexts/AlertModalContext';
 import { AlertModalInitializer } from '@/components/atoms/AlertModalInitializer';
 import { ToastProvider } from '@/contexts/ToastContext';
 import { ToastInitializer } from '@/components/atoms/ToastInitializer';
+import { CommissionProvider } from '@/contexts/CommissionContext';
 import '@/utils/polyfills';
 import { DURATIONS, EASING_CURVES } from '@/constants/animations';
 import { Colors } from '@/constants/theme';
@@ -51,10 +52,11 @@ function RootLayoutContent() {
         <AlertModalProvider>
           <AlertModalInitializer />
           <StripeProviderWrapper>
-            <AppProviders>
-              <ProProfileProvider>
-                <BottomSheetModalProvider>
-                  <OverlayProvider>
+            <CommissionProvider>
+              <AppProviders>
+                <ProProfileProvider>
+                  <BottomSheetModalProvider>
+                    <OverlayProvider>
                 <Stack
                   screenOptions={{
                     headerShown: false,
@@ -105,6 +107,24 @@ function RootLayoutContent() {
                     options={{
                       headerShown: false,
                       presentation: 'modal',
+                      animation: 'slide_from_bottom',
+                      animationDuration: DURATIONS.MEDIUM,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="profile/division"
+                    options={{
+                      headerShown: false,
+                      presentation: 'modal',
+                      animation: 'slide_from_bottom',
+                      animationDuration: DURATIONS.MEDIUM,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="premium-paywall"
+                    options={{
+                      headerShown: false,
+                      presentation: 'fullScreenModal',
                       animation: 'slide_from_bottom',
                       animationDuration: DURATIONS.MEDIUM,
                     }}
@@ -179,12 +199,31 @@ function RootLayoutContent() {
                       animationDuration: DURATIONS.MEDIUM,
                     }}
                   />
+                  <Stack.Screen
+                    name="pros-nearby-modal"
+                    options={{
+                      headerShown: false,
+                      presentation: 'modal',
+                      animation: 'slide_from_bottom',
+                      animationDuration: DURATIONS.MEDIUM,
+                    }}
+                  />
+                  <Stack.Screen
+                    name="pros-division-modal"
+                    options={{
+                      headerShown: false,
+                      presentation: 'modal',
+                      animation: 'slide_from_bottom',
+                      animationDuration: DURATIONS.MEDIUM,
+                    }}
+                  />
                 </Stack>
                 <StatusBar style="auto" />
-              </OverlayProvider>
-            </BottomSheetModalProvider>
-          </ProProfileProvider>
-        </AppProviders>
+                </OverlayProvider>
+              </BottomSheetModalProvider>
+            </ProProfileProvider>
+          </AppProviders>
+        </CommissionProvider>
       </StripeProviderWrapper>
         </AlertModalProvider>
       </ToastProvider>

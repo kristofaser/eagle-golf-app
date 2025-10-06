@@ -11,7 +11,7 @@ const tripSchema = z.object({
   title: z.string().min(1, 'Le titre est requis'),
   country: z.string().min(1, 'Le pays est requis'),
   image_url: z.string().min(1, 'Une image est requise'),
-  status: z.enum(['available', 'completed', 'full']),
+  status: z.enum(['available']),
 });
 
 type TripFormData = z.infer<typeof tripSchema>;
@@ -232,7 +232,7 @@ export default function VoyagesPage() {
       title: trip.title,
       country: trip.country,
       image_url: trip.image_url,
-      status: trip.status as 'available' | 'completed' | 'full',
+      status: 'available',
     });
   };
 
@@ -269,25 +269,6 @@ export default function VoyagesPage() {
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const styles = {
-      available: 'bg-green-100 text-green-800',
-      completed: 'bg-gray-100 text-gray-800',
-      full: 'bg-red-100 text-red-800',
-    };
-
-    const labels = {
-      available: 'Disponible',
-      completed: 'Terminé',
-      full: 'Complet',
-    };
-
-    return (
-      <span className={`px-2 py-1 text-xs font-medium rounded-full ${styles[status as keyof typeof styles]}`}>
-        {labels[status as keyof typeof labels] || status}
-      </span>
-    );
-  };
 
   if (loading) {
     return (
@@ -299,14 +280,6 @@ export default function VoyagesPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Gestion des Voyages</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Créez et gérez les voyages de golf, consultez les utilisateurs avec alertes
-        </p>
-      </div>
-
       {/* Statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-lg shadow p-6">
@@ -464,19 +437,7 @@ export default function VoyagesPage() {
               )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Statut
-              </label>
-              <select
-                {...register('status')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              >
-                <option value="available">Disponible</option>
-                <option value="completed">Terminé</option>
-                <option value="full">Complet</option>
-              </select>
-            </div>
+            <input type="hidden" {...register('status')} value="available" />
           </div>
 
           <div className="mt-6">
@@ -531,9 +492,6 @@ export default function VoyagesPage() {
                   Pays
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Statut
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Créé le
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -561,9 +519,6 @@ export default function VoyagesPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {trip.country}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {getStatusBadge(trip.status)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(trip.created_at).toLocaleDateString('fr-FR')}

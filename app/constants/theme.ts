@@ -27,6 +27,28 @@ export const Colors = {
     white: '#FFFFFF', // Blanc pur (ex-ball, ex-cardBackground, ex-inputBackground)
   },
 
+  // Alias pour compatibilité (text = neutral)
+  text: {
+    charcoal: '#022142',
+    iron: '#4A5568',
+    course: '#5A6B7F',
+    mist: '#A8B5C6',
+    white: '#FFFFFF',
+  },
+
+  // Alias pour compatibilité (background = neutral)
+  background: {
+    cream: '#F7FAFC',
+    white: '#FFFFFF',
+    navy: '#022142',
+  },
+
+  // Alias pour compatibilité (border = neutral)
+  border: {
+    light: '#E1E1E1',
+    mist: '#A8B5C6',
+  },
+
   // Semantic Colors (actions & états - AMÉLIORÉS)
   semantic: {
     success: {
@@ -59,42 +81,37 @@ export const Colors = {
   },
 
   // Division System (synchronisé avec Supabase DB)
+  // 6 divisions officielles après nettoyage de l'ENUM
   division: {
-    // Divisions officielles de la base de données
-    'DP World Tour': {
+    'DP World': {
       background: '#E6F3FF', // Bleu clair
       text: '#0066CC', // Bleu foncé
       border: '#B3D9FF',
-    },
-    'HotelPlanner Tour': {
-      background: '#FFF8E1', // Jaune clair
-      text: '#F57F17', // Jaune foncé
-      border: '#FFE082',
-    },
-    'Alps Tour': {
-      background: '#FFF3E0', // Orange clair
-      text: '#E65100', // Orange foncé
-      border: '#FFCC80',
     },
     'Ladies European Tour': {
       background: '#FCE4EC', // Rose clair
       text: '#C2185B', // Rose foncé
       border: '#F8BBD9',
     },
-    'Circuit Français': {
-      background: '#E8EAF6', // Indigo clair
-      text: '#3F51B5', // Indigo foncé
-      border: '#C5CAE9',
-    },
-    'Challenge Tour': {
-      background: '#E8F5E8', // Vert clair
-      text: '#2E7D32', // Vert foncé
-      border: '#A5D6A7',
-    },
-    'Elite Tour': {
+    'Legends Tour': {
       background: '#F3E5F5', // Violet clair
       text: '#7B1FA2', // Violet foncé
       border: '#CE93D8',
+    },
+    'Hotel Planner': {
+      background: '#FFF8E1', // Jaune clair
+      text: '#F57F17', // Jaune foncé
+      border: '#FFE082',
+    },
+    'Alps Tour & Pro Golf': {
+      background: '#FFF3E0', // Orange clair
+      text: '#E65100', // Orange foncé
+      border: '#FFCC80',
+    },
+    'Circuit FR': {
+      background: '#E8EAF6', // Indigo clair
+      text: '#3F51B5', // Indigo foncé
+      border: '#C5CAE9',
     },
     default: {
       background: '#F5F5F5', // Gris clair
