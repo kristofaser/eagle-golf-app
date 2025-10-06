@@ -55,12 +55,20 @@ export default async function AdminUsersPage() {
     };
   }) || [];
 
+  // Convertir admin_permissions (objet ou tableau) en tableau de strings
+  const permissions = currentUserProfile?.admin_permissions;
+  const permissionsArray = Array.isArray(permissions)
+    ? permissions
+    : permissions && typeof permissions === 'object'
+      ? Object.keys(permissions).filter(key => permissions[key as keyof typeof permissions])
+      : [];
+
   return (
     <AdminUsersClient
       initialUsers={users}
       currentUserId={currentUser?.id || ''}
       currentUserRole={currentUserProfile?.user_type || 'admin'}
-      currentUserPermissions={currentUserProfile?.admin_permissions || []}
+      currentUserPermissions={permissionsArray}
     />
   );
 }
