@@ -44,7 +44,7 @@ interface SidebarState {
 
 export default function AdminUsersClient({ initialUsers, currentUserId, currentUserRole, currentUserPermissions }: AdminUsersClientProps) {
   const router = useRouter();
-  const [allUsers] = useState<any[]>(initialUsers);
+  const [allUsers, setAllUsers] = useState<any[]>(initialUsers);
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterState>({
     role: 'all'
@@ -135,9 +135,16 @@ export default function AdminUsersClient({ initialUsers, currentUserId, currentU
   };
 
   const handleSidebarDelete = (user: any) => {
+    if (!user) {
+      console.error('❌ Aucun utilisateur fourni à handleSidebarDelete');
+      return;
+    }
     setSelectedUser(user);
-    openModal('delete');
     closeSidebar();
+    // Petit délai pour s'assurer que le state est mis à jour
+    setTimeout(() => {
+      openModal('delete', user);
+    }, 50);
   };
 
   const handleSidebarToggleStatus = (user: any) => {
@@ -207,19 +214,29 @@ export default function AdminUsersClient({ initialUsers, currentUserId, currentU
   };
 
   const handleDeleteAdmin = async () => {
-    if (!selectedUser) return;
-    
+    if (!selectedUser) {
+      setErrorMessage('Aucun utilisateur sélectionné');
+      return;
+    }
+
     setIsLoading(true);
     try {
       const result = await deleteAdminUser(selectedUser.id);
+
       if (result.success) {
+        // Mettre à jour l'état local pour retirer l'utilisateur supprimé
+        setAllUsers(prevUsers => prevUsers.filter(user => user.id !== selectedUser.id));
+
         setSuccessMessage(result.message);
         closeAllModals();
+
+        // Rafraîchir aussi depuis le serveur pour s'assurer de la synchronisation
         router.refresh();
       } else {
         setErrorMessage(result.message);
       }
     } catch (error) {
+      console.error('❌ Erreur lors de la suppression:', error);
       setErrorMessage('Erreur lors de la suppression');
     } finally {
       setIsLoading(false);

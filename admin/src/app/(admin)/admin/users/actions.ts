@@ -18,13 +18,13 @@ export async function createAdminUser(data: AdminFormData) {
     }
     
     const { data: currentUserProfile } = await supabase
-      .from('admin_profiles')
-      .select('role, permissions')
+      .from('profiles')
+      .select('admin_role, admin_permissions, is_admin')
       .eq('id', currentUser.id)
       .single();
-    
-    const canManageAdmins = currentUserProfile?.permissions?.includes('manage_admin_users') || 
-                           currentUserProfile?.role === 'super_admin';
+
+    const canManageAdmins = currentUserProfile?.admin_permissions?.includes('manage_admin_users') ||
+                           currentUserProfile?.admin_role === 'super_admin';
     
     if (!canManageAdmins) {
       return { success: false, message: 'Permissions insuffisantes' };
@@ -45,17 +45,18 @@ export async function createAdminUser(data: AdminFormData) {
       throw new Error(`Erreur création utilisateur: ${authError?.message}`);
     }
 
-    // 2. Créer le profil admin
+    // 2. Créer le profil admin dans la table profiles
     const { error: profileError } = await supabase
-      .from('admin_profiles')
+      .from('profiles')
       .insert({
         id: authUser.user.id,
         first_name: data.firstName,
         last_name: data.lastName,
         email: data.email,
-        role: data.role,
-        permissions: data.permissions,
-        is_active: true,
+        user_type: data.role,
+        is_admin: true,
+        admin_role: data.role,
+        admin_permissions: data.permissions,
         created_at: new Date().toISOString(),
       });
 
@@ -128,16 +129,16 @@ export async function updateAdminUser(userId: string, data: EditAdminFormData) {
 
     console.log('✅ Auth user updated');
 
-    // 2. Mettre à jour le profil admin
+    // 2. Mettre à jour le profil admin dans la table profiles
     const { data: updateResult, error: profileError } = await supabase
-      .from('admin_profiles')
+      .from('profiles')
       .update({
         first_name: data.firstName,
         last_name: data.lastName,
         email: data.email,
         phone: data.phone || null,
-        role: data.role,
-        permissions: data.permissions,
+        admin_role: data.role,
+        admin_permissions: data.permissions,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId)
@@ -171,36 +172,87 @@ export async function updateAdminUser(userId: string, data: EditAdminFormData) {
 export async function deleteAdminUser(userId: string) {
   try {
     const supabase = await createServiceClient();
-    
+
     // Vérifier les permissions de l'utilisateur connecté
     const sessionClient = await createClient();
     const { data: { user: currentUser } } = await sessionClient.auth.getUser();
-    
+
     if (!currentUser) {
       return { success: false, message: 'Non authentifié' };
     }
-    
+
     // Empêcher la suppression de son propre compte
     if (currentUser.id === userId) {
       return { success: false, message: 'Impossible de supprimer son propre compte' };
     }
-    
+
     const { data: currentUserProfile } = await supabase
-      .from('admin_profiles')
-      .select('role, permissions')
+      .from('profiles')
+      .select('admin_role, admin_permissions, is_admin')
       .eq('id', currentUser.id)
       .single();
-    
-    const canManageAdmins = currentUserProfile?.permissions?.includes('manage_admin_users') || 
-                           currentUserProfile?.role === 'super_admin';
-    
+
+    const canManageAdmins = currentUserProfile?.admin_permissions?.includes('manage_admin_users') ||
+                           currentUserProfile?.admin_role === 'super_admin';
+
     if (!canManageAdmins) {
       return { success: false, message: 'Permissions insuffisantes' };
     }
 
-    // 1. Supprimer le profil admin
+    // 1. Supprimer toutes les entrées liées qui n'ont pas CASCADE DELETE
+    // Ces tables ont des contraintes NO ACTION qui empêchent la suppression
+
+    // Supprimer les entrées dans amateur_profiles
+    await supabase
+      .from('amateur_profiles')
+      .delete()
+      .eq('user_id', userId);
+
+    // Supprimer les entrées dans pro_profiles
+    await supabase
+      .from('pro_profiles')
+      .delete()
+      .eq('user_id', userId);
+
+    // Supprimer ou mettre à jour les reviews où l'utilisateur est impliqué
+    await supabase
+      .from('reviews')
+      .delete()
+      .or(`reviewer_id.eq.${userId},reviewee_id.eq.${userId}`);
+
+    // Mettre à jour les soumissions de parcours (on ne les supprime pas, on enlève juste la référence)
+    await supabase
+      .from('golf_course_submissions')
+      .update({ submitted_by: null })
+      .eq('submitted_by', userId);
+
+    await supabase
+      .from('golf_course_submissions')
+      .update({ reviewed_by: null })
+      .eq('reviewed_by', userId);
+
+    // Mettre à jour les commission_settings (on garde l'historique)
+    await supabase
+      .from('commission_settings')
+      .update({ created_by: null })
+      .eq('created_by', userId);
+
+    // Mettre à jour les politiques d'annulation
+    await supabase
+      .from('cancellation_policies')
+      .update({ cancelled_by: null })
+      .eq('cancelled_by', userId);
+
+    // Mettre à jour user_roles pour granted_by
+    await supabase
+      .from('user_roles')
+      .update({ granted_by: null })
+      .eq('granted_by', userId);
+
+    // 2. Supprimer le profil de la table profiles
+    // Les tables avec CASCADE DELETE se nettoieront automatiquement
     const { error: profileError } = await supabase
-      .from('admin_profiles')
+      .from('profiles')
       .delete()
       .eq('id', userId);
 
@@ -208,7 +260,7 @@ export async function deleteAdminUser(userId: string) {
       throw new Error(`Erreur suppression profil: ${profileError.message}`);
     }
 
-    // 2. Supprimer l'utilisateur de Supabase Auth
+    // 3. Supprimer l'utilisateur de Supabase Auth
     const { error: authError } = await supabase.auth.admin.deleteUser(userId);
 
     if (authError) {
@@ -249,23 +301,24 @@ export async function toggleAdminUserStatus(userId: string, isActive: boolean) {
     }
     
     const { data: currentUserProfile } = await supabase
-      .from('admin_profiles')
-      .select('role, permissions')
+      .from('profiles')
+      .select('admin_role, admin_permissions, is_admin')
       .eq('id', currentUser.id)
       .single();
-    
-    const canManageAdmins = currentUserProfile?.permissions?.includes('manage_admin_users') || 
-                           currentUserProfile?.role === 'super_admin';
+
+    const canManageAdmins = currentUserProfile?.admin_permissions?.includes('manage_admin_users') ||
+                           currentUserProfile?.admin_role === 'super_admin';
     
     if (!canManageAdmins) {
       return { success: false, message: 'Permissions insuffisantes' };
     }
 
-    // Mettre à jour le statut dans admin_profiles
+    // Mettre à jour le statut dans profiles
+    // Note: La table profiles n'a peut-être pas de champ is_active
+    // On utilise user_metadata dans auth pour gérer l'activation/désactivation
     const { error: profileError } = await supabase
-      .from('admin_profiles')
+      .from('profiles')
       .update({
-        is_active: isActive,
         updated_at: new Date().toISOString(),
       })
       .eq('id', userId);

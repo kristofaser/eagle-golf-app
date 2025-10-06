@@ -108,45 +108,98 @@ export async function POST(request: NextRequest) {
 
     console.log('🟢 [STEP 5] Utilisateur auth créé - ID:', authData.user.id);
 
-    // 6. Créer le profil dans profiles
-    const profileData = {
-      id: authData.user.id,
-      email: invitation.email,
-      first_name: invitation.first_name,
-      last_name: invitation.last_name,
-      user_type: invitation.role,
-      is_admin: true,
-      admin_role: invitation.role,
-      admin_permissions: invitation.permissions,
-      admin_created_at: new Date().toISOString(),
-      admin_created_by: invitation.invited_by
-    };
-
-    console.log('🔍 [DEBUG] Données profil à insérer:', JSON.stringify(profileData, null, 2));
-
-    const { data: insertedProfile, error: profileError } = await serviceClient
+    // 6. Vérifier si un profil a été créé automatiquement par un trigger
+    const { data: autoCreatedProfile } = await serviceClient
       .from('profiles')
-      .insert(profileData)
-      .select()
+      .select('*')
+      .eq('id', authData.user.id)
       .single();
 
-    if (profileError) {
-      console.error('❌ [ERROR] Erreur création profil:', JSON.stringify(profileError, null, 2));
-      console.error('❌ [ERROR] Profile data was:', JSON.stringify(profileData, null, 2));
+    let insertedProfile;
 
-      // Rollback: supprimer l'utilisateur auth
-      await serviceClient.auth.admin.deleteUser(authData.user.id);
+    if (autoCreatedProfile) {
+      console.log('🔍 [STEP 6] Profil auto-créé détecté, mise à jour...');
 
-      return NextResponse.json(
-        {
-          error: 'Erreur lors de la création du profil',
-          details: profileError.message || JSON.stringify(profileError)
-        },
-        { status: 500 }
-      );
+      // Le profil existe déjà (créé par trigger), on le met à jour
+      const { data: updated, error: updateError } = await serviceClient
+        .from('profiles')
+        .update({
+          email: invitation.email,
+          first_name: invitation.first_name,
+          last_name: invitation.last_name,
+          user_type: invitation.role,
+          is_admin: true,
+          admin_role: invitation.role,
+          admin_permissions: invitation.permissions,
+          admin_created_at: new Date().toISOString(),
+          admin_created_by: invitation.invited_by
+        })
+        .eq('id', authData.user.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('❌ [ERROR] Erreur mise à jour profil:', JSON.stringify(updateError, null, 2));
+
+        // Rollback: supprimer l'utilisateur auth
+        await serviceClient.auth.admin.deleteUser(authData.user.id);
+
+        return NextResponse.json(
+          {
+            error: 'Erreur lors de la mise à jour du profil',
+            details: updateError.message || JSON.stringify(updateError)
+          },
+          { status: 500 }
+        );
+      }
+
+      insertedProfile = updated;
+      console.log('✅ [SUCCESS] Profil mis à jour:', JSON.stringify(insertedProfile, null, 2));
+
+    } else {
+      console.log('🔍 [STEP 6] Aucun profil auto-créé, insertion...');
+
+      // Le profil n'existe pas, on le crée
+      const profileData = {
+        id: authData.user.id,
+        email: invitation.email,
+        first_name: invitation.first_name,
+        last_name: invitation.last_name,
+        user_type: invitation.role,
+        is_admin: true,
+        admin_role: invitation.role,
+        admin_permissions: invitation.permissions,
+        admin_created_at: new Date().toISOString(),
+        admin_created_by: invitation.invited_by
+      };
+
+      console.log('🔍 [DEBUG] Données profil à insérer:', JSON.stringify(profileData, null, 2));
+
+      const { data: created, error: profileError } = await serviceClient
+        .from('profiles')
+        .insert(profileData)
+        .select()
+        .single();
+
+      if (profileError) {
+        console.error('❌ [ERROR] Erreur création profil:', JSON.stringify(profileError, null, 2));
+        console.error('❌ [ERROR] Profile data was:', JSON.stringify(profileData, null, 2));
+
+        // Rollback: supprimer l'utilisateur auth
+        await serviceClient.auth.admin.deleteUser(authData.user.id);
+
+        return NextResponse.json(
+          {
+            error: 'Erreur lors de la création du profil',
+            details: profileError.message || JSON.stringify(profileError)
+          },
+          { status: 500 }
+        );
+      }
+
+      insertedProfile = created;
+      console.log('✅ [SUCCESS] Profil créé:', JSON.stringify(insertedProfile, null, 2));
     }
-
-    console.log('✅ [SUCCESS] Profil créé:', JSON.stringify(insertedProfile, null, 2));
 
     // 6.5. Vérification et correction si is_admin a été écrasé par un trigger
     if (insertedProfile && !insertedProfile.is_admin) {
